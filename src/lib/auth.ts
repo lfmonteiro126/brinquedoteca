@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
-import { getDb } from "./db";
+import { sqlGet } from "./db";
 import type { User, UserRole } from "./types";
 
 export class AuthError extends Error {
@@ -46,12 +46,10 @@ async function verifyToken(token: string): Promise<SessionPayload | null> {
 }
 
 export async function login(email: string, senha: string): Promise<User | null> {
-  const db = getDb();
-  const row = db
-    .prepare(
-      "SELECT id, nome, email, senha_hash, role, ativo, created_at FROM users WHERE email = ? AND ativo = 1"
-    )
-    .get(email) as (User & { senha_hash: string }) | undefined;
+  const row = await sqlGet`
+    SELECT id, nome, email, senha_hash, role, ativo, created_at
+    FROM users WHERE email = ${email} AND ativo = true
+  ` as (User & { senha_hash: string }) | undefined;
 
   if (!row || !bcrypt.compareSync(senha, row.senha_hash)) {
     return null;
@@ -87,12 +85,10 @@ export async function getSessionUser(): Promise<User | null> {
   const payload = await verifyToken(session.value);
   if (!payload) return null;
 
-  const db = getDb();
-  const user = db
-    .prepare(
-      "SELECT id, nome, email, role, ativo, primeiro_login, created_at FROM users WHERE id = ? AND ativo = 1"
-    )
-    .get(payload.userId) as User | undefined;
+  const user = await sqlGet`
+    SELECT id, nome, email, role, ativo, primeiro_login, created_at
+    FROM users WHERE id = ${payload.userId} AND ativo = true
+  ` as User | undefined;
 
   return user ?? null;
 }

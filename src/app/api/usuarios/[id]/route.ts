@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { sqlGet, sqlRun, getClient } from "@/lib/db";
 import { handleApiError } from "@/lib/api";
 
 export async function PUT(
@@ -16,24 +16,25 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const db = getDb();
     const bcrypt = await import("bcryptjs");
 
-    const existing = db
-      .prepare("SELECT id FROM users WHERE id = ?")
-      .get(id) as { id: number } | undefined;
+    const existing = await sqlGet(
+      "SELECT id FROM users WHERE id = $",
+      id
+    ) as { id: number } | undefined;
     if (!existing) {
       return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
     }
 
     const updates: string[] = [];
-    const values: (string | number)[] = [];
+    const values: (string | number | boolean)[] = [];
+    let paramIndex = 1;
 
     if (body.nome !== undefined) {
       if (!body.nome?.trim()) {
         return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
       }
-      updates.push("nome = ?");
+      updates.push(`nome = $${paramIndex++}`);
       values.push(body.nome.trim());
     }
 
@@ -41,7 +42,7 @@ export async function PUT(
       if (!body.email?.trim()) {
         return NextResponse.json({ error: "Email é obrigatório" }, { status: 400 });
       }
-      updates.push("email = ?");
+      updates.push(`email = $${paramIndex++}`);
       values.push(body.email.trim().toLowerCase());
     }
 
@@ -50,10 +51,10 @@ export async function PUT(
         return NextResponse.json({ error: "Senha deve ter no mínimo 6 caracteres" }, { status: 400 });
       }
       const hash = bcrypt.hashSync(body.senha, 10);
-      updates.push("senha_hash = ?");
+      updates.push(`senha_hash = $${paramIndex++}`);
       values.push(hash);
       if (body.forcePrimeiroLogin !== false) {
-        updates.push("primeiro_login = 0");
+        updates.push("primeiro_login = false");
       }
     }
 
@@ -61,13 +62,13 @@ export async function PUT(
       if (body.role !== "admin" && body.role !== "vendedor") {
         return NextResponse.json({ error: "Perfil inválido" }, { status: 400 });
       }
-      updates.push("role = ?");
+      updates.push(`role = $${paramIndex++}`);
       values.push(body.role);
     }
 
     if (body.ativo !== undefined) {
-      updates.push("ativo = ?");
-      values.push(body.ativo ? 1 : 0);
+      updates.push(`ativo = $${paramIndex++}`);
+      values.push(!!body.ativo);
     }
 
     if (updates.length === 0) {
@@ -75,11 +76,15 @@ export async function PUT(
     }
 
     values.push(id);
-    db.prepare(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`).run(...values);
+    await getClient().unsafe(
+      `UPDATE users SET ${updates.join(", ")} WHERE id = $${paramIndex}`,
+      values
+    );
 
-    const usuario = db
-      .prepare("SELECT id, nome, email, role, ativo, primeiro_login, created_at FROM users WHERE id = ?")
-      .get(id);
+    const usuario = await sqlGet`
+      SELECT id, nome, email, role, ativo, primeiro_login, created_at
+      FROM users WHERE id = ${id}
+    `;
 
     return NextResponse.json({ usuario });
   } catch (error) {
@@ -107,15 +112,15 @@ export async function DELETE(
       return NextResponse.json({ error: "Não é possível desativar a si mesmo" }, { status: 400 });
     }
 
-    const db = getDb();
-    const existing = db
-      .prepare("SELECT id, role FROM users WHERE id = ? AND ativo = 1")
-      .get(id) as { id: number; role: string } | undefined;
+    const existing = await sqlGet(
+      "SELECT id, role FROM users WHERE id = $ AND ativo = true",
+      id
+    ) as { id: number; role: string } | undefined;
     if (!existing) {
       return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
     }
 
-    db.prepare("UPDATE users SET ativo = 0 WHERE id = ?").run(id);
+    await sqlRun`UPDATE users SET ativo = false WHERE id = ${id}`;
 
     return NextResponse.json({ ok: true });
   } catch (error) {

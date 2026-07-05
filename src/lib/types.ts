@@ -5,8 +5,8 @@ export interface User {
   nome: string;
   email: string;
   role: UserRole;
-  ativo: number;
-  primeiro_login: number;
+  ativo: boolean;
+  primeiro_login: boolean;
   created_at: string;
 }
 
@@ -19,7 +19,7 @@ export interface Produto {
   preco_venda: number;
   estoque: number;
   estoque_minimo: number;
-  ativo: number;
+  ativo: boolean;
   created_at: string;
   updated_at: string;
 }

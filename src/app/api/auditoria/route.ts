@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getClient } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
     await requireAuth();
-    const db = getDb();
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "50", 10)));
@@ -14,56 +13,49 @@ export async function GET(request: NextRequest) {
     const desde = searchParams.get("desde");
     const ate = searchParams.get("ate");
 
-    let whereClause = "";
     const conditions: string[] = [];
     const params: (string | number)[] = [];
+    let paramIndex = 1;
 
     if (tipo) {
-      conditions.push("m.tipo = ?");
+      conditions.push(`m.tipo = $${paramIndex++}`);
       params.push(tipo);
     }
     if (produto) {
-      conditions.push("p.nome LIKE ?");
+      conditions.push(`p.nome LIKE $${paramIndex++}`);
       params.push(`%${produto}%`);
     }
     if (desde) {
-      conditions.push("date(m.created_at) >= date(?)");
+      conditions.push(`m.created_at >= $${paramIndex++}::date`);
       params.push(desde);
     }
     if (ate) {
-      conditions.push("date(m.created_at) <= date(?)");
+      conditions.push(`m.created_at < ($${paramIndex++}::date + interval '1 day')`);
       params.push(ate);
     }
 
-    if (conditions.length > 0) {
-      whereClause = "WHERE " + conditions.join(" AND ");
-    }
+    const whereClause = conditions.length > 0 ? "WHERE " + conditions.join(" AND ") : "";
 
-    const countResult = db
-      .prepare(
-        `SELECT COUNT(*) as total
-         FROM movimentacoes m
-         JOIN produtos p ON p.id = m.produto_id
-         ${whereClause}`
-      )
-      .get(...params) as { total: number };
+    const countResult = await getClient().unsafe(
+      `SELECT COUNT(*) as total FROM movimentacoes m JOIN produtos p ON p.id = m.produto_id ${whereClause}`,
+      params
+    );
 
     const offset = (page - 1) * pageSize;
-    const movimentacoes = db
-      .prepare(
-        `SELECT m.*, p.nome as produto_nome, u.nome as usuario_nome
-         FROM movimentacoes m
-         JOIN produtos p ON p.id = m.produto_id
-         JOIN users u ON u.id = m.usuario_id
-         ${whereClause}
-         ORDER BY m.created_at DESC
-         LIMIT ? OFFSET ?`
-      )
-      .all(...params, pageSize, offset);
+    const movimentacoes = await getClient().unsafe(
+      `SELECT m.*, p.nome as produto_nome, u.nome as usuario_nome
+       FROM movimentacoes m
+       JOIN produtos p ON p.id = m.produto_id
+       JOIN users u ON u.id = m.usuario_id
+       ${whereClause}
+       ORDER BY m.created_at DESC
+       LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,
+      [...params, pageSize, offset]
+    );
 
     return NextResponse.json({
       movimentacoes,
-      total: countResult.total,
+      total: countResult[0]?.total ?? 0,
       page,
       pageSize,
     });

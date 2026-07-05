@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { getDb, registrarMovimentacao } from "@/lib/db";
+import { sqlGet, sqlAll, registrarMovimentacao, getClient } from "@/lib/db";
 import { handleApiError } from "@/lib/api";
 
 export async function POST(
@@ -15,11 +15,10 @@ export async function POST(
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
 
-    const db = getDb();
-
-    const venda = db
-      .prepare("SELECT * FROM vendas WHERE id = ?")
-      .get(vendaId) as {
+    const venda = await sqlGet(
+      "SELECT * FROM vendas WHERE id = $",
+      vendaId
+    ) as {
       id: number;
       numero: number;
       total: number;
@@ -30,24 +29,22 @@ export async function POST(
       return NextResponse.json({ error: "Venda não encontrada" }, { status: 404 });
     }
 
-    const jaEstornada = db
-      .prepare("SELECT id FROM movimentacoes WHERE tipo = 'estorno' AND referencia_id = ?")
-      .get(vendaId) as { id: number } | undefined;
+    const jaEstornada = await sqlGet(
+      "SELECT id FROM movimentacoes WHERE tipo = 'estorno' AND referencia_id = $",
+      vendaId
+    ) as { id: number } | undefined;
 
     if (jaEstornada) {
       return NextResponse.json({ error: "Esta venda já foi estornada" }, { status: 400 });
     }
 
-    const itens = db
-      .prepare("SELECT * FROM venda_itens WHERE venda_id = ?")
-      .all(vendaId) as Array<{
-      produto_id: number;
-      quantidade: number;
-    }>;
+    const itens = await sqlAll`
+      SELECT * FROM venda_itens WHERE venda_id = ${vendaId}
+    ` as { produto_id: number; quantidade: number }[];
 
-    const estornoTransaction = db.transaction(() => {
+    await getClient().begin(async () => {
       for (const item of itens) {
-        registrarMovimentacao(db, {
+        await registrarMovimentacao({
           produtoId: item.produto_id,
           tipo: "estorno",
           quantidade: item.quantidade,
@@ -57,8 +54,6 @@ export async function POST(
         });
       }
     });
-
-    estornoTransaction();
 
     return NextResponse.json({
       ok: true,

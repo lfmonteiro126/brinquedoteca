@@ -1,11 +1,10 @@
-import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { ProductForm } from "@/components/ProductForm";
-import { getDb } from "@/lib/db";
+import { sqlGet } from "@/lib/db";
 import type { Produto } from "@/lib/types";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Editar brinquedo | Brinquedoteca",
 };
 
@@ -13,8 +12,10 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function EditarProdutoPage({ params }: Props) {
   const { id } = await params;
-  const db = getDb();
-  const produto = db.prepare("SELECT * FROM produtos WHERE id = ?").get(id) as Produto | undefined;
+  const produto = await sqlGet(
+    "SELECT * FROM produtos WHERE id = $",
+    parseInt(id)
+  ) as Produto | undefined;
 
   if (!produto) notFound();
 

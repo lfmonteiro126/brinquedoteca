@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { sqlGet } from "@/lib/db";
 import { handleApiError } from "@/lib/api";
 
 export async function POST(request: NextRequest) {
@@ -8,7 +8,6 @@ export async function POST(request: NextRequest) {
     const user = await requireAuth();
     const body = await request.json();
     const { senhaAtual, novaSenha } = body;
-    const db = getDb();
     const bcrypt = await import("bcryptjs");
 
     if (!senhaAtual) {
@@ -21,16 +20,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const row = db
-      .prepare("SELECT id, senha_hash FROM users WHERE id = ?")
-      .get(user.id) as { id: number; senha_hash: string } | undefined;
+    const row = await sqlGet`
+      SELECT id, senha_hash FROM users WHERE id = ${user.id}
+    ` as { id: number; senha_hash: string } | undefined;
 
     if (!row || !bcrypt.compareSync(senhaAtual, row.senha_hash)) {
       return NextResponse.json({ error: "Senha atual incorreta" }, { status: 400 });
     }
 
     const hash = bcrypt.hashSync(novaSenha, 10);
-    db.prepare("UPDATE users SET senha_hash = ?, primeiro_login = 0 WHERE id = ?").run(hash, user.id);
+    await sqlGet`
+      UPDATE users SET senha_hash = ${hash}, primeiro_login = false WHERE id = ${user.id}
+    `;
 
     return NextResponse.json({ ok: true });
   } catch (error) {

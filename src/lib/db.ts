@@ -1,97 +1,153 @@
-import Database from "better-sqlite3";
+import postgres from "postgres";
 import bcrypt from "bcryptjs";
-import path from "path";
-import fs from "fs";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const DB_PATH = path.join(DATA_DIR, "brinquedoteca.db");
+let _client: ReturnType<typeof postgres> | null = null;
+let _initialized = false;
 
-let db: Database.Database | null = null;
+export function getClient() {
+  if (!_client) {
+    const DATABASE_URL = process.env.DATABASE_URL;
+    if (!DATABASE_URL) {
+      throw new Error("DATABASE_URL não definida. Configure a variável de ambiente.");
+    }
+    _client = postgres(DATABASE_URL);
+  }
+  return _client;
+}
 
-function initSchema(database: Database.Database) {
-  database.exec(`
+async function ensureInitialized() {
+  if (!_initialized) {
+    _initialized = true;
+    await initSchema();
+  }
+}
+
+export async function sqlGet<T = Record<string, unknown>>(
+  queryOrTemplate: TemplateStringsArray | string,
+  ...values: unknown[]
+): Promise<T | undefined> {
+  await ensureInitialized();
+  let result: postgres.Row[];
+  if (typeof queryOrTemplate === "string") {
+    result = await getClient().unsafe(queryOrTemplate, values as postgres.Row[]);
+  } else {
+    result = await getClient().unsafe(queryOrTemplate.join("$"), values as postgres.Row[]);
+  }
+  return result[0] as T | undefined;
+}
+
+export async function sqlAll<T = Record<string, unknown>>(
+  queryOrTemplate: TemplateStringsArray | string,
+  ...values: unknown[]
+): Promise<T[]> {
+  await ensureInitialized();
+  let result: postgres.Row[];
+  if (typeof queryOrTemplate === "string") {
+    result = await getClient().unsafe(queryOrTemplate, values as postgres.Row[]);
+  } else {
+    result = await getClient().unsafe(queryOrTemplate.join("$"), values as postgres.Row[]);
+  }
+  return result as T[];
+}
+
+export async function sqlRun(
+  queryOrTemplate: TemplateStringsArray | string,
+  ...values: unknown[]
+): Promise<{ rowCount: number; insertId?: number }> {
+  await ensureInitialized();
+  let result: postgres.Row[];
+  if (typeof queryOrTemplate === "string") {
+    result = await getClient().unsafe(queryOrTemplate, values as postgres.Row[]);
+  } else {
+    result = await getClient().unsafe(queryOrTemplate.join("$"), values as postgres.Row[]);
+  }
+  return {
+    rowCount: result.length,
+    insertId: result[0]?.id as number | undefined,
+  };
+}
+
+export async function sqlExec(query: string): Promise<void> {
+  await ensureInitialized();
+  await getClient().unsafe(query);
+}
+
+export async function initSchema() {
+  await getClient().unsafe(`
     CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       nome TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       senha_hash TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'vendedor' CHECK(role IN ('admin', 'vendedor')),
-      ativo INTEGER NOT NULL DEFAULT 1,
-      primeiro_login INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      role TEXT NOT NULL DEFAULT 'vendedor',
+      ativo BOOLEAN NOT NULL DEFAULT true,
+      primeiro_login BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS produtos (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       nome TEXT NOT NULL,
       codigo_barras TEXT UNIQUE,
       categoria TEXT,
-      preco_custo REAL NOT NULL DEFAULT 0,
-      preco_venda REAL NOT NULL DEFAULT 0,
+      preco_custo NUMERIC(10,2) NOT NULL DEFAULT 0,
+      preco_venda NUMERIC(10,2) NOT NULL DEFAULT 0,
       estoque INTEGER NOT NULL DEFAULT 0,
       estoque_minimo INTEGER NOT NULL DEFAULT 5,
-      ativo INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+      ativo BOOLEAN NOT NULL DEFAULT true,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS vendas (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       numero INTEGER NOT NULL UNIQUE,
-      usuario_id INTEGER NOT NULL,
-      total REAL NOT NULL DEFAULT 0,
-      desconto REAL NOT NULL DEFAULT 0,
-      metodo_pagamento TEXT NOT NULL DEFAULT 'dinheiro' CHECK(metodo_pagamento IN ('pix', 'debito', 'credito', 'dinheiro')),
+      usuario_id INTEGER NOT NULL REFERENCES users(id),
+      total NUMERIC(10,2) NOT NULL DEFAULT 0,
+      desconto NUMERIC(10,2) NOT NULL DEFAULT 0,
+      metodo_pagamento TEXT NOT NULL DEFAULT 'dinheiro',
       parcelas INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-      FOREIGN KEY (usuario_id) REFERENCES users(id)
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS venda_itens (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      venda_id INTEGER NOT NULL,
-      produto_id INTEGER NOT NULL,
+      id SERIAL PRIMARY KEY,
+      venda_id INTEGER NOT NULL REFERENCES vendas(id),
+      produto_id INTEGER NOT NULL REFERENCES produtos(id),
       quantidade INTEGER NOT NULL,
-      preco_unitario REAL NOT NULL,
-      subtotal REAL NOT NULL,
-      FOREIGN KEY (venda_id) REFERENCES vendas(id),
-      FOREIGN KEY (produto_id) REFERENCES produtos(id)
+      preco_unitario NUMERIC(10,2) NOT NULL,
+      subtotal NUMERIC(10,2) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS movimentacoes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      produto_id INTEGER NOT NULL,
-      tipo TEXT NOT NULL CHECK(tipo IN ('entrada', 'saida', 'ajuste', 'venda', 'inventario', 'estorno')),
+      id SERIAL PRIMARY KEY,
+      produto_id INTEGER NOT NULL REFERENCES produtos(id),
+      tipo TEXT NOT NULL,
       quantidade INTEGER NOT NULL,
       estoque_anterior INTEGER NOT NULL,
       estoque_novo INTEGER NOT NULL,
-      usuario_id INTEGER NOT NULL,
+      usuario_id INTEGER NOT NULL REFERENCES users(id),
       referencia_id INTEGER,
       motivo TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-      FOREIGN KEY (produto_id) REFERENCES produtos(id),
-      FOREIGN KEY (usuario_id) REFERENCES users(id)
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS sessoes_inventario (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      usuario_id INTEGER NOT NULL,
-      status TEXT NOT NULL DEFAULT 'aberta' CHECK(status IN ('aberta', 'finalizada')),
+      id SERIAL PRIMARY KEY,
+      usuario_id INTEGER NOT NULL REFERENCES users(id),
+      status TEXT NOT NULL DEFAULT 'aberta',
       observacao TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-      finalized_at TEXT,
-      FOREIGN KEY (usuario_id) REFERENCES users(id)
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      finalized_at TIMESTAMPTZ
     );
 
     CREATE TABLE IF NOT EXISTS inventario_itens (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      sessao_id INTEGER NOT NULL,
-      produto_id INTEGER NOT NULL,
+      id SERIAL PRIMARY KEY,
+      sessao_id INTEGER NOT NULL REFERENCES sessoes_inventario(id),
+      produto_id INTEGER NOT NULL REFERENCES produtos(id),
       estoque_sistema INTEGER NOT NULL,
       estoque_contado INTEGER NOT NULL,
-      diferenca INTEGER NOT NULL,
-      FOREIGN KEY (sessao_id) REFERENCES sessoes_inventario(id),
-      FOREIGN KEY (produto_id) REFERENCES produtos(id)
+      diferenca INTEGER NOT NULL
     );
 
     CREATE INDEX IF NOT EXISTS idx_produtos_codigo ON produtos(codigo_barras);
@@ -99,93 +155,53 @@ function initSchema(database: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_vendas_data ON vendas(created_at);
   `);
 
-  const hasPrimeiroLogin = database
-    .prepare("PRAGMA table_info(users)")
-    .all() as Array<{ name: string }>;
-  if (!hasPrimeiroLogin.some((c) => c.name === "primeiro_login")) {
-    database.exec("ALTER TABLE users ADD COLUMN primeiro_login INTEGER NOT NULL DEFAULT 1");
-    database.exec("UPDATE users SET primeiro_login = 0");
-  }
-
-  const adminExists = database
-    .prepare("SELECT id FROM users WHERE email = ?")
-    .get("admin@loja");
+  const adminExists = await sqlGet`
+    SELECT id FROM users WHERE email = ${"admin@loja"}
+  ` as { id: number } | undefined;
 
   if (!adminExists) {
     const hash = bcrypt.hashSync("admin123", 10);
-    database
-      .prepare(
-        "INSERT INTO users (nome, email, senha_hash, role) VALUES (?, ?, ?, ?)"
-      )
-      .run("Administrador", "admin@loja", hash, "admin");
+    await sqlRun`
+      INSERT INTO users (nome, email, senha_hash, role)
+      VALUES (${"Administrador"}, ${"admin@loja"}, ${hash}, ${"admin"})
+    `;
   }
 }
 
-export function getDb(): Database.Database {
-  if (!db) {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    db = new Database(DB_PATH);
-    db.pragma("journal_mode = WAL");
-    db.pragma("foreign_keys = ON");
-    initSchema(db);
-  }
-  return db;
-}
+export async function registrarMovimentacao(params: {
+  produtoId: number;
+  tipo: "entrada" | "saida" | "ajuste" | "venda" | "inventario" | "estorno";
+  quantidade: number;
+  usuarioId: number;
+  referenciaId?: number | null;
+  motivo?: string | null;
+}): Promise<number> {
+  return getClient().begin(async (tx) => {
+    const produto = await tx`SELECT estoque FROM produtos WHERE id = ${params.produtoId}`;
+    if (produto.length === 0) throw new Error("Produto não encontrado");
 
-export function registrarMovimentacao(
-  database: Database.Database,
-  params: {
-    produtoId: number;
-    tipo: "entrada" | "saida" | "ajuste" | "venda" | "inventario" | "estorno";
-    quantidade: number;
-    usuarioId: number;
-    referenciaId?: number | null;
-    motivo?: string | null;
-  }
-): number {
-  const updateEstoque = database.prepare(
-    "UPDATE produtos SET estoque = ?, updated_at = datetime('now', 'localtime') WHERE id = ?"
-  );
-  const insertMov = database.prepare(
-    `INSERT INTO movimentacoes (produto_id, tipo, quantidade, estoque_anterior, estoque_novo, usuario_id, referencia_id, motivo)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-  );
-  const getProduto = database.prepare("SELECT estoque FROM produtos WHERE id = ?");
-
-  const result = database.transaction(() => {
-    const produto = getProduto.get(params.produtoId) as { estoque: number } | undefined;
-    if (!produto) throw new Error("Produto não encontrado");
-
-    const estoqueAnterior = produto.estoque;
-    const estoqueNovo = params.tipo === "entrada"
-      ? estoqueAnterior + params.quantidade
-      : estoqueAnterior - params.quantidade;
+    const estoqueAnterior = produto[0].estoque;
+    const estoqueNovo =
+      params.tipo === "entrada"
+        ? estoqueAnterior + params.quantidade
+        : estoqueAnterior - params.quantidade;
 
     if (estoqueNovo < 0) throw new Error("Estoque insuficiente");
 
-    updateEstoque.run(estoqueNovo, params.produtoId);
-    insertMov.run(
-      params.produtoId,
-      params.tipo,
-      params.quantidade,
-      estoqueAnterior,
-      estoqueNovo,
-      params.usuarioId,
-      params.referenciaId ?? null,
-      params.motivo ?? null
-    );
+    await tx`UPDATE produtos SET estoque = ${estoqueNovo}, updated_at = NOW() WHERE id = ${params.produtoId}`;
+
+    await tx`
+      INSERT INTO movimentacoes (produto_id, tipo, quantidade, estoque_anterior, estoque_novo, usuario_id, referencia_id, motivo)
+      VALUES (${params.produtoId}, ${params.tipo}, ${params.quantidade}, ${estoqueAnterior}, ${estoqueNovo}, ${params.usuarioId}, ${params.referenciaId ?? null}, ${params.motivo ?? null})
+    `;
 
     return estoqueNovo;
-  })();
-
-  return result;
+  });
 }
 
-export function proximoNumeroVenda(database: Database.Database): number {
-  const last = database
-    .prepare("SELECT MAX(numero) as max_num FROM vendas")
-    .get() as { max_num: number | null };
-  return (last.max_num ?? 0) + 1;
+export async function proximoNumeroVenda(): Promise<number> {
+  const result = await sqlGet`
+    SELECT MAX(numero) as max_num FROM vendas
+  ` as { max_num: number | null } | undefined;
+  return (result?.max_num ?? 0) + 1;
 }
