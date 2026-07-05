@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 
 let _client: ReturnType<typeof postgres> | null = null;
 let _initialized = false;
+let _initPromise: Promise<void> | null = null;
 
 export function getClient() {
   if (!_client) {
@@ -10,16 +11,21 @@ export function getClient() {
     if (!DATABASE_URL) {
       throw new Error("DATABASE_URL não definida. Configure a variável de ambiente.");
     }
-    _client = postgres(DATABASE_URL, { connect_timeout: 10 });
+    _client = postgres(DATABASE_URL, {
+      max: 1,
+      idle_timeout: 0,
+      connect_timeout: 10,
+      prepare: false,
+    });
   }
   return _client;
 }
 
-async function ensureInitialized() {
-  if (!_initialized) {
-    await initSchema();
-    _initialized = true;
-  }
+function ensureInitialized(): Promise<void> {
+  if (_initialized) return Promise.resolve();
+  if (_initPromise) return _initPromise;
+  _initPromise = initSchema().then(() => { _initialized = true; });
+  return _initPromise;
 }
 
 function buildQuery(queryOrTemplate: TemplateStringsArray | string, values: unknown[]): [string, unknown[]] {
