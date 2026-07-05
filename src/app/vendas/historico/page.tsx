@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/AppShell";
 import { VendasHistoricoView } from "@/components/VendasHistoricoView";
+import { getSessionUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Histórico | Brinquedoteca",
 };
 
-export default function HistoricoPage() {
+export default async function HistoricoPage() {
+  const user = await getSessionUser();
+  const isAdmin = user?.role === "admin";
+
   return (
-    <AppShell>
-      <VendasHistoricoView />
+    <AppShell allowedRoles={["admin", "vendedor"]}>
+      <VendasHistoricoView isAdmin={isAdmin} />
     </AppShell>
   );
 }

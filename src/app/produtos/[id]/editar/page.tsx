@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { ProductForm } from "@/components/ProductForm";
-import { requireAdmin } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import type { Produto } from "@/lib/types";
 
@@ -13,12 +12,6 @@ export const metadata: Metadata = {
 type Props = { params: Promise<{ id: string }> };
 
 export default async function EditarProdutoPage({ params }: Props) {
-  try {
-    await requireAdmin();
-  } catch {
-    redirect("/produtos");
-  }
-
   const { id } = await params;
   const db = getDb();
   const produto = db.prepare("SELECT * FROM produtos WHERE id = ?").get(id) as Produto | undefined;
@@ -26,7 +19,7 @@ export default async function EditarProdutoPage({ params }: Props) {
   if (!produto) notFound();
 
   return (
-    <AppShell>
+    <AppShell allowedRoles={["admin"]}>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-violet-900">Editar brinquedo</h1>

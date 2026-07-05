@@ -1,0 +1,124 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/auth";
+import { getDb } from "@/lib/db";
+import { handleApiError } from "@/lib/api";
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await requireAdmin();
+    const { id: idStr } = await params;
+    const id = parseInt(idStr, 10);
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const db = getDb();
+    const bcrypt = await import("bcryptjs");
+
+    const existing = db
+      .prepare("SELECT id FROM users WHERE id = ?")
+      .get(id) as { id: number } | undefined;
+    if (!existing) {
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    }
+
+    const updates: string[] = [];
+    const values: (string | number)[] = [];
+
+    if (body.nome !== undefined) {
+      if (!body.nome?.trim()) {
+        return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
+      }
+      updates.push("nome = ?");
+      values.push(body.nome.trim());
+    }
+
+    if (body.email !== undefined) {
+      if (!body.email?.trim()) {
+        return NextResponse.json({ error: "Email é obrigatório" }, { status: 400 });
+      }
+      updates.push("email = ?");
+      values.push(body.email.trim().toLowerCase());
+    }
+
+    if (body.senha) {
+      if (body.senha.length < 6) {
+        return NextResponse.json({ error: "Senha deve ter no mínimo 6 caracteres" }, { status: 400 });
+      }
+      const hash = bcrypt.hashSync(body.senha, 10);
+      updates.push("senha_hash = ?");
+      values.push(hash);
+      if (body.forcePrimeiroLogin !== false) {
+        updates.push("primeiro_login = 0");
+      }
+    }
+
+    if (body.role !== undefined) {
+      if (body.role !== "admin" && body.role !== "vendedor") {
+        return NextResponse.json({ error: "Perfil inválido" }, { status: 400 });
+      }
+      updates.push("role = ?");
+      values.push(body.role);
+    }
+
+    if (body.ativo !== undefined) {
+      updates.push("ativo = ?");
+      values.push(body.ativo ? 1 : 0);
+    }
+
+    if (updates.length === 0) {
+      return NextResponse.json({ error: "Nada para atualizar" }, { status: 400 });
+    }
+
+    values.push(id);
+    db.prepare(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`).run(...values);
+
+    const usuario = db
+      .prepare("SELECT id, nome, email, role, ativo, primeiro_login, created_at FROM users WHERE id = ?")
+      .get(id);
+
+    return NextResponse.json({ usuario });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erro";
+    if (message.includes("UNIQUE")) {
+      return NextResponse.json({ error: "Email já cadastrado" }, { status: 409 });
+    }
+    return handleApiError(error);
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const admin = await requireAdmin();
+    const { id: idStr } = await params;
+    const id = parseInt(idStr, 10);
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+    }
+
+    if (id === admin.id) {
+      return NextResponse.json({ error: "Não é possível desativar a si mesmo" }, { status: 400 });
+    }
+
+    const db = getDb();
+    const existing = db
+      .prepare("SELECT id, role FROM users WHERE id = ? AND ativo = 1")
+      .get(id) as { id: number; role: string } | undefined;
+    if (!existing) {
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    }
+
+    db.prepare("UPDATE users SET ativo = 0 WHERE id = ?").run(id);
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

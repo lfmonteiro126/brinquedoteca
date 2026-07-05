@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function VendasPage() {
   return (
-    <AppShell>
+    <AppShell allowedRoles={["admin", "vendedor"]}>
       <POSView />
     </AppShell>
   );

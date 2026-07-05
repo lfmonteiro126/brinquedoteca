@@ -6,6 +6,7 @@ export interface User {
   email: string;
   role: UserRole;
   ativo: number;
+  primeiro_login: number;
   created_at: string;
 }
 
@@ -50,7 +51,7 @@ export interface Movimentacao {
   id: number;
   produto_id: number;
   produto_nome?: string;
-  tipo: "entrada" | "saida" | "ajuste" | "venda" | "inventario";
+  tipo: "entrada" | "saida" | "ajuste" | "venda" | "inventario" | "estorno";
   quantidade: number;
   estoque_anterior: number;
   estoque_novo: number;
@@ -64,8 +65,11 @@ export interface Movimentacao {
 export interface DashboardData {
   vendasHoje: { total: number; quantidade: number };
   vendasPeriodo: { total: number; quantidade: number };
+  periodoAnterior: { total: number; quantidade: number };
   produtosEstoque: number;
   produtosEstoqueBaixo: Produto[];
   vendasRecentes: Venda[];
   topProdutos: { produto_nome: string; total_vendido: number }[];
+  vendasPorHora: { hora: number; total: number; quantidade: number }[];
+  kpis: { ticketMedio: number; itensPorVenda: number; taxaDevolucao: number };
 }

@@ -17,6 +17,7 @@ function initSchema(database: Database.Database) {
       senha_hash TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'vendedor' CHECK(role IN ('admin', 'vendedor')),
       ativo INTEGER NOT NULL DEFAULT 1,
+      primeiro_login INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
     );
 
@@ -60,7 +61,7 @@ function initSchema(database: Database.Database) {
     CREATE TABLE IF NOT EXISTS movimentacoes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       produto_id INTEGER NOT NULL,
-      tipo TEXT NOT NULL CHECK(tipo IN ('entrada', 'saida', 'ajuste', 'venda', 'inventario')),
+      tipo TEXT NOT NULL CHECK(tipo IN ('entrada', 'saida', 'ajuste', 'venda', 'inventario', 'estorno')),
       quantidade INTEGER NOT NULL,
       estoque_anterior INTEGER NOT NULL,
       estoque_novo INTEGER NOT NULL,
@@ -98,6 +99,14 @@ function initSchema(database: Database.Database) {
     CREATE INDEX IF NOT EXISTS idx_vendas_data ON vendas(created_at);
   `);
 
+  const hasPrimeiroLogin = database
+    .prepare("PRAGMA table_info(users)")
+    .all() as Array<{ name: string }>;
+  if (!hasPrimeiroLogin.some((c) => c.name === "primeiro_login")) {
+    database.exec("ALTER TABLE users ADD COLUMN primeiro_login INTEGER NOT NULL DEFAULT 1");
+    database.exec("UPDATE users SET primeiro_login = 0");
+  }
+
   const adminExists = database
     .prepare("SELECT id FROM users WHERE email = ?")
     .get("admin@loja");
@@ -129,42 +138,35 @@ export function registrarMovimentacao(
   database: Database.Database,
   params: {
     produtoId: number;
-    tipo: "entrada" | "saida" | "ajuste" | "venda" | "inventario";
+    tipo: "entrada" | "saida" | "ajuste" | "venda" | "inventario" | "estorno";
     quantidade: number;
     usuarioId: number;
     referenciaId?: number | null;
     motivo?: string | null;
   }
-) {
-  const produto = database
-    .prepare("SELECT estoque FROM produtos WHERE id = ?")
-    .get(params.produtoId) as { estoque: number } | undefined;
+): number {
+  const updateEstoque = database.prepare(
+    "UPDATE produtos SET estoque = ?, updated_at = datetime('now', 'localtime') WHERE id = ?"
+  );
+  const insertMov = database.prepare(
+    `INSERT INTO movimentacoes (produto_id, tipo, quantidade, estoque_anterior, estoque_novo, usuario_id, referencia_id, motivo)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  );
+  const getProduto = database.prepare("SELECT estoque FROM produtos WHERE id = ?");
 
-  if (!produto) throw new Error("Produto não encontrado");
+  const result = database.transaction(() => {
+    const produto = getProduto.get(params.produtoId) as { estoque: number } | undefined;
+    if (!produto) throw new Error("Produto não encontrado");
 
-  const estoqueAnterior = produto.estoque;
-  let estoqueNovo: number;
+    const estoqueAnterior = produto.estoque;
+    const estoqueNovo = params.tipo === "entrada"
+      ? estoqueAnterior + params.quantidade
+      : estoqueAnterior - params.quantidade;
 
-  if (params.tipo === "entrada") {
-    estoqueNovo = estoqueAnterior + params.quantidade;
-  } else {
-    estoqueNovo = estoqueAnterior - params.quantidade;
-  }
+    if (estoqueNovo < 0) throw new Error("Estoque insuficiente");
 
-  if (estoqueNovo < 0) {
-    throw new Error("Estoque insuficiente");
-  }
-
-  database
-    .prepare("UPDATE produtos SET estoque = ?, updated_at = datetime('now', 'localtime') WHERE id = ?")
-    .run(estoqueNovo, params.produtoId);
-
-  database
-    .prepare(
-      `INSERT INTO movimentacoes (produto_id, tipo, quantidade, estoque_anterior, estoque_novo, usuario_id, referencia_id, motivo)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .run(
+    updateEstoque.run(estoqueNovo, params.produtoId);
+    insertMov.run(
       params.produtoId,
       params.tipo,
       params.quantidade,
@@ -175,7 +177,10 @@ export function registrarMovimentacao(
       params.motivo ?? null
     );
 
-  return estoqueNovo;
+    return estoqueNovo;
+  })();
+
+  return result;
 }
 
 export function proximoNumeroVenda(database: Database.Database): number {

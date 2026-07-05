@@ -1,9 +1,49 @@
 import { cookies } from "next/headers";
+import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { getDb } from "./db";
 import type { User, UserRole } from "./types";
 
+export class AuthError extends Error {
+  constructor(message: string, public status: number = 401) {
+    super(message);
+    this.name = "AuthError";
+  }
+}
+
 const SESSION_COOKIE = "brinquedoteca_session";
+const SESSION_MAX_AGE = 60 * 60 * 12;
+
+function getJwtSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      "JWT_SECRET não definido. Configure a variável de ambiente JWT_SECRET."
+    );
+  }
+  return new TextEncoder().encode(secret);
+}
+
+interface SessionPayload {
+  userId: number;
+}
+
+async function signToken(payload: SessionPayload): Promise<string> {
+  return new SignJWT({ userId: payload.userId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(`${SESSION_MAX_AGE}s`)
+    .sign(getJwtSecret());
+}
+
+async function verifyToken(token: string): Promise<SessionPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, getJwtSecret());
+    return { userId: payload.userId as number };
+  } catch {
+    return null;
+  }
+}
 
 export async function login(email: string, senha: string): Promise<User | null> {
   const db = getDb();
@@ -17,18 +57,20 @@ export async function login(email: string, senha: string): Promise<User | null> 
     return null;
   }
 
-  const { senha_hash: _, ...user } = row;
-  return user;
+  const user = { ...row };
+  delete (user as Record<string, unknown>).senha_hash;
+  return user as User;
 }
 
 export async function setSession(userId: number) {
+  const token = await signToken({ userId });
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, String(userId), {
+  cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 12,
+    maxAge: SESSION_MAX_AGE,
   });
 }
 
@@ -42,28 +84,28 @@ export async function getSessionUser(): Promise<User | null> {
   const session = cookieStore.get(SESSION_COOKIE);
   if (!session?.value) return null;
 
-  const userId = parseInt(session.value, 10);
-  if (isNaN(userId)) return null;
+  const payload = await verifyToken(session.value);
+  if (!payload) return null;
 
   const db = getDb();
   const user = db
     .prepare(
-      "SELECT id, nome, email, role, ativo, created_at FROM users WHERE id = ? AND ativo = 1"
+      "SELECT id, nome, email, role, ativo, primeiro_login, created_at FROM users WHERE id = ? AND ativo = 1"
     )
-    .get(userId) as User | undefined;
+    .get(payload.userId) as User | undefined;
 
   return user ?? null;
 }
 
 export async function requireAuth(): Promise<User> {
   const user = await getSessionUser();
-  if (!user) throw new Error("Não autenticado");
+  if (!user) throw new AuthError("Não autenticado", 401);
   return user;
 }
 
 export async function requireAdmin(): Promise<User> {
   const user = await requireAuth();
-  if (user.role !== "admin") throw new Error("Acesso negado");
+  if (user.role !== "admin") throw new AuthError("Acesso negado", 403);
   return user;
 }
 

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Brinquedoteca — Gestão de Loja",
+  title: "Ateliê Angels Kids — Loja Praia Grande",
   description: "Sistema de estoque e vendas para loja de brinquedos",
 };
 

@@ -2,6 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { RefreshCw } from "lucide-react";
+
+function generateBarcode(): string {
+  const prefix = "AAK";
+  const timestamp = Date.now().toString(36).toUpperCase().slice(-6);
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, "0");
+  return `${prefix}${timestamp}${random}`;
+}
 
 interface ProductFormProps {
   initial?: {
@@ -34,6 +42,10 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
 
   function update(field: string, value: string | number) {
     setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  function handleGenerateBarcode() {
+    update("codigo_barras", generateBarcode());
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -84,12 +96,24 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium">Código de barras</label>
-        <input
-          value={form.codigo_barras}
-          onChange={(e) => update("codigo_barras", e.target.value)}
-          className="w-full rounded-xl border px-4 py-2.5 font-mono outline-none focus:border-violet-400"
-          placeholder="Escaneie ou digite o EAN"
-        />
+        <div className="flex gap-2">
+          <input
+            value={form.codigo_barras}
+            onChange={(e) => update("codigo_barras", e.target.value)}
+            className="w-full rounded-xl border px-4 py-2.5 font-mono outline-none focus:border-violet-400"
+            placeholder="Escaneie, digite ou gere um código"
+          />
+          <button
+            type="button"
+            onClick={handleGenerateBarcode}
+            className="shrink-0 flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2.5 text-sm font-medium text-violet-700 hover:bg-violet-100"
+            title="Gerar código automaticamente"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Gerar
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-slate-400">Código único para impressão de etiquetas e busca</p>
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium">Categoria</label>

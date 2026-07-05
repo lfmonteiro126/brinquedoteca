@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, requireAdmin } from "@/lib/auth";
 import { getDb, registrarMovimentacao } from "@/lib/db";
+import { handleApiError } from "@/lib/api";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,27 +10,39 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get("q")?.trim();
     const estoqueBaixo = searchParams.get("estoque_baixo") === "1";
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "20", 10)));
 
-    let query = "SELECT * FROM produtos WHERE ativo = 1";
+    let whereClause = "WHERE ativo = 1";
     const params: (string | number)[] = [];
 
     if (q) {
-      query += " AND (nome LIKE ? OR codigo_barras LIKE ? OR categoria LIKE ?)";
+      whereClause += " AND (nome LIKE ? OR codigo_barras LIKE ? OR categoria LIKE ?)";
       const term = `%${q}%`;
       params.push(term, term, term);
     }
 
     if (estoqueBaixo) {
-      query += " AND estoque <= estoque_minimo";
+      whereClause += " AND estoque <= estoque_minimo";
     }
 
-    query += " ORDER BY nome ASC";
+    const countResult = db
+      .prepare(`SELECT COUNT(*) as total FROM produtos ${whereClause}`)
+      .get(...params) as { total: number };
 
-    const produtos = db.prepare(query).all(...params);
-    return NextResponse.json({ produtos });
+    const offset = (page - 1) * pageSize;
+    const produtos = db
+      .prepare(`SELECT * FROM produtos ${whereClause} ORDER BY nome ASC LIMIT ? OFFSET ?`)
+      .all(...params, pageSize, offset);
+
+    return NextResponse.json({
+      produtos,
+      total: countResult.total,
+      page,
+      pageSize,
+    });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro";
-    return NextResponse.json({ error: message }, { status: message === "Não autenticado" ? 401 : 500 });
+    return handleApiError(error);
   }
 }
 
@@ -88,9 +101,6 @@ export async function POST(request: NextRequest) {
     if (message.includes("UNIQUE")) {
       return NextResponse.json({ error: "Código de barras já cadastrado" }, { status: 409 });
     }
-    return NextResponse.json(
-      { error: message },
-      { status: message === "Não autenticado" || message === "Acesso negado" ? 403 : 500 }
-    );
+    return handleApiError(error);
   }
 }
