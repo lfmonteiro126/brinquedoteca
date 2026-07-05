@@ -17,8 +17,8 @@ export function getClient() {
 
 async function ensureInitialized() {
   if (!_initialized) {
-    _initialized = true;
     await initSchema();
+    _initialized = true;
   }
 }
 
