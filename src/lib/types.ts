@@ -13,6 +13,7 @@ export interface User {
 export interface Produto {
   id: number;
   nome: string;
+  descricao: string | null;
   codigo_barras: string | null;
   categoria: string | null;
   preco_custo: number;

@@ -91,6 +91,7 @@ export async function initSchema() {
     CREATE TABLE IF NOT EXISTS produtos (
       id SERIAL PRIMARY KEY,
       nome TEXT NOT NULL,
+      descricao TEXT,
       codigo_barras TEXT UNIQUE,
       categoria TEXT,
       preco_custo NUMERIC(10,2) NOT NULL DEFAULT 0,

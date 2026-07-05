@@ -15,6 +15,7 @@ interface ProductFormProps {
   initial?: {
     id?: number;
     nome: string;
+    descricao?: string;
     codigo_barras: string;
     categoria: string;
     preco_custo: number;
@@ -29,6 +30,7 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
   const router = useRouter();
   const [form, setForm] = useState({
     nome: initial?.nome || "",
+    descricao: initial?.descricao || "",
     codigo_barras: initial?.codigo_barras || "",
     categoria: initial?.categoria || "",
     preco_custo: initial?.preco_custo ?? 0,
@@ -92,6 +94,16 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
           value={form.nome}
           onChange={(e) => update("nome", e.target.value)}
           className="w-full rounded-xl border px-4 py-2.5 outline-none focus:border-violet-400"
+        />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium">Descrição</label>
+        <textarea
+          value={form.descricao}
+          onChange={(e) => update("descricao", e.target.value)}
+          className="w-full rounded-xl border px-4 py-2.5 outline-none focus:border-violet-400"
+          placeholder="Detalhes do brinquedo para catálogo"
+          rows={3}
         />
       </div>
       <div>

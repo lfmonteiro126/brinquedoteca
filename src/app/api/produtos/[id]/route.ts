@@ -37,6 +37,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     await sqlRun`
       UPDATE produtos SET
         nome = ${body.nome?.trim()},
+        descricao = ${body.descricao?.trim() || null},
         codigo_barras = ${body.codigo_barras?.trim() || null},
         categoria = ${body.categoria?.trim() || null},
         preco_custo = ${body.preco_custo ?? 0},
