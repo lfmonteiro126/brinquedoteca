@@ -7,12 +7,35 @@ Sistema de estoque e vendas presenciais para loja de brinquedos.
 ```bash
 cd ~/Projects/brinquedoteca
 npm install
+```
+
+Crie o arquivo `.env.local` na raiz do projeto:
+
+```
+DATABASE_URL=postgresql://usuario:senha@host/database?sslmode=require
+JWT_SECRET=uma_senha_forte_com_pelo_menos_32_caracteres
+```
+
+```bash
 npm run dev
 ```
 
 Acesse [http://localhost:3000](http://localhost:3000)
 
 **Login inicial:** `admin@loja` / `admin123` (troque a senha depois)
+
+As tabelas e o usuario admin sao criados automaticamente na primeira execucao.
+
+## Deploy (Vercel + Neon)
+
+1. Crie um repositorio no GitHub e faca push do codigo
+2. Crie uma conta gratuita no [Neon](https://neon.tech) e crie um projeto (PostgreSQL 17)
+3. Copie a `DATABASE_URL` de conexao do Neon
+4. No [Vercel](https://vercel.com), importe o repositorio do GitHub
+5. Adicione as environment variables:
+   - `DATABASE_URL` — string de conexao do Neon
+   - `JWT_SECRET` — frase aleatoria para assinatura JWT
+6. Faca deploy — as tabelas sao criadas automaticamente na primeira request
 
 ## Tecnologias
 
@@ -23,11 +46,12 @@ Acesse [http://localhost:3000](http://localhost:3000)
 | UI | React 19, Tailwind CSS 4 |
 | Graficos | Recharts |
 | Icones | Lucide React |
-| Banco de dados | SQLite (better-sqlite3) |
+| Banco de dados | PostgreSQL (Neon) + Drizzle ORM + postgres.js |
 | Autenticacao | JWT (jose) + bcryptjs |
 | PDF | jsPDF + jspdf-autotable |
 | Codigo de barras | JsBarcode (geracao de etiquetas) |
 | Fontes | Geist Sans / Geist Mono |
+| Hospedagem | Vercel (frontend + API) + Neon (banco de dados) |
 
 ## Estrutura do projeto
 
@@ -75,13 +99,16 @@ src/
 │   └── usePreferences.ts         # Preferencias do usuario
 ├── lib/                          # Utilitarios e logica
 │   ├── auth.ts                   # Autenticacao (JWT, sessao)
-│   ├── db.ts                     # Conexao SQLite + schema
+│   ├── db.ts                     # Conexao PostgreSQL (postgres.js) + helpers
+│   ├── schema.ts                 # Schema Drizzle ORM (tabelas do banco)
+│   ├── api.ts                    # Helpers de error handling para API
 │   ├── format.ts                 # Formatacao (moeda, data)
 │   └── types.ts                  # Tipagens TypeScript
+├── drizzle.config.ts              # Config do Drizzle Kit (migrations)
 └── middleware.ts                  # Middleware de autenticacao
 ```
 
-### Banco de dados (SQLite)
+### Banco de dados (PostgreSQL)
 
 Tabelas principais:
 - `users` — usuarios do sistema (admin/vendedor)
@@ -91,6 +118,8 @@ Tabelas principais:
 - `movimentacoes` — log de todas as movimentacoes de estoque
 - `sessoes_inventario` — sessoes de inventario
 - `inventario_itens` — itens contados em cada sessao
+
+O schema e criado automaticamente via `initSchema()` na primeira execucao. Para migrations manuais, edite `src/app/api/...` ou use o SQL Editor do Neon.
 
 ## Funcionalidades
 
@@ -192,4 +221,4 @@ Leitores USB comuns funcionam como teclado — basta focar o campo de scan no PD
 
 ## Dados
 
-O banco SQLite fica em `data/brinquedoteca.db` — faca backup regularmente.
+Os dados ficam no PostgreSQL gerenciado pelo Neon. Faca backup regularmente via dashboard do Neon (Export Data ou SQL Editor).
