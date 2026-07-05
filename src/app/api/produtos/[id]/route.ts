@@ -8,7 +8,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
   try {
     await requireAuth();
     const { id } = await params;
-    const produto = await sqlGet("SELECT * FROM produtos WHERE id = $", parseInt(id));
+    const produto = await sqlGet("SELECT * FROM produtos WHERE id = $1", parseInt(id));
     if (!produto) {
       return NextResponse.json({ error: "Produto não encontrado" }, { status: 404 });
     }
@@ -26,7 +26,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     const body = await request.json();
 
     const atual = await sqlGet(
-      "SELECT estoque FROM produtos WHERE id = $",
+      "SELECT estoque FROM produtos WHERE id = $1",
       parseInt(id)
     ) as { estoque: number } | undefined;
 
@@ -58,7 +58,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
       });
     }
 
-    const produto = await sqlGet("SELECT * FROM produtos WHERE id = $", parseInt(id));
+    const produto = await sqlGet("SELECT * FROM produtos WHERE id = $1", parseInt(id));
     return NextResponse.json({ produto });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erro";

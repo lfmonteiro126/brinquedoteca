@@ -9,7 +9,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
     await requireAuth();
     const { code } = await params;
     const produto = await sqlGet(
-      "SELECT * FROM produtos WHERE codigo_barras = $ AND ativo = true",
+      "SELECT * FROM produtos WHERE codigo_barras = $1 AND ativo = true",
       decodeURIComponent(code)
     );
 

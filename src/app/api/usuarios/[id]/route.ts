@@ -19,7 +19,7 @@ export async function PUT(
     const bcrypt = await import("bcryptjs");
 
     const existing = await sqlGet(
-      "SELECT id FROM users WHERE id = $",
+      "SELECT id FROM users WHERE id = $1",
       id
     ) as { id: number } | undefined;
     if (!existing) {
@@ -113,7 +113,7 @@ export async function DELETE(
     }
 
     const existing = await sqlGet(
-      "SELECT id, role FROM users WHERE id = $ AND ativo = true",
+      "SELECT id, role FROM users WHERE id = $1 AND ativo = true",
       id
     ) as { id: number; role: string } | undefined;
     if (!existing) {

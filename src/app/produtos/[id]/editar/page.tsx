@@ -13,7 +13,7 @@ type Props = { params: Promise<{ id: string }> };
 export default async function EditarProdutoPage({ params }: Props) {
   const { id } = await params;
   const produto = await sqlGet(
-    "SELECT * FROM produtos WHERE id = $",
+    "SELECT * FROM produtos WHERE id = $1",
     parseInt(id)
   ) as Produto | undefined;
 

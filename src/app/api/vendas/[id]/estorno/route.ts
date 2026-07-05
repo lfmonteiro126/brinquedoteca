@@ -16,7 +16,7 @@ export async function POST(
     }
 
     const venda = await sqlGet(
-      "SELECT * FROM vendas WHERE id = $",
+      "SELECT * FROM vendas WHERE id = $1",
       vendaId
     ) as {
       id: number;
@@ -30,7 +30,7 @@ export async function POST(
     }
 
     const jaEstornada = await sqlGet(
-      "SELECT id FROM movimentacoes WHERE tipo = 'estorno' AND referencia_id = $",
+      "SELECT id FROM movimentacoes WHERE tipo = 'estorno' AND referencia_id = $1",
       vendaId
     ) as { id: number } | undefined;
 

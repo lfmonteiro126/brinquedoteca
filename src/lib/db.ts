@@ -22,17 +22,27 @@ async function ensureInitialized() {
   }
 }
 
+function buildQuery(queryOrTemplate: TemplateStringsArray | string, values: unknown[]): [string, unknown[]] {
+  if (typeof queryOrTemplate === "string") {
+    return [queryOrTemplate, values];
+  }
+  let query = "";
+  for (let i = 0; i < queryOrTemplate.length; i++) {
+    query += queryOrTemplate[i];
+    if (i < values.length) {
+      query += `$${i + 1}`;
+    }
+  }
+  return [query, values];
+}
+
 export async function sqlGet<T = Record<string, unknown>>(
   queryOrTemplate: TemplateStringsArray | string,
   ...values: unknown[]
 ): Promise<T | undefined> {
   await ensureInitialized();
-  let result: postgres.Row[];
-  if (typeof queryOrTemplate === "string") {
-    result = await getClient().unsafe(queryOrTemplate, values as postgres.Row[]);
-  } else {
-    result = await getClient().unsafe(queryOrTemplate.join("$"), values as postgres.Row[]);
-  }
+  const [query, params] = buildQuery(queryOrTemplate, values);
+  const result = await getClient().unsafe(query, params as postgres.Row[]);
   return result[0] as T | undefined;
 }
 
@@ -41,13 +51,9 @@ export async function sqlAll<T = Record<string, unknown>>(
   ...values: unknown[]
 ): Promise<T[]> {
   await ensureInitialized();
-  let result: postgres.Row[];
-  if (typeof queryOrTemplate === "string") {
-    result = await getClient().unsafe(queryOrTemplate, values as postgres.Row[]);
-  } else {
-    result = await getClient().unsafe(queryOrTemplate.join("$"), values as postgres.Row[]);
-  }
-  return result as T[];
+  const [query, params] = buildQuery(queryOrTemplate, values);
+  const result = await getClient().unsafe(query, params as postgres.Row[]);
+  return result as unknown as T[];
 }
 
 export async function sqlRun(
@@ -55,12 +61,8 @@ export async function sqlRun(
   ...values: unknown[]
 ): Promise<{ rowCount: number; insertId?: number }> {
   await ensureInitialized();
-  let result: postgres.Row[];
-  if (typeof queryOrTemplate === "string") {
-    result = await getClient().unsafe(queryOrTemplate, values as postgres.Row[]);
-  } else {
-    result = await getClient().unsafe(queryOrTemplate.join("$"), values as postgres.Row[]);
-  }
+  const [query, params] = buildQuery(queryOrTemplate, values);
+  const result = await getClient().unsafe(query, params as postgres.Row[]);
   return {
     rowCount: result.length,
     insertId: result[0]?.id as number | undefined,
