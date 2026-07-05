@@ -10,7 +10,7 @@ export function getClient() {
     if (!DATABASE_URL) {
       throw new Error("DATABASE_URL não definida. Configure a variável de ambiente.");
     }
-    _client = postgres(DATABASE_URL);
+    _client = postgres(DATABASE_URL, { connect_timeout: 10 });
   }
   return _client;
 }
@@ -75,7 +75,8 @@ export async function sqlExec(query: string): Promise<void> {
 }
 
 export async function initSchema() {
-  await getClient().unsafe(`
+  const sql = getClient();
+  await sql.unsafe(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       nome TEXT NOT NULL,
@@ -157,16 +158,17 @@ export async function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_vendas_data ON vendas(created_at);
   `);
 
-  const adminExists = await sqlGet`
-    SELECT id FROM users WHERE email = ${"admin@loja"}
-  ` as { id: number } | undefined;
+  const adminResult = await sql.unsafe(
+    `SELECT id FROM users WHERE email = $1`,
+    ["admin@loja"]
+  );
 
-  if (!adminExists) {
+  if (adminResult.length === 0) {
     const hash = bcrypt.hashSync("admin123", 10);
-    await sqlRun`
-      INSERT INTO users (nome, email, senha_hash, role)
-      VALUES (${"Administrador"}, ${"admin@loja"}, ${hash}, ${"admin"})
-    `;
+    await sql.unsafe(
+      `INSERT INTO users (nome, email, senha_hash, role) VALUES ($1, $2, $3, $4)`,
+      ["Administrador", "admin@loja", hash, "admin"]
+    );
   }
 }
 
