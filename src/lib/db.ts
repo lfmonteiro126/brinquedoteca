@@ -105,6 +105,11 @@ export async function initSchema() {
     );
 
     DO $$ BEGIN
+      ALTER TABLE produtos ADD COLUMN descricao TEXT;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+
+    DO $$ BEGIN
       ALTER TABLE produtos ADD COLUMN imagem_url TEXT;
     EXCEPTION WHEN duplicate_column THEN NULL;
     END $$;
