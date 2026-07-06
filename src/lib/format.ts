@@ -14,3 +14,25 @@ export function formatDate(dateStr: string): string {
     minute: "2-digit",
   }).format(new Date(dateStr));
 }
+
+export function normalizeImageUrl(url: string): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+
+  const imgurShortMatch = trimmed.match(/^https?:\/\/imgur\.com\/([a-zA-Z0-9]+)$/);
+  if (imgurShortMatch) {
+    return `https://i.imgur.com/${imgurShortMatch[1]}.jpg`;
+  }
+
+  const imgurDirectMatch = trimmed.match(/^https?:\/\/i\.imgur\.com\/.+/);
+  if (imgurDirectMatch) {
+    return trimmed;
+  }
+
+  const imgurAlbumMatch = trimmed.match(/^https?:\/\/imgur\.com\/a\//);
+  if (imgurAlbumMatch) {
+    return "";
+  }
+
+  return trimmed;
+}

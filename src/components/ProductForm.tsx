@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
+import { normalizeImageUrl } from "@/lib/format";
 
 function generateBarcode(): string {
   const prefix = "AAK";
@@ -63,11 +64,12 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
     const body = isEdit
       ? {
           ...form,
+          imagem_url: normalizeImageUrl(form.imagem_url),
           ajuste_estoque: form.estoque !== initial?.estoque,
           ajuste_quantidade: Math.abs(form.estoque - (initial?.estoque ?? 0)),
           ajuste_tipo: form.estoque >= (initial?.estoque ?? 0) ? "entrada" : "saida",
         }
-      : form;
+      : { ...form, imagem_url: normalizeImageUrl(form.imagem_url) };
 
     const res = await fetch(url, {
       method,
@@ -118,14 +120,20 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
         />
         {form.imagem_url && (
           <div className="mt-2">
-            <img
-              src={form.imagem_url}
-              alt="Preview"
-              className="h-24 w-24 rounded-xl object-cover border border-slate-200"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
+            {normalizeImageUrl(form.imagem_url) ? (
+              <img
+                src={normalizeImageUrl(form.imagem_url)}
+                alt="Preview"
+                className="h-24 w-24 rounded-xl object-cover border border-slate-200"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            ) : (
+              <p className="text-xs text-amber-600">
+                Link de álbum do Imgur não pode ser exibido diretamente. Use o link direto da imagem (i.imgur.com/xxx.jpg).
+              </p>
+            )}
           </div>
         )}
       </div>

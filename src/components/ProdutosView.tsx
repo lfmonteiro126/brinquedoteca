@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ChevronDown, Pencil, Plus, Search, Trash2, Package } from "lucide-react";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, normalizeImageUrl } from "@/lib/format";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { Produto } from "@/lib/types";
@@ -181,81 +181,100 @@ export function ProdutosView({ isAdmin }: { isAdmin: boolean }) {
               return (
                 <div
                   key={p.id}
-                  className="group relative flex flex-col rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:bg-[var(--card-bg)] dark:border-[var(--card-border)]"
+                  className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:bg-[var(--card-bg)] dark:border-[var(--card-border)]"
                 >
-                  <div className="relative">
-                    {baixo ? (
-                      <span className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-lg bg-red-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
-                        <AlertTriangle className="h-3 w-3" />
-                        REPOR! QTD: {p.estoque}
-                      </span>
-                    ) : (
-                      <span className="absolute left-3 top-3 z-10 rounded-lg bg-emerald-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
-                        ESTOQUE OK
-                      </span>
-                    )}
-                    {p.imagem_url ? (
-                      <img
-                        src={p.imagem_url}
-                        alt={p.nome}
-                        className="h-44 w-full rounded-t-2xl object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "";
-                          (e.target as HTMLImageElement).className = "h-44 w-full rounded-t-2xl bg-gradient-to-br from-violet-100 to-violet-50 dark:from-violet-900/20 dark:to-violet-800/10 flex items-center justify-center";
-                          (e.target as HTMLImageElement).alt = "Sem imagem";
-                        }}
-                      />
-                    ) : (
-                      <div className="flex h-44 w-full items-center justify-center rounded-t-2xl bg-gradient-to-br from-violet-100 to-violet-50 dark:from-violet-900/20 dark:to-violet-800/10">
-                        <Package className="h-12 w-12 text-violet-300 dark:text-violet-600" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-1 flex-col p-4">
-                    <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-violet-500 dark:text-violet-400">
-                      {p.categoria || "Sem categoria"}
-                    </p>
-                    <h3 className="mb-2 text-base font-bold leading-tight text-slate-800 dark:text-slate-200 line-clamp-2">
-                      {p.nome}
-                    </h3>
-                    <div className="mb-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                      <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono dark:bg-slate-700">
-                        SKU: {p.codigo_barras || "—"}
-                      </span>
-                      <span>Mínimo: {p.estoque_minimo} un.</span>
+                  <Link
+                    href={`/produtos/${p.id}/editar`}
+                    className="flex flex-1 flex-col"
+                  >
+                    <div className="relative">
+                      {baixo ? (
+                        <span className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-lg bg-red-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                          <AlertTriangle className="h-3 w-3" />
+                          REPOR! QTD: {p.estoque}
+                        </span>
+                      ) : (
+                        <span className="absolute left-3 top-3 z-10 rounded-lg bg-emerald-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                          ESTOQUE OK
+                        </span>
+                      )}
+                      {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
+                        <img
+                          src={normalizeImageUrl(p.imagem_url)}
+                          alt={p.nome}
+                          className="h-44 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                            const parent = (e.target as HTMLImageElement).parentElement;
+                            if (parent && !parent.querySelector(".fallback-icon")) {
+                              const fallback = document.createElement("div");
+                              fallback.className = "fallback-icon flex h-44 w-full items-center justify-center bg-gradient-to-br from-violet-100 to-violet-50 dark:from-violet-900/20 dark:to-violet-800/10";
+                              fallback.innerHTML = '<svg class="h-12 w-12 text-violet-300 dark:text-violet-600" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>';
+                              parent.appendChild(fallback);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-violet-100 to-violet-50 dark:from-violet-900/20 dark:to-violet-800/10">
+                          <Package className="h-12 w-12 text-violet-300 dark:text-violet-600" />
+                        </div>
+                      )}
                     </div>
-                    {p.descricao && (
-                      <p className="mb-3 line-clamp-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                        {p.descricao}
-                      </p>
-                    )}
 
-                    <div className="mt-auto">
-                      <div className="mb-3 flex items-end justify-between">
-                        <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Preço Venda</p>
-                          <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                            {formatCurrency(p.preco_venda)}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Custo Compra</p>
-                          <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-                            {formatCurrency(p.preco_custo)}
-                          </p>
+                    <div className="flex flex-1 flex-col p-4">
+                      <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-violet-500 dark:text-violet-400">
+                        {p.categoria || "Sem categoria"}
+                      </p>
+                      <h3 className="mb-2 text-base font-bold leading-tight text-slate-800 dark:text-slate-200 line-clamp-2">
+                        {p.nome}
+                      </h3>
+                      <div className="mb-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                        <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono dark:bg-slate-700">
+                          SKU: {p.codigo_barras || "—"}
+                        </span>
+                        <span>Mínimo: {p.estoque_minimo} un.</span>
+                      </div>
+                      {p.descricao && (
+                        <p className="mb-3 line-clamp-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                          {p.descricao}
+                        </p>
+                      )}
+
+                      <div className="mt-auto">
+                        <div className="mb-3 flex items-end justify-between">
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Preço Venda</p>
+                            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                              {formatCurrency(p.preco_venda)}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Custo Compra</p>
+                            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                              {formatCurrency(p.preco_custo)}
+                            </p>
+                          </div>
                         </div>
                       </div>
+                    </div>
+                  </Link>
 
+                  <div className="p-4 pt-0">
                       <div className="mb-3 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-[var(--card-border)] dark:bg-slate-800/50">
                         <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
                           Qtd: <span className="font-bold text-slate-800 dark:text-slate-200">{p.estoque}</span>
                         </span>
                         <div className="flex gap-1">
-                          <button className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">
+                          <button
+                            onClick={(e) => e.preventDefault()}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                          >
                             −
                           </button>
-                          <button className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600">
+                          <button
+                            onClick={(e) => e.preventDefault()}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                          >
                             +
                           </button>
                         </div>
@@ -265,6 +284,7 @@ export function ProdutosView({ isAdmin }: { isAdmin: boolean }) {
                         {isAdmin && (
                           <Link
                             href={`/produtos/${p.id}/editar`}
+                            onClick={(e) => e.stopPropagation()}
                             className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-300 dark:hover:bg-slate-700"
                           >
                             <Pencil className="h-3.5 w-3.5" />
@@ -273,7 +293,10 @@ export function ProdutosView({ isAdmin }: { isAdmin: boolean }) {
                         )}
                         {isAdmin && (
                           <button
-                            onClick={() => setDeleteTarget(p)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteTarget(p);
+                            }}
                             className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-300 dark:hover:bg-red-900/20 dark:hover:text-red-400 dark:hover:border-red-800"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -282,7 +305,6 @@ export function ProdutosView({ isAdmin }: { isAdmin: boolean }) {
                         )}
                       </div>
                     </div>
-                  </div>
                 </div>
               );
             })}
