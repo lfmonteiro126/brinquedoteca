@@ -145,10 +145,6 @@ export function POSView() {
       const data = await res.json();
       const results = data.produtos || [];
       setSearchResults(results);
-
-      if (results.length > 1) {
-        setModalProdutos(results);
-      }
     }, 300);
   }
 
@@ -168,6 +164,27 @@ export function POSView() {
       setShowRecent(false);
       setModalProdutos(null);
       searchRef.current?.blur();
+      return;
+    }
+
+    if (e.key === "Enter" && searchQuery.trim()) {
+      e.preventDefault();
+
+      if (searchResults.length === 1) {
+        adicionarAoCarrinho(searchResults[0]);
+        setSearchQuery("");
+        setShowResults(false);
+        return;
+      }
+
+      if (searchResults.length > 1) {
+        setModalProdutos(searchResults);
+        return;
+      }
+
+      buscarPorCodigo(searchQuery.trim());
+      setSearchQuery("");
+      setShowResults(false);
     }
   }
 
