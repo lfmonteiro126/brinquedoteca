@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Barcode, Check, Clock, Minus, Plus, Printer, Search, Trash2, X } from "lucide-react";
-import { formatCurrency } from "@/lib/format";
+import { Barcode, Check, ImageOff, Minus, Plus, Printer, Search, Trash2, X } from "lucide-react";
+import { formatCurrency, normalizeImageUrl } from "@/lib/format";
 import { escapeHtml } from "@/lib/sanitize";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { Produto } from "@/lib/types";
@@ -349,15 +349,26 @@ ${itensTexto}
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => adicionarAoCarrinho(p)}
-                  className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-violet-50 dark:hover:bg-violet-900/20"
                 >
-                  <div>
-                    <p className="font-medium text-slate-800 dark:text-slate-200">{p.nome}</p>
+                  {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
+                    <img
+                      src={normalizeImageUrl(p.imagem_url)}
+                      alt={p.nome}
+                      className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                      <ImageOff className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-slate-800 dark:text-slate-200 truncate">{p.nome}</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       {p.codigo_barras || "Sem código"} · {p.categoria || "Sem categoria"}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="shrink-0 text-right">
                     <p className="font-semibold text-emerald-600 dark:text-emerald-400">
                       {formatCurrency(p.preco_venda)}
                     </p>
@@ -389,7 +400,17 @@ ${itensTexto}
                     onClick={() => adicionarAoCarrinho(p)}
                     className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-violet-50 dark:hover:bg-violet-900/20"
                   >
-                    <Clock className="h-3.5 w-3.5 shrink-0 text-slate-300 dark:text-slate-500" />
+                    {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
+                      <img
+                        src={normalizeImageUrl(p.imagem_url)}
+                        alt={p.nome}
+                        className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                        <ImageOff className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium text-slate-800 dark:text-slate-200">{p.nome}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">{p.codigo_barras || "Sem código"}</p>
@@ -432,8 +453,19 @@ ${itensTexto}
                 {cart.map((item) => (
                   <li
                     key={item.produto.id}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 dark:bg-slate-800 px-4 py-3"
+                    className="flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-800 px-4 py-3"
                   >
+                    {item.produto.imagem_url && normalizeImageUrl(item.produto.imagem_url) ? (
+                      <img
+                        src={normalizeImageUrl(item.produto.imagem_url)}
+                        alt={item.produto.nome}
+                        className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700">
+                        <ImageOff className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-slate-800 dark:text-slate-200 truncate">{item.produto.nome}</p>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -563,8 +595,19 @@ ${itensTexto}
                 <li key={p.id}>
                   <button
                     onClick={() => selecionarDoModal(p)}
-                    className="flex w-full items-center justify-between rounded-xl border border-slate-100 dark:border-[var(--card-border)] px-4 py-3 text-left transition hover:border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                    className="flex w-full items-center gap-3 rounded-xl border border-slate-100 dark:border-[var(--card-border)] px-4 py-3 text-left transition hover:border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20"
                   >
+                    {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
+                      <img
+                        src={normalizeImageUrl(p.imagem_url)}
+                        alt={p.nome}
+                        className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                        <ImageOff className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-slate-800 dark:text-slate-200">{p.nome}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">

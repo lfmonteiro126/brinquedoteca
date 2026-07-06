@@ -133,8 +133,9 @@ export function DashboardView() {
   }, [periodo, retryCount]);
 
   function calcTrend(atual: number, anterior: number) {
-    if (anterior === 0) return atual > 0 ? 100 : 0;
-    return ((atual - anterior) / anterior) * 100;
+    if (!anterior || !Number.isFinite(anterior)) return atual > 0 ? 100 : 0;
+    const result = ((atual - anterior) / Math.abs(anterior)) * 100;
+    return Number.isFinite(result) ? result : 0;
   }
 
   if (loading) {
