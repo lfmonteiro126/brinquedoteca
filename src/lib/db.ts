@@ -92,6 +92,7 @@ export async function initSchema() {
       id SERIAL PRIMARY KEY,
       nome TEXT NOT NULL,
       descricao TEXT,
+      imagem_url TEXT,
       codigo_barras TEXT UNIQUE,
       categoria TEXT,
       preco_custo NUMERIC(10,2) NOT NULL DEFAULT 0,
@@ -102,6 +103,11 @@ export async function initSchema() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    DO $$ BEGIN
+      ALTER TABLE produtos ADD COLUMN imagem_url TEXT;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
 
     CREATE TABLE IF NOT EXISTS vendas (
       id SERIAL PRIMARY KEY,

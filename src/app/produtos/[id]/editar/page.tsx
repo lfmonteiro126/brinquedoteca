@@ -32,6 +32,7 @@ export default async function EditarProdutoPage({ params }: Props) {
             id: produto.id,
             nome: produto.nome,
             descricao: produto.descricao || "",
+            imagem_url: produto.imagem_url || "",
             codigo_barras: produto.codigo_barras || "",
             categoria: produto.categoria || "",
             preco_custo: produto.preco_custo,

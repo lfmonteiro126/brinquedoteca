@@ -16,6 +16,7 @@ interface ProductFormProps {
     id?: number;
     nome: string;
     descricao?: string;
+    imagem_url?: string;
     codigo_barras: string;
     categoria: string;
     preco_custo: number;
@@ -31,6 +32,7 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
   const [form, setForm] = useState({
     nome: initial?.nome || "",
     descricao: initial?.descricao || "",
+    imagem_url: initial?.imagem_url || "",
     codigo_barras: initial?.codigo_barras || "",
     categoria: initial?.categoria || "",
     preco_custo: initial?.preco_custo ?? 0,
@@ -105,6 +107,27 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
           placeholder="Detalhes do brinquedo para catálogo"
           rows={3}
         />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium">URL da Imagem</label>
+        <input
+          value={form.imagem_url}
+          onChange={(e) => update("imagem_url", e.target.value)}
+          className="w-full rounded-xl border px-4 py-2.5 outline-none focus:border-violet-400"
+          placeholder="https://exemplo.com/imagem.jpg"
+        />
+        {form.imagem_url && (
+          <div className="mt-2">
+            <img
+              src={form.imagem_url}
+              alt="Preview"
+              className="h-24 w-24 rounded-xl object-cover border border-slate-200"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+          </div>
+        )}
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium">Código de barras</label>

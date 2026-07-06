@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
     const {
       nome,
       descricao,
+      imagem_url,
       codigo_barras,
       categoria,
       preco_custo,
@@ -73,11 +74,12 @@ export async function POST(request: NextRequest) {
     const estoqueInicial = estoque ?? 0;
 
     const result = await getClient().unsafe(
-      `INSERT INTO produtos (nome, descricao, codigo_barras, categoria, preco_custo, preco_venda, estoque, estoque_minimo)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+      `INSERT INTO produtos (nome, descricao, imagem_url, codigo_barras, categoria, preco_custo, preco_venda, estoque, estoque_minimo)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
       [
         nome.trim(),
         descricao?.trim() || null,
+        imagem_url?.trim() || null,
         codigo_barras?.trim() || null,
         categoria?.trim() || null,
         preco_custo ?? 0,

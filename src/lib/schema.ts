@@ -25,6 +25,7 @@ export const produtos = pgTable(
   {
     id: serial("id").primaryKey(),
     nome: text("nome").notNull(),
+    imagemUrl: text("imagem_url"),
     codigoBarras: text("codigo_barras").unique(),
     categoria: text("categoria"),
     precoCusto: numeric("preco_custo", { precision: 10, scale: 2 })
