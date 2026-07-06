@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import Link from "next/link";
 import { Barcode, Check, ImageOff, Minus, Plus, Printer, Search, Trash2, X } from "lucide-react";
 import { formatCurrency, normalizeImageUrl } from "@/lib/format";
 import { escapeHtml } from "@/lib/sanitize";
@@ -60,6 +59,7 @@ export function POSView() {
   const [recentSearches, setRecentSearches] = useState<Produto[]>(() => loadRecent());
   const [showRecent, setShowRecent] = useState(false);
   const [modalProdutos, setModalProdutos] = useState<Produto[] | null>(null);
+  const [produtoDetalhe, setProdutoDetalhe] = useState<Produto | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -485,13 +485,13 @@ ${itensTexto}
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <Link
-                        href={`/produtos/${item.produto.id}/editar`}
-                        target="_blank"
-                        className="font-medium text-violet-600 hover:text-violet-800 hover:underline dark:text-violet-400 dark:hover:text-violet-300 truncate block"
+                      <button
+                        type="button"
+                        onClick={() => setProdutoDetalhe(item.produto)}
+                        className="font-medium text-violet-600 hover:text-violet-800 hover:underline dark:text-violet-400 dark:hover:text-violet-300 truncate block text-left"
                       >
                         {item.produto.nome}
-                      </Link>
+                      </button>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
                         {formatCurrency(item.produto.preco_venda)} · estoque: {item.produto.estoque}
                       </p>
@@ -686,6 +686,48 @@ ${itensTexto}
                 Imprimir
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {produtoDetalhe && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setProdutoDetalhe(null)}>
+          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Detalhes do produto</h3>
+              <button onClick={() => setProdutoDetalhe(null)} className="rounded-lg p-1 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex flex-col items-center gap-4">
+              {produtoDetalhe.imagem_url && normalizeImageUrl(produtoDetalhe.imagem_url) ? (
+                <img
+                  src={normalizeImageUrl(produtoDetalhe.imagem_url)}
+                  alt={produtoDetalhe.nome}
+                  className="h-48 w-48 rounded-2xl object-cover"
+                />
+              ) : (
+                <div className="flex h-48 w-48 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-700">
+                  <ImageOff className="h-12 w-12 text-slate-400 dark:text-slate-500" />
+                  <span className="ml-2 text-sm text-slate-500">Sem foto cadastrada</span>
+                </div>
+              )}
+              <div className="w-full text-center">
+                <p className="text-lg font-bold text-slate-800 dark:text-slate-200">{produtoDetalhe.nome}</p>
+                {produtoDetalhe.descricao && (
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{produtoDetalhe.descricao}</p>
+                )}
+                <p className="mt-3 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                  {formatCurrency(produtoDetalhe.preco_venda)}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setProdutoDetalhe(null)}
+              className="mt-6 w-full rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white hover:bg-violet-700"
+            >
+              Fechar
+            </button>
           </div>
         </div>
       )}
