@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     let paramIndex = 1;
 
     if (q) {
-      conditions.push(`(nome LIKE $${paramIndex} OR codigo_barras LIKE $${paramIndex} OR categoria LIKE $${paramIndex})`);
+      conditions.push(`(nome ILIKE $${paramIndex} OR codigo_barras ILIKE $${paramIndex} OR categoria ILIKE $${paramIndex})`);
       params.push(`%${q}%`);
       paramIndex++;
     }
