@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     const result = await sqlRun`
       INSERT INTO users (nome, email, senha_hash, role, primeiro_login)
       VALUES (${nome.trim()}, ${email.trim().toLowerCase()}, ${hash}, ${role || "vendedor"}, true)
+      RETURNING id
     `;
 
     const usuario = await sqlGet`
