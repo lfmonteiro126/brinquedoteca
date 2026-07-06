@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import Link from "next/link";
 import { Barcode, Check, ImageOff, Minus, Plus, Printer, Search, Trash2, X } from "lucide-react";
 import { formatCurrency, normalizeImageUrl } from "@/lib/format";
 import { escapeHtml } from "@/lib/sanitize";
@@ -484,7 +485,13 @@ ${itensTexto}
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-slate-800 dark:text-slate-200 truncate">{item.produto.nome}</p>
+                      <Link
+                        href={`/produtos/${item.produto.id}/editar`}
+                        target="_blank"
+                        className="font-medium text-violet-600 hover:text-violet-800 hover:underline dark:text-violet-400 dark:hover:text-violet-300 truncate block"
+                      >
+                        {item.produto.nome}
+                      </Link>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
                         {formatCurrency(item.produto.preco_venda)} · estoque: {item.produto.estoque}
                       </p>
