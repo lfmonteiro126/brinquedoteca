@@ -3,6 +3,7 @@ import { getSessionUser } from "@/lib/auth";
 import { Nav } from "@/components/Nav";
 import { IdleTimer } from "@/components/IdleTimer";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { GlobalSearch } from "@/components/GlobalSearch";
 import type { UserRole } from "@/lib/types";
 
 export async function AppShell({
@@ -24,6 +25,7 @@ export async function AppShell({
       <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-amber-50 dark:from-[var(--background)] dark:via-[var(--background)] dark:to-[var(--background)]">
         <Nav user={user} />
         <main className="min-h-screen p-4 pt-16 lg:pl-72 lg:pr-8 lg:pb-8 lg:pt-8">{children}</main>
+        <GlobalSearch />
         <IdleTimer />
       </div>
     </ThemeProvider>

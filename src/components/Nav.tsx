@@ -81,12 +81,15 @@ export function Nav({ user }: { user: User }) {
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                   active
                     ? "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300"
                     : "text-slate-600 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300"
                 }`}
               >
+                {active && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-violet-600 dark:bg-violet-400" />
+                )}
                 <Icon className="h-4 w-4" />
                 {label}
               </Link>

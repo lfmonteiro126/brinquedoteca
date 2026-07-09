@@ -6,11 +6,12 @@ import { AlertTriangle, ChevronDown, Pencil, Plus, Search, Trash2, Package } fro
 import { formatCurrency, normalizeImageUrl } from "@/lib/format";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Produto } from "@/lib/types";
 
 const PAGE_SIZE = 20;
 
-export function ProdutosView({ isAdmin }: { isAdmin: boolean }) {
+export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; breadcrumbs?: BreadcrumbItem[] }) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -82,6 +83,7 @@ export function ProdutosView({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <div className="space-y-6">
+      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Brinquedos</h1>

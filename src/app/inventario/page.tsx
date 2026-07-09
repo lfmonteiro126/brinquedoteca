@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function InventarioPage() {
   return (
     <AppShell allowedRoles={["admin"]}>
-      <InventarioView />
+      <InventarioView breadcrumbs={[{ label: "Inventário" }]} />
     </AppShell>
   );
 }

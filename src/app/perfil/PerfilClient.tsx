@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { PerfilView } from "@/components/PerfilView";
 import { Loader2 } from "lucide-react";
 import type { User } from "@/lib/types";
+import type { BreadcrumbItem } from "@/components/Breadcrumbs";
 
-export function PerfilClient() {
+export function PerfilClient({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
 
@@ -35,5 +36,5 @@ export function PerfilClient() {
     );
   }
 
-  return <PerfilView user={user} />;
+  return <PerfilView user={user} breadcrumbs={breadcrumbs} />;
 }

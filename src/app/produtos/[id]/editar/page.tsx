@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { ProductForm } from "@/components/ProductForm";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { sqlGet } from "@/lib/db";
 import type { Produto } from "@/lib/types";
 
@@ -22,6 +23,7 @@ export default async function EditarProdutoPage({ params }: Props) {
   return (
     <AppShell allowedRoles={["admin"]}>
       <div className="space-y-6">
+        <Breadcrumbs items={[{ label: "Brinquedos", href: "/produtos" }, { label: produto.nome }]} />
         <div>
           <h1 className="text-2xl font-bold text-violet-900">Editar brinquedo</h1>
           <p className="text-slate-500">{produto.nome}</p>

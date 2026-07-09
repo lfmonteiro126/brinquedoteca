@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function VendasPage() {
   return (
     <AppShell allowedRoles={["admin", "vendedor"]}>
-      <POSView />
+      <POSView breadcrumbs={[{ label: "PDV / Vendas" }]} />
     </AppShell>
   );
 }

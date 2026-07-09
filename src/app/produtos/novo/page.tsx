@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/AppShell";
 import { ProductForm } from "@/components/ProductForm";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Novo brinquedo | Brinquedoteca",
@@ -10,6 +11,7 @@ export default function NovoProdutoPage() {
   return (
     <AppShell allowedRoles={["admin"]}>
       <div className="space-y-6">
+        <Breadcrumbs items={[{ label: "Brinquedos", href: "/produtos" }, { label: "Novo brinquedo" }]} />
         <div>
           <h1 className="text-2xl font-bold text-violet-900">Novo brinquedo</h1>
           <p className="text-slate-500">Cadastre um produto com código de barras</p>

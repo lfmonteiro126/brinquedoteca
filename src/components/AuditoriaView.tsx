@@ -5,6 +5,7 @@ import { Filter, X } from "lucide-react";
 import { formatDate } from "@/lib/format";
 import { Pagination } from "@/components/Pagination";
 import { SkeletonTable } from "@/components/Skeleton";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Movimentacao } from "@/lib/types";
 
 const PAGE_SIZE = 30;
@@ -27,7 +28,7 @@ const tipoColors: Record<string, string> = {
   estorno: "bg-rose-100 text-rose-700",
 };
 
-export function AuditoriaView() {
+export function AuditoriaView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -79,6 +80,7 @@ export function AuditoriaView() {
 
   return (
     <div className="space-y-6">
+      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Auditoria</h1>

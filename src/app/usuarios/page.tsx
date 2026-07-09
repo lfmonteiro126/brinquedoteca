@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function UsuariosPage() {
   return (
     <AppShell allowedRoles={["admin"]}>
-      <UsuariosView />
+      <UsuariosView breadcrumbs={[{ label: "Usuários" }]} />
     </AppShell>
   );
 }

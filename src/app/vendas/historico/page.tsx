@@ -13,7 +13,7 @@ export default async function HistoricoPage() {
 
   return (
     <AppShell allowedRoles={["admin", "vendedor"]}>
-      <VendasHistoricoView isAdmin={isAdmin} />
+      <VendasHistoricoView isAdmin={isAdmin} breadcrumbs={[{ label: "Histórico" }]} />
     </AppShell>
   );
 }

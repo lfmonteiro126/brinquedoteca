@@ -5,6 +5,7 @@ import { Edit, Plus, Shield, UserX, X } from "lucide-react";
 import type { User } from "@/lib/types";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SkeletonTable } from "@/components/Skeleton";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 
 interface FormData {
   nome: string;
@@ -15,7 +16,7 @@ interface FormData {
 
 const emptyForm: FormData = { nome: "", email: "", senha: "", role: "vendedor" };
 
-export function UsuariosView() {
+export function UsuariosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
   const [usuarios, setUsuarios] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -133,6 +134,7 @@ export function UsuariosView() {
 
   return (
     <div className="space-y-6">
+      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Usuários</h1>

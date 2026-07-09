@@ -15,6 +15,7 @@ import {
 import { formatCurrency } from "@/lib/format";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useDebounce } from "@/hooks/useDebounce";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Produto } from "@/lib/types";
 
 interface CountItem {
@@ -50,7 +51,7 @@ interface SessaoDetalhe {
 
 type FilterMode = "all" | "counted" | "not_counted" | "divergences";
 
-export function InventarioView() {
+export function InventarioView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [produtosLoaded, setProdutosLoaded] = useState(false);
   const [counts, setCounts] = useState<Map<number, number>>(new Map());
@@ -244,6 +245,7 @@ export function InventarioView() {
 
   return (
     <div className="space-y-6">
+      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <div>
         <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Inventário físico</h1>
         <p className="text-slate-500 dark:text-slate-400">

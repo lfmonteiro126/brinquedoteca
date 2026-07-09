@@ -6,6 +6,7 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { Pagination } from "@/components/Pagination";
 import { SkeletonTable } from "@/components/Skeleton";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Venda } from "@/lib/types";
 
 const PAGE_SIZE = 20;
@@ -17,7 +18,7 @@ const metodoLabels: Record<string, string> = {
   dinheiro: "Dinheiro",
 };
 
-export function VendasHistoricoView({ isAdmin }: { isAdmin: boolean }) {
+export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean; breadcrumbs?: BreadcrumbItem[] }) {
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -101,6 +102,7 @@ export function VendasHistoricoView({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <div className="space-y-6">
+      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Histórico de vendas</h1>

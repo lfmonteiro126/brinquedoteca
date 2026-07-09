@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { usePreferences } from "@/hooks/usePreferences";
 import { User, Moon, Sun, Save } from "lucide-react";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { User as UserType } from "@/lib/types";
 
-export function PerfilView({ user }: { user: UserType }) {
+export function PerfilView({ user, breadcrumbs }: { user: UserType; breadcrumbs?: BreadcrumbItem[] }) {
   const { theme, toggleTheme } = useTheme();
   const { prefs, updatePreferences } = usePreferences();
   const [senhaAtual, setSenhaAtual] = useState("");
@@ -57,6 +58,7 @@ export function PerfilView({ user }: { user: UserType }) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <h1 className="text-2xl font-bold text-foreground">Meu Perfil</h1>
 
       {/* Dados pessoais */}

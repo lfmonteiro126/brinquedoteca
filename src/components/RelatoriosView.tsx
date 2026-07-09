@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { SkeletonTable } from "@/components/Skeleton";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -291,7 +292,7 @@ function MargemTab({ dados, onExportCSV, onExportPDF }: { dados: MargemData[]; o
   );
 }
 
-export function RelatoriosView() {
+export function RelatoriosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
   const [activeTab, setActiveTab] = useState<Tab>("resumo");
   const [desde, setDesde] = useState("");
   const [ate, setAte] = useState("");
@@ -393,6 +394,7 @@ export function RelatoriosView() {
 
   return (
     <div className="space-y-6">
+      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <div>
         <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Relatórios</h1>
         <p className="text-slate-500 dark:text-slate-400">Análise de vendas e desempenho</p>

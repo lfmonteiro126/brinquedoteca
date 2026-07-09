@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function PerfilPage() {
   return (
     <AppShell allowedRoles={["admin", "vendedor"]}>
-      <PerfilClient />
+      <PerfilClient breadcrumbs={[{ label: "Meu Perfil" }]} />
     </AppShell>
   );
 }

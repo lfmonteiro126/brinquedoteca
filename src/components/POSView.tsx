@@ -22,6 +22,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useToast } from "@/components/Toast";
 import { useKeyboardShortcuts, getShortcutLabel } from "@/hooks/useKeyboardShortcuts";
 import { ShortcutHelp } from "@/components/ShortcutHelp";
+import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Produto } from "@/lib/types";
 
 interface CartItem {
@@ -56,7 +57,7 @@ function saveRecent(produto: Produto) {
   localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)));
 }
 
-export function POSView() {
+export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
   const [barcode, setBarcode] = useState("");
   const [cart, setCart] = useState<CartItem[]>(() => {
     if (typeof window !== "undefined") {
@@ -422,6 +423,7 @@ ${itensTexto}
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-violet-900 dark:text-violet-300">

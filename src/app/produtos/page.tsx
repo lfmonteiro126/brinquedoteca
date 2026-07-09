@@ -12,7 +12,7 @@ export default async function ProdutosPage() {
 
   return (
     <AppShell allowedRoles={["admin", "vendedor"]}>
-      <ProdutosView isAdmin={user?.role === "admin"} />
+      <ProdutosView isAdmin={user?.role === "admin"} breadcrumbs={[{ label: "Brinquedos" }]} />
     </AppShell>
   );
 }

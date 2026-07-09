@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function AuditoriaPage() {
   return (
     <AppShell allowedRoles={["admin"]}>
-      <AuditoriaView />
+      <AuditoriaView breadcrumbs={[{ label: "Auditoria" }]} />
     </AppShell>
   );
 }
