@@ -1,10 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Barcode, Check, ImageOff, Minus, Plus, Printer, Search, Trash2, X } from "lucide-react";
+import {
+  Barcode,
+  Check,
+  ImageOff,
+  Minus,
+  Plus,
+  Printer,
+  Search,
+  Trash2,
+  X,
+  ShoppingCart,
+  Percent,
+  CreditCard,
+  Keyboard,
+} from "lucide-react";
 import { formatCurrency, normalizeImageUrl } from "@/lib/format";
 import { escapeHtml } from "@/lib/sanitize";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useToast } from "@/components/Toast";
+import { useKeyboardShortcuts, getShortcutLabel } from "@/hooks/useKeyboardShortcuts";
+import { ShortcutHelp } from "@/components/ShortcutHelp";
 import type { Produto } from "@/lib/types";
 
 interface CartItem {
@@ -28,7 +45,9 @@ function loadRecent(): Produto[] {
   if (typeof window === "undefined") return [];
   try {
     return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
 function saveRecent(produto: Produto) {
@@ -47,7 +66,6 @@ export function POSView() {
     return [];
   });
   const [desconto, setDesconto] = useState(0);
-  const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [metodoPagamento, setMetodoPagamento] = useState("dinheiro");
   const [parcelas, setParcelas] = useState(1);
@@ -60,13 +78,85 @@ export function POSView() {
   const [showRecent, setShowRecent] = useState(false);
   const [modalProdutos, setModalProdutos] = useState<Produto[] | null>(null);
   const [produtoDetalhe, setProdutoDetalhe] = useState<Produto | null>(null);
+  const [addedItemId, setAddedItemId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const descontoRef = useRef<HTMLInputElement>(null);
+  const { showToast } = useToast();
 
   const focusInput = useCallback(() => {
     inputRef.current?.focus();
   }, []);
+
+  const focusSearch = useCallback(() => {
+    searchRef.current?.focus();
+  }, []);
+
+  const focusDesconto = useCallback(() => {
+    descontoRef.current?.focus();
+    descontoRef.current?.select();
+  }, []);
+
+  const clearCart = useCallback(() => {
+    if (cart.length > 0) {
+      setCart([]);
+      localStorage.removeItem("pos_cart");
+      setDesconto(0);
+      showToast("info", "Carrinho limpo");
+    }
+  }, [cart.length, showToast]);
+
+  const triggerFinalizar = useCallback(() => {
+    if (cart.length > 0) {
+      setConfirmOpen(true);
+    }
+  }, [cart.length]);
+
+  // Atalhos de teclado
+  const shortcuts = [
+    {
+      key: "F2",
+      description: "Foco no campo de desconto",
+      action: focusDesconto,
+    },
+    {
+      key: "F3",
+      description: "Foco na busca de produtos",
+      action: focusSearch,
+    },
+    {
+      key: "F4",
+      description: "Finalizar venda",
+      action: triggerFinalizar,
+    },
+    {
+      key: "F5",
+      description: "Limpar carrinho",
+      action: clearCart,
+    },
+    {
+      key: "Escape",
+      description: "Fechar modais / Limpar busca",
+      action: () => {
+        if (modalProdutos) {
+          setModalProdutos(null);
+          setSearchQuery("");
+        } else if (vendaFinalizada) {
+          setVendaFinalizada(null);
+        } else if (produtoDetalhe) {
+          setProdutoDetalhe(null);
+        } else {
+          setSearchQuery("");
+          setShowResults(false);
+          setShowRecent(false);
+          focusInput();
+        }
+      },
+    },
+  ];
+
+  useKeyboardShortcuts(shortcuts);
 
   useEffect(() => {
     focusInput();
@@ -81,39 +171,46 @@ export function POSView() {
     const data = await res.json();
 
     if (!res.ok) {
-      setMessage({ type: "err", text: data.error || "Produto não encontrado" });
+      showToast("error", data.error || "Produto não encontrado");
       return;
     }
 
     adicionarAoCarrinho(data.produto);
     setBarcode("");
-    setMessage(null);
   }
 
   function adicionarAoCarrinho(produto: Produto) {
+    let added = false;
     setCart((prev) => {
       const existing = prev.find((i) => i.produto.id === produto.id);
       if (existing) {
         if (existing.quantidade >= produto.estoque) {
-          setMessage({ type: "err", text: "Estoque insuficiente" });
+          showToast("error", "Estoque insuficiente");
           return prev;
         }
+        added = true;
         return prev.map((i) =>
           i.produto.id === produto.id ? { ...i, quantidade: i.quantidade + 1 } : i
         );
       }
       if (produto.estoque < 1) {
-        setMessage({ type: "err", text: "Produto sem estoque" });
+        showToast("error", "Produto sem estoque");
         return prev;
       }
+      added = true;
       return [...prev, { produto, quantidade: 1 }];
     });
-    saveRecent(produto);
-    setRecentSearches(loadRecent());
-    setShowResults(false);
-    setShowRecent(false);
-    setSearchQuery("");
-    setMessage(null);
+
+    if (added) {
+      saveRecent(produto);
+      setRecentSearches(loadRecent());
+      setShowResults(false);
+      setShowRecent(false);
+      setSearchQuery("");
+      setAddedItemId(produto.id);
+      setTimeout(() => setAddedItemId(null), 500);
+      focusInput();
+    }
   }
 
   function handleBarcodeKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -210,6 +307,7 @@ export function POSView() {
 
   function removeItem(produtoId: number) {
     setCart((prev) => prev.filter((i) => i.produto.id !== produtoId));
+    showToast("info", "Item removido do carrinho");
   }
 
   const subtotal = cart.reduce((s, i) => s + i.produto.preco_venda * i.quantidade, 0);
@@ -224,7 +322,6 @@ export function POSView() {
     setConfirmOpen(false);
     if (cart.length === 0) return;
     setLoading(true);
-    setMessage(null);
 
     const itensParaEnvio = cart.map((i) => ({
       produto_id: i.produto.id,
@@ -259,7 +356,7 @@ export function POSView() {
     setLoading(false);
 
     if (!res.ok) {
-      setMessage({ type: "err", text: data.error });
+      showToast("error", data.error);
       return;
     }
 
@@ -315,23 +412,36 @@ ${itensTexto}
     }
 
     setVendaFinalizada(null);
+    showToast("success", "Cupom enviado para impressão");
   }
 
   function fecharModal() {
     setVendaFinalizada(null);
+    showToast("success", "Venda finalizada com sucesso!");
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-violet-900">PDV — Ponto de Venda</h1>
-        <p className="text-slate-500 dark:text-slate-400">
-          Escaneie o código de barras ou busque pelo nome do produto
-        </p>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-violet-900 dark:text-violet-300">
+            PDV — Ponto de Venda
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Escaneie o código de barras ou busque pelo nome do produto
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-violet-100 dark:bg-violet-900/30 px-3 py-1.5 text-xs font-medium text-violet-700 dark:text-violet-300">
+            <Keyboard className="h-3.5 w-3.5" />
+            F3 Buscar
+          </span>
+        </div>
       </div>
 
-      <div className="rounded-2xl border-2 border-dashed border-violet-200 bg-white dark:bg-[var(--card-bg)] p-6">
-        <label className="mb-2 flex items-center gap-2 text-sm font-medium text-violet-700">
+      {/* Scanner de código de barras */}
+      <div className="rounded-2xl border-2 border-dashed border-violet-200 dark:border-violet-700 bg-white dark:bg-[var(--card-bg)] p-4 sm:p-6">
+        <label className="mb-2 flex items-center gap-2 text-sm font-medium text-violet-700 dark:text-violet-300">
           <Barcode className="h-4 w-4" />
           Leitor de código de barras
         </label>
@@ -342,11 +452,12 @@ ${itensTexto}
           onChange={(e) => setBarcode(e.target.value)}
           onKeyDown={handleBarcodeKeyDown}
           placeholder="Aponte o leitor aqui..."
-          className="w-full rounded-xl border border-violet-200 bg-violet-50 dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200 px-4 py-4 text-lg font-mono outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+          className="w-full rounded-xl border border-violet-200 dark:border-violet-700 bg-violet-50 dark:bg-[var(--input-bg)] dark:text-slate-200 px-4 py-3 sm:py-4 text-base sm:text-lg font-mono outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800"
           autoComplete="off"
         />
       </div>
 
+      {/* Busca de produtos */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
         <input
@@ -355,9 +466,14 @@ ${itensTexto}
           onChange={(e) => handleSearchChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
           onFocus={handleSearchFocus}
-          onBlur={() => setTimeout(() => { setShowResults(false); setShowRecent(false); }, 200)}
+          onBlur={() =>
+            setTimeout(() => {
+              setShowResults(false);
+              setShowRecent(false);
+            }, 200)
+          }
           placeholder="Buscar por nome ou código de barras..."
-          className="w-full rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--input-bg)] dark:text-slate-200 py-3 pl-11 pr-4 outline-none focus:border-violet-400"
+          className="w-full rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--input-bg)] dark:text-slate-200 py-3 pl-11 pr-4 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800"
         />
         {showResults && searchResults.length > 0 && (
           <ul className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] shadow-lg">
@@ -367,7 +483,7 @@ ${itensTexto}
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => adicionarAoCarrinho(p)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-violet-50 dark:hover:bg-violet-900/20 active:bg-violet-100 dark:active:bg-violet-900/40"
                 >
                   {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
                     <img
@@ -381,7 +497,9 @@ ${itensTexto}
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-slate-800 dark:text-slate-200 truncate">{p.nome}</p>
+                    <p className="font-medium text-slate-800 dark:text-slate-200 truncate">
+                      {p.nome}
+                    </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       {p.codigo_barras || "Sem código"} · {p.categoria || "Sem categoria"}
                     </p>
@@ -390,7 +508,9 @@ ${itensTexto}
                     <p className="font-semibold text-emerald-600 dark:text-emerald-400">
                       {formatCurrency(p.preco_venda)}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Estoque: {p.estoque}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Estoque: {p.estoque}
+                    </p>
                   </div>
                 </button>
               </li>
@@ -400,10 +520,16 @@ ${itensTexto}
         {showRecent && !showResults && recentSearches.length > 0 && (
           <div className="absolute z-30 mt-1 w-full rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] shadow-lg">
             <div className="flex items-center justify-between border-b px-4 py-2">
-              <span className="text-xs font-medium text-slate-400 dark:text-slate-500">Buscas recentes</span>
+              <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                Buscas recentes
+              </span>
               <button
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => { localStorage.removeItem(RECENT_KEY); setRecentSearches([]); setShowRecent(false); }}
+                onClick={() => {
+                  localStorage.removeItem(RECENT_KEY);
+                  setRecentSearches([]);
+                  setShowRecent(false);
+                }}
                 className="text-xs text-slate-400 dark:text-slate-500 hover:text-red-500"
               >
                 Limpar
@@ -416,7 +542,7 @@ ${itensTexto}
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => adicionarAoCarrinho(p)}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-violet-50 dark:hover:bg-violet-900/20 active:bg-violet-100 dark:active:bg-violet-900/40"
                   >
                     {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
                       <img
@@ -430,8 +556,12 @@ ${itensTexto}
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium text-slate-800 dark:text-slate-200">{p.nome}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{p.codigo_barras || "Sem código"}</p>
+                      <p className="truncate font-medium text-slate-800 dark:text-slate-200">
+                        {p.nome}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {p.codigo_barras || "Sem código"}
+                      </p>
                     </div>
                     <span className="shrink-0 font-semibold text-emerald-600 dark:text-emerald-400">
                       {formatCurrency(p.preco_venda)}
@@ -444,82 +574,104 @@ ${itensTexto}
         )}
       </div>
 
-      {message && (
-        <div
-          className={`rounded-xl px-4 py-3 text-sm font-medium ${
-            message.type === "ok"
-              ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400"
-              : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* Layout principal: Carrinho + Resumo */}
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+        {/* Carrinho */}
         <div className="lg:col-span-2">
-          <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
-            <h2 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">
-              Itens da venda ({cart.length})
-            </h2>
+          <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-4 sm:p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-violet-500" />
+                Itens da venda ({cart.length})
+              </h2>
+              {cart.length > 0 && (
+                <button
+                  onClick={clearCart}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Limpar
+                </button>
+              )}
+            </div>
             {cart.length === 0 ? (
-              <p className="py-8 text-center text-slate-400 dark:text-slate-500">
-                Escaneie ou busque produtos para adicionar ao carrinho
-              </p>
+              <div className="py-8 sm:py-12 text-center">
+                <ShoppingCart className="mx-auto mb-3 h-10 sm:h-12 w-10 sm:w-12 text-slate-300 dark:text-slate-600" />
+                <p className="text-sm text-slate-400 dark:text-slate-500">
+                  Escaneie ou busque produtos para adicionar ao carrinho
+                </p>
+                <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+                  Pressione <kbd className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-1.5 py-0.5 font-mono">F3</kbd> para buscar
+                </p>
+              </div>
             ) : (
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 {cart.map((item) => (
                   <li
                     key={item.produto.id}
-                    className="flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-800 px-4 py-3"
+                    className={`flex items-center gap-2 sm:gap-3 rounded-xl bg-slate-50 dark:bg-slate-800 px-3 sm:px-4 py-3 transition-all duration-200 ${
+                      addedItemId === item.produto.id ? "animate-flash-success ring-2 ring-emerald-400" : ""
+                    }`}
                   >
+                    {/* Imagem - menor no mobile */}
                     {item.produto.imagem_url && normalizeImageUrl(item.produto.imagem_url) ? (
                       <img
                         src={normalizeImageUrl(item.produto.imagem_url)}
                         alt={item.produto.nome}
-                        className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                        className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 rounded-lg object-cover"
                       />
                     ) : (
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700">
-                        <ImageOff className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                      <div className="flex h-10 w-10 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700">
+                        <ImageOff className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400 dark:text-slate-500" />
                       </div>
                     )}
+
+                    {/* Info do produto */}
                     <div className="min-w-0 flex-1">
                       <button
                         type="button"
                         onClick={() => setProdutoDetalhe(item.produto)}
-                        className="font-medium text-violet-600 hover:text-violet-800 hover:underline dark:text-violet-400 dark:hover:text-violet-300 truncate block text-left"
+                        className="font-medium text-violet-600 hover:text-violet-800 hover:underline dark:text-violet-400 dark:hover:text-violet-300 truncate block text-left text-sm sm:text-base"
                       >
                         {item.produto.nome}
                       </button>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">
-                        {formatCurrency(item.produto.preco_venda)} · estoque: {item.produto.estoque}
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                        {formatCurrency(item.produto.preco_venda)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+
+                    {/* Controles de quantidade - maiores no mobile */}
+                    <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                       <button
                         onClick={() => updateQty(item.produto.id, -1)}
-                        className="rounded-lg bg-white dark:bg-[var(--card-bg)] p-1.5 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700"
+                        className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-white dark:bg-[var(--card-bg)] shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform"
                       >
                         <Minus className="h-4 w-4" />
                       </button>
-                      <span className="w-8 text-center font-bold">{item.quantidade}</span>
+                      <span className="w-6 sm:w-8 text-center font-bold text-sm sm:text-base">
+                        {item.quantidade}
+                      </span>
                       <button
                         onClick={() => updateQty(item.produto.id, 1)}
-                        className="rounded-lg bg-white dark:bg-[var(--card-bg)] p-1.5 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700"
+                        disabled={item.quantidade >= item.produto.estoque}
+                        className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-white dark:bg-[var(--card-bg)] shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <Plus className="h-4 w-4" />
                       </button>
-                      <span className="w-24 text-right font-semibold text-violet-700">
-                        {formatCurrency(item.produto.preco_venda * item.quantidade)}
-                      </span>
-                      <button
-                        onClick={() => removeItem(item.produto.id)}
-                        className="rounded-lg p-1.5 text-red-400 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
                     </div>
+
+                    {/* Subtotal */}
+                    <span className="w-16 sm:w-20 text-right font-semibold text-violet-700 dark:text-violet-300 text-sm sm:text-base">
+                      {formatCurrency(item.produto.preco_venda * item.quantidade)}
+                    </span>
+
+                    {/* Botão remover */}
+                    <button
+                      onClick={() => removeItem(item.produto.id)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg p-1 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 active:scale-95 transition-transform"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -527,34 +679,50 @@ ${itensTexto}
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
+        {/* Resumo */}
+        <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-4 sm:p-5 shadow-sm lg:sticky lg:top-24 lg:self-start">
           <h2 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Resumo</h2>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-slate-500 dark:text-slate-400">Subtotal</span>
-              <span>{formatCurrency(subtotal)}</span>
+              <span className="font-medium">{formatCurrency(subtotal)}</span>
             </div>
+
+            {/* Desconto - com ícone e atalho */}
             <div className="flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Desconto (R$)</span>
-              <input
-                type="number"
-                min={0}
-                step={0.01}
-                value={desconto || ""}
-                onChange={(e) => setDesconto(Math.max(0, parseFloat(e.target.value) || 0))}
-                className="w-24 rounded-lg border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1 text-right"
-              />
+              <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <Percent className="h-3.5 w-3.5" />
+                Desconto
+              </span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  ref={descontoRef}
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={desconto || ""}
+                  onChange={(e) => setDesconto(Math.max(0, parseFloat(e.target.value) || 0))}
+                  placeholder="0,00"
+                  className="w-24 rounded-lg border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-right text-sm"
+                />
+                <span className="hidden sm:inline text-[10px] text-slate-400 dark:text-slate-500">F2</span>
+              </div>
             </div>
+
+            {/* Método de pagamento */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Pagamento</span>
+                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <CreditCard className="h-3.5 w-3.5" />
+                  Pagamento
+                </span>
                 <select
                   value={metodoPagamento}
                   onChange={(e) => {
                     setMetodoPagamento(e.target.value);
                     if (e.target.value !== "credito") setParcelas(1);
                   }}
-                  className="rounded-lg border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1"
+                  className="rounded-lg border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-sm"
                 >
                   <option value="pix">PIX</option>
                   <option value="debito">Cartão de débito</option>
@@ -568,7 +736,7 @@ ${itensTexto}
                   <select
                     value={parcelas}
                     onChange={(e) => setParcelas(parseInt(e.target.value))}
-                    className="rounded-lg border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1"
+                    className="rounded-lg border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-sm"
                   >
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
                       <option key={n} value={n}>
@@ -579,22 +747,30 @@ ${itensTexto}
                 </div>
               )}
             </div>
+
+            {/* Total */}
             <div className="border-t dark:border-[var(--card-border)] pt-3 flex justify-between text-lg font-bold">
               <span>Total</span>
-              <span className="text-emerald-600 dark:text-emerald-400">{formatCurrency(total)}</span>
+              <span className="text-emerald-600 dark:text-emerald-400">
+                {formatCurrency(total)}
+              </span>
             </div>
           </div>
+
+          {/* Botão finalizar - maior no mobile */}
           <button
             onClick={handleFinalizar}
             disabled={cart.length === 0 || loading}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 sm:py-4 font-semibold text-white hover:bg-emerald-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
           >
             <Check className="h-5 w-5" />
             {loading ? "Processando..." : "Finalizar venda"}
+            <span className="hidden sm:inline text-xs opacity-75 ml-1">F4</span>
           </button>
         </div>
       </div>
 
+      {/* Diálogo de confirmação */}
       <ConfirmDialog
         open={confirmOpen}
         title="Finalizar venda?"
@@ -604,31 +780,42 @@ ${itensTexto}
         onCancel={() => setConfirmOpen(false)}
       />
 
+      {/* Modal de seleção de produto */}
       {modalProdutos && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-lg rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-[var(--card-bg)] p-4 sm:p-6 shadow-xl animate-slide-in">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Selecione o produto</h3>
-              <button onClick={() => { setModalProdutos(null); setSearchQuery(""); }} className="rounded-lg p-1 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                Selecione o produto
+              </h3>
+              <button
+                onClick={() => {
+                  setModalProdutos(null);
+                  setSearchQuery("");
+                }}
+                className="rounded-lg p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">{modalProdutos.length} resultados para &ldquo;{searchQuery}&rdquo;</p>
+            <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
+              {modalProdutos.length} resultados para &ldquo;{searchQuery}&rdquo;
+            </p>
             <ul className="max-h-80 space-y-2 overflow-y-auto">
               {modalProdutos.map((p) => (
                 <li key={p.id}>
                   <button
                     onClick={() => selecionarDoModal(p)}
-                    className="flex w-full items-center gap-3 rounded-xl border border-slate-100 dark:border-[var(--card-border)] px-4 py-3 text-left transition hover:border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                    className="flex w-full items-center gap-3 rounded-xl border border-slate-100 dark:border-[var(--card-border)] px-4 py-3 text-left transition hover:border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20 active:bg-violet-100 dark:active:bg-violet-900/40"
                   >
                     {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
                       <img
                         src={normalizeImageUrl(p.imagem_url)}
                         alt={p.nome}
-                        className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                        className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-lg object-cover"
                       />
                     ) : (
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                      <div className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
                         <ImageOff className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                       </div>
                     )}
@@ -639,8 +826,12 @@ ${itensTexto}
                       </p>
                     </div>
                     <div className="shrink-0 pl-4 text-right">
-                      <p className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(p.preco_venda)}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Estoque: {p.estoque}</p>
+                      <p className="font-semibold text-emerald-600 dark:text-emerald-400">
+                        {formatCurrency(p.preco_venda)}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Estoque: {p.estoque}
+                      </p>
                     </div>
                   </button>
                 </li>
@@ -650,12 +841,18 @@ ${itensTexto}
         </div>
       )}
 
+      {/* Modal de venda finalizada */}
       {vendaFinalizada && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-xl animate-slide-in">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Venda finalizada!</h3>
-              <button onClick={fecharModal} className="rounded-lg p-1 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                Venda finalizada!
+              </h3>
+              <button
+                onClick={fecharModal}
+                className="rounded-lg p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -666,7 +863,9 @@ ${itensTexto}
               <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                 {formatCurrency(vendaFinalizada.total)}
               </p>
-              <p className="text-emerald-600 dark:text-emerald-400">{vendaFinalizada.metodo_pagamento}</p>
+              <p className="text-emerald-600 dark:text-emerald-400">
+                {vendaFinalizada.metodo_pagamento}
+              </p>
             </div>
             <p className="mb-4 text-center text-sm text-slate-500 dark:text-slate-400">
               Deseja imprimir o cupom informativo?
@@ -674,13 +873,13 @@ ${itensTexto}
             <div className="flex gap-3">
               <button
                 onClick={fecharModal}
-                className="flex-1 rounded-xl border border-slate-200 dark:border-[var(--card-border)] py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
+                className="flex-1 rounded-xl border border-slate-200 dark:border-[var(--card-border)] py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-[0.98] transition-transform"
               >
                 Não
               </button>
               <button
                 onClick={imprimirCupom}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white hover:bg-violet-700"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white hover:bg-violet-700 active:scale-[0.98] transition-transform"
               >
                 <Printer className="h-4 w-4" />
                 Imprimir
@@ -690,12 +889,24 @@ ${itensTexto}
         </div>
       )}
 
+      {/* Modal de detalhes do produto */}
       {produtoDetalhe && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setProdutoDetalhe(null)}>
-          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setProdutoDetalhe(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-xl animate-slide-in"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Detalhes do produto</h3>
-              <button onClick={() => setProdutoDetalhe(null)} className="rounded-lg p-1 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                Detalhes do produto
+              </h3>
+              <button
+                onClick={() => setProdutoDetalhe(null)}
+                className="rounded-lg p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -704,18 +915,21 @@ ${itensTexto}
                 <img
                   src={normalizeImageUrl(produtoDetalhe.imagem_url)}
                   alt={produtoDetalhe.nome}
-                  className="h-48 w-48 rounded-2xl object-cover"
+                  className="h-40 w-40 sm:h-48 sm:w-48 rounded-2xl object-cover"
                 />
               ) : (
-                <div className="flex h-48 w-48 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-700">
+                <div className="flex h-40 w-40 sm:h-48 sm:w-48 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-700">
                   <ImageOff className="h-12 w-12 text-slate-400 dark:text-slate-500" />
-                  <span className="ml-2 text-sm text-slate-500">Sem foto cadastrada</span>
                 </div>
               )}
               <div className="w-full text-center">
-                <p className="text-lg font-bold text-slate-800 dark:text-slate-200">{produtoDetalhe.nome}</p>
+                <p className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                  {produtoDetalhe.nome}
+                </p>
                 {produtoDetalhe.descricao && (
-                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{produtoDetalhe.descricao}</p>
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                    {produtoDetalhe.descricao}
+                  </p>
                 )}
                 <p className="mt-3 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                   {formatCurrency(produtoDetalhe.preco_venda)}
@@ -724,13 +938,16 @@ ${itensTexto}
             </div>
             <button
               onClick={() => setProdutoDetalhe(null)}
-              className="mt-6 w-full rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white hover:bg-violet-700"
+              className="mt-6 w-full rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white hover:bg-violet-700 active:scale-[0.98] transition-transform"
             >
               Fechar
             </button>
           </div>
         </div>
       )}
+
+      {/* Botão flutuante de atalhos */}
+      <ShortcutHelp shortcuts={shortcuts} />
     </div>
   );
 }
