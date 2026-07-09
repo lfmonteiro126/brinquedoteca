@@ -67,6 +67,22 @@ export function GlobalSearch() {
     }
   }, [isOpen]);
 
+  // Handler global para ESC - funciona mesmo quando modal está aberto
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleGlobalEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        closeSearch();
+      }
+    }
+
+    window.addEventListener("keydown", handleGlobalEscape, true);
+    return () => window.removeEventListener("keydown", handleGlobalEscape, true);
+  }, [isOpen, closeSearch]);
+
   useEffect(() => {
     if (query.trim().length < 2) {
       setResults([]);

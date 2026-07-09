@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -8,6 +8,7 @@ import {
   ArrowUp,
   BarChart3,
   Bell,
+  Clock,
   DollarSign,
   Minus,
   Package,
@@ -27,6 +28,8 @@ function StatCard({
   icon: Icon,
   color,
   trend,
+  href,
+  onClick,
 }: {
   title: string;
   value: string;
@@ -34,13 +37,17 @@ function StatCard({
   icon: React.ElementType;
   color: string;
   trend?: { value: number; label: string };
+  href?: string;
+  onClick?: () => void;
 }) {
-  return (
-    <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
+  const content = (
+    <div className="group rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-violet-200 dark:hover:border-violet-700 cursor-pointer">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100">{value}</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100 group-hover:text-violet-700 dark:group-hover:text-violet-300 transition-colors">
+            {value}
+          </p>
           {subtitle && <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{subtitle}</p>}
           {trend && (
             <div className={`mt-1 flex items-center gap-1 text-xs font-medium ${
@@ -51,12 +58,20 @@ function StatCard({
             </div>
           )}
         </div>
-        <div className={`rounded-xl p-3 ${color}`}>
+        <div className={`rounded-xl p-3 transition-transform group-hover:scale-110 ${color}`}>
           <Icon className="h-5 w-5" />
         </div>
       </div>
     </div>
   );
+
+  if (href) {
+    return <Link href={href}>{content}</Link>;
+  }
+  if (onClick) {
+    return <button onClick={onClick} className="text-left w-full">{content}</button>;
+  }
+  return content;
 }
 
 function NotificationBanner({ onDismiss }: { onDismiss: () => void }) {
@@ -92,13 +107,49 @@ function HeatmapChart({ data }: { data: DashboardData["vendasPorHora"] }) {
             <div className="absolute -top-8 hidden group-hover:block z-10 rounded-lg bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs text-white whitespace-nowrap">
               {String(hora).padStart(2, "0")}h — {quantidade} venda(s) — {formatCurrency(total)}
             </div>
-            <div className={`w-full rounded-t ${intensity}`} style={{ height: `${Math.max(pct, 2)}%` }} />
+            <div className={`w-full rounded-t transition-all duration-200 hover:opacity-80 ${intensity}`} style={{ height: `${Math.max(pct, 2)}%` }} />
             <span className="text-[9px] text-slate-400 dark:text-slate-500">{hora}</span>
           </div>
         );
       })}
     </div>
   );
+}
+
+function AutoRefreshIndicator({ isRefreshing, lastUpdated, onRefresh }: {
+  isRefreshing: boolean;
+  lastUpdated: Date | null;
+  onRefresh: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        onClick={onRefresh}
+        disabled={isRefreshing}
+        className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-all"
+      >
+        <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+        <span className="hidden sm:inline">Atualizar</span>
+      </button>
+      {lastUpdated && (
+        <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+          <Clock className="h-3.5 w-3.5" />
+          <span>Atualizado {formatTimeAgo(lastUpdated)}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatTimeAgo(date: Date): string {
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diff < 10) return "agora";
+  if (diff < 60) return `há ${diff}s`;
+  if (diff < 3600) return `há ${Math.floor(diff / 60)}min`;
+  if (diff < 86400) return `há ${Math.floor(diff / 3600)}h`;
+  return `há ${Math.floor(diff / 86400)}d`;
 }
 
 export function DashboardView() {
@@ -108,29 +159,42 @@ export function DashboardView() {
   const [periodo, setPeriodo] = useState("7");
   const [retryCount, setRetryCount] = useState(0);
   const [showNotification, setShowNotification] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+
+  const loadData = useCallback(async (showLoader = true) => {
+    if (showLoader) setLoading(true);
+    else setIsRefreshing(true);
+
+    try {
+      const r = await fetch("/api/dashboard?periodo=" + periodo);
+      const json = await r.json();
+      setData(json);
+      setLastUpdated(new Date());
+      setShowNotification(true);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [periodo]);
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
-      setLoading(true);
-      try {
-        const r = await fetch("/api/dashboard?periodo=" + periodo);
-        const json = await r.json();
-        if (!cancelled) {
-          setData(json);
-          setLoading(false);
-          setShowNotification(true);
-        }
-      } catch {
-        if (!cancelled) {
-          setError(true);
-          setLoading(false);
-        }
-      }
-    }
-    load();
+    if (!cancelled) loadData();
     return () => { cancelled = true; };
-  }, [periodo, retryCount]);
+  }, [periodo, retryCount, loadData]);
+
+  // Auto-refresh a cada 30 segundos
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const interval = setInterval(() => {
+      loadData(false);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [autoRefresh, loadData]);
 
   function calcTrend(atual: number, anterior: number) {
     if (!anterior || !Number.isFinite(anterior)) return atual > 0 ? 100 : 0;
@@ -192,18 +256,26 @@ export function DashboardView() {
           <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Dashboard</h1>
           <p className="text-slate-500 dark:text-slate-400">Ateliê Angels Kids — Loja Praia Grande</p>
         </div>
-        <Link
-          href="/vendas"
-          className="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-700"
-        >
-          Abrir PDV
-        </Link>
+        <div className="flex items-center gap-3">
+          <AutoRefreshIndicator
+            isRefreshing={isRefreshing}
+            lastUpdated={lastUpdated}
+            onRefresh={() => loadData(false)}
+          />
+          <Link
+            href="/vendas"
+            className="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 transition-colors"
+          >
+            Abrir PDV
+          </Link>
+        </div>
       </div>
 
       {showNotification && data.produtosEstoqueBaixo.length > 0 && (
         <NotificationBanner onDismiss={() => setShowNotification(false)} />
       )}
 
+      {/* Cards de estatísticas clicáveis */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Vendas hoje"
@@ -211,6 +283,7 @@ export function DashboardView() {
           subtitle={`${data.vendasHoje.quantidade} venda(s)`}
           icon={DollarSign}
           color="bg-emerald-100 text-emerald-600"
+          href="/vendas/historico"
         />
         <StatCard
           title="Vendas no período"
@@ -219,6 +292,7 @@ export function DashboardView() {
           icon={TrendingUp}
           color="bg-blue-100 text-blue-600"
           trend={{ value: trendVendas, label: "vs anterior" }}
+          href="/vendas/historico"
         />
         <StatCard
           title="Produtos em estoque"
@@ -226,6 +300,7 @@ export function DashboardView() {
           subtitle="com quantidade > 0"
           icon={Package}
           color="bg-violet-100 text-violet-600"
+          href="/produtos"
         />
         <StatCard
           title="Alertas de estoque"
@@ -233,9 +308,11 @@ export function DashboardView() {
           subtitle="abaixo do mínimo"
           icon={AlertTriangle}
           color="bg-amber-100 text-amber-600"
+          href="/produtos"
         />
       </div>
 
+      {/* KPIs */}
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
           <div className="flex items-center gap-2">
@@ -265,19 +342,32 @@ export function DashboardView() {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
-        <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Período:</label>
-        <select
-          value={periodo}
-          onChange={(e) => setPeriodo(e.target.value)}
-          className="rounded-lg border border-card-border dark:border-[var(--card-border)] bg-input-bg dark:bg-[var(--input-bg)] px-3 py-1.5 text-sm text-foreground dark:text-slate-200"
-        >
-          <option value="7">Últimos 7 dias</option>
-          <option value="15">Últimos 15 dias</option>
-          <option value="30">Últimos 30 dias</option>
-        </select>
+      {/* Filtros */}
+      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Período:</label>
+          <select
+            value={periodo}
+            onChange={(e) => setPeriodo(e.target.value)}
+            className="rounded-lg border border-card-border dark:border-[var(--card-border)] bg-input-bg dark:bg-[var(--input-bg)] px-3 py-1.5 text-sm text-foreground dark:text-slate-200"
+          >
+            <option value="7">Últimos 7 dias</option>
+            <option value="15">Últimos 15 dias</option>
+            <option value="30">Últimos 30 dias</option>
+          </select>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={autoRefresh}
+            onChange={(e) => setAutoRefresh(e.target.checked)}
+            className="rounded border-slate-300 dark:border-slate-600 text-violet-600 focus:ring-violet-500"
+          />
+          Auto-refresh (30s)
+        </label>
       </div>
 
+      {/* Gráfico de vendas por hora */}
       <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-violet-500" />
@@ -286,20 +376,28 @@ export function DashboardView() {
         <HeatmapChart data={data.vendasPorHora} />
       </div>
 
+      {/* Estoque baixo e Mais vendidos */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
-            <h2 className="font-semibold text-slate-800 dark:text-slate-200">Estoque baixo</h2>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              <h2 className="font-semibold text-slate-800 dark:text-slate-200">Estoque baixo</h2>
+            </div>
+            {data.produtosEstoqueBaixo.length > 0 && (
+              <Link href="/produtos" className="text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline">
+                Ver todos →
+              </Link>
+            )}
           </div>
           {data.produtosEstoqueBaixo.length === 0 ? (
             <p className="text-sm text-slate-500 dark:text-slate-400">Nenhum alerta no momento</p>
           ) : (
             <ul className="space-y-2">
-              {data.produtosEstoqueBaixo.map((p) => (
+              {data.produtosEstoqueBaixo.slice(0, 5).map((p) => (
                 <li
                   key={p.id}
-                  className="flex items-center justify-between rounded-xl bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-xl bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-sm hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors cursor-pointer"
                 >
                   <span className="font-medium text-slate-700 dark:text-slate-300">{p.nome}</span>
                   <span className="font-bold text-amber-700 dark:text-amber-400">
@@ -307,35 +405,65 @@ export function DashboardView() {
                   </span>
                 </li>
               ))}
+              {data.produtosEstoqueBaixo.length > 5 && (
+                <li className="text-center text-xs text-slate-400 dark:text-slate-500">
+                  +{data.produtosEstoqueBaixo.length - 5} mais
+                </li>
+              )}
             </ul>
           )}
         </div>
 
         <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5 text-violet-500" />
-            <h2 className="font-semibold text-slate-800 dark:text-slate-200">Mais vendidos</h2>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 text-violet-500" />
+              <h2 className="font-semibold text-slate-800 dark:text-slate-200">Mais vendidos</h2>
+            </div>
+            {data.topProdutos.length > 0 && (
+              <Link href="/relatorios" className="text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline">
+                Ver relatório →
+              </Link>
+            )}
           </div>
           {data.topProdutos.length === 0 ? (
             <p className="text-sm text-slate-500 dark:text-slate-400">Nenhuma venda registrada ainda</p>
           ) : (
             <ul className="space-y-2">
-              {data.topProdutos.map((p, i) => (
+              {data.topProdutos.slice(0, 5).map((p, i) => (
                 <li
                   key={i}
-                  className="flex items-center justify-between rounded-xl bg-violet-50 dark:bg-violet-900/20 px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-xl bg-violet-50 dark:bg-violet-900/20 px-3 py-2 text-sm hover:bg-violet-100 dark:hover:bg-violet-900/30 transition-colors"
                 >
-                  <span className="font-medium text-slate-700 dark:text-slate-300">{p.produto_nome}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-200 dark:bg-violet-800 text-xs font-bold text-violet-700 dark:text-violet-300">
+                      {i + 1}
+                    </span>
+                    <span className="font-medium text-slate-700 dark:text-slate-300">{p.produto_nome}</span>
+                  </div>
                   <span className="font-bold text-violet-700 dark:text-violet-400">{p.total_vendido} un.</span>
                 </li>
               ))}
+              {data.topProdutos.length > 5 && (
+                <li className="text-center text-xs text-slate-400 dark:text-slate-500">
+                  +{data.topProdutos.length - 5} mais
+                </li>
+              )}
             </ul>
           )}
         </div>
       </div>
 
+      {/* Vendas recentes */}
       <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
-        <h2 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Vendas recentes</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-semibold text-slate-800 dark:text-slate-200">Vendas recentes</h2>
+          {data.vendasRecentes.length > 0 && (
+            <Link href="/vendas/historico" className="text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline">
+              Ver histórico →
+            </Link>
+          )}
+        </div>
         {data.vendasRecentes.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">Nenhuma venda ainda</p>
         ) : (
@@ -351,7 +479,7 @@ export function DashboardView() {
               </thead>
               <tbody>
                 {data.vendasRecentes.map((v) => (
-                  <tr key={v.id} className="border-b border-slate-50 dark:border-[var(--card-border)]">
+                  <tr key={v.id} className="border-b border-slate-50 dark:border-[var(--card-border)] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="py-2.5 pr-4 font-medium text-foreground dark:text-slate-200">#{v.numero}</td>
                     <td className="py-2.5 pr-4 text-foreground dark:text-slate-200">{v.usuario_nome}</td>
                     <td className="py-2.5 pr-4 font-semibold text-emerald-600 dark:text-emerald-400">

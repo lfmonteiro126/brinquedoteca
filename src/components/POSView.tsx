@@ -114,6 +114,33 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
     }
   }, [cart.length]);
 
+  // Handler global para ESC - funciona mesmo quando modais estão abertos
+  useEffect(() => {
+    function handleGlobalEscape(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+
+      // Prioridade: fechar modais na ordem correta
+      if (modalProdutos) {
+        e.preventDefault();
+        e.stopPropagation();
+        setModalProdutos(null);
+        setSearchQuery("");
+      } else if (vendaFinalizada) {
+        e.preventDefault();
+        e.stopPropagation();
+        setVendaFinalizada(null);
+        showToast("success", "Venda finalizada com sucesso!");
+      } else if (produtoDetalhe) {
+        e.preventDefault();
+        e.stopPropagation();
+        setProdutoDetalhe(null);
+      }
+    }
+
+    window.addEventListener("keydown", handleGlobalEscape, true);
+    return () => window.removeEventListener("keydown", handleGlobalEscape, true);
+  }, [modalProdutos, vendaFinalizada, produtoDetalhe, showToast]);
+
   // Atalhos de teclado
   const shortcuts = [
     {

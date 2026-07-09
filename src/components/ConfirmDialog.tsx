@@ -32,10 +32,14 @@ export function ConfirmDialog({
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape" && open) onCancel();
+      if (e.key === "Escape" && open) {
+        e.preventDefault();
+        e.stopPropagation();
+        onCancel();
+      }
     }
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
+    window.addEventListener("keydown", handleKey, true);
+    return () => window.removeEventListener("keydown", handleKey, true);
   }, [open, onCancel]);
 
   if (!open) return null;

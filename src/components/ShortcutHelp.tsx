@@ -1,7 +1,7 @@
 "use client";
 
 import { Keyboard, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getShortcutLabel, type ShortcutConfig } from "@/hooks/useKeyboardShortcuts";
 
 interface ShortcutHelpProps {
@@ -10,6 +10,22 @@ interface ShortcutHelpProps {
 
 export function ShortcutHelp({ shortcuts }: ShortcutHelpProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Handler global para ESC - funciona mesmo quando modal está aberto
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleGlobalEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleGlobalEscape, true);
+    return () => window.removeEventListener("keydown", handleGlobalEscape, true);
+  }, [isOpen]);
 
   return (
     <>
