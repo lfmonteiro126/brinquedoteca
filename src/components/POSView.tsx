@@ -461,7 +461,7 @@ ${itensTexto}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-lg bg-violet-100 dark:bg-violet-900/30 px-3 py-1.5 text-xs font-medium text-violet-700 dark:text-violet-300">
+          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-violet-100 dark:bg-violet-900/30 px-3 py-1.5 text-xs font-medium text-violet-700 dark:text-violet-300">
             <Keyboard className="h-3.5 w-3.5" />
             F3 Buscar
           </span>
@@ -518,10 +518,10 @@ ${itensTexto}
                     <img
                       src={normalizeImageUrl(p.imagem_url)}
                       alt={p.nome}
-                      className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                      className="h-12 w-12 shrink-0 rounded-xl object-cover"
                     />
                   ) : (
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700">
                       <ImageOff className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                     </div>
                   )}
@@ -559,7 +559,7 @@ ${itensTexto}
                   setRecentSearches([]);
                   setShowRecent(false);
                 }}
-                className="rounded-lg px-2 py-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-red-500 active:scale-95 transition-transform"
+                className="rounded-xl px-2 py-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-red-500 active:scale-[0.98] transition-transform"
               >
                 Limpar
               </button>
@@ -577,10 +577,10 @@ ${itensTexto}
                       <img
                         src={normalizeImageUrl(p.imagem_url)}
                         alt={p.nome}
-                        className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                        className="h-10 w-10 shrink-0 rounded-xl object-cover"
                       />
                     ) : (
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700">
                         <ImageOff className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                       </div>
                     )}
@@ -616,7 +616,7 @@ ${itensTexto}
               {cart.length > 0 && (
                 <button
                   onClick={clearCart}
-                  className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-transform"
+                  className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-[0.98] transition-transform"
                 >
                   <Trash2 className="h-4 w-4" />
                   Limpar
@@ -630,7 +630,7 @@ ${itensTexto}
                   Escaneie ou busque produtos para adicionar ao carrinho
                 </p>
                 <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
-                  Pressione <kbd className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-1.5 py-0.5 font-mono">F3</kbd> para buscar
+                  Pressione <kbd className="rounded border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-slate-700 px-1.5 py-0.5 font-mono">F3</kbd> para buscar
                 </p>
               </div>
             ) : (
@@ -647,10 +647,10 @@ ${itensTexto}
                       <img
                         src={normalizeImageUrl(item.produto.imagem_url)}
                         alt={item.produto.nome}
-                        className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 rounded-lg object-cover"
+                        className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 rounded-xl object-cover"
                       />
                     ) : (
-                      <div className="flex h-10 w-10 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-700">
+                      <div className="flex h-10 w-10 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl bg-slate-200 dark:bg-slate-700">
                         <ImageOff className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400 dark:text-slate-500" />
                       </div>
                     )}
@@ -673,7 +673,7 @@ ${itensTexto}
                     <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                       <button
                         onClick={() => updateQty(item.produto.id, -1)}
-                        className="flex h-11 w-11 items-center justify-center rounded-xl bg-white dark:bg-[var(--card-bg)] shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform"
+                        className="flex h-11 w-11 items-center justify-center rounded-xl bg-white dark:bg-[var(--card-bg)] shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-[0.98] transition-transform"
                       >
                         <Minus className="h-5 w-5" />
                       </button>
@@ -683,7 +683,7 @@ ${itensTexto}
                       <button
                         onClick={() => updateQty(item.produto.id, 1)}
                         disabled={item.quantidade >= item.produto.estoque}
-                        className="flex h-11 w-11 items-center justify-center rounded-xl bg-white dark:bg-[var(--card-bg)] shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="flex h-11 w-11 items-center justify-center rounded-xl bg-white dark:bg-[var(--card-bg)] shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-[0.98] transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <Plus className="h-5 w-5" />
                       </button>
@@ -697,7 +697,7 @@ ${itensTexto}
                     {/* Botão remover */}
                     <button
                       onClick={() => removeItem(item.produto.id)}
-                      className="flex h-11 w-11 items-center justify-center rounded-xl p-1 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 active:scale-95 transition-transform"
+                      className="flex h-11 w-11 items-center justify-center rounded-xl p-1 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 active:scale-[0.98] transition-transform"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -732,7 +732,7 @@ ${itensTexto}
                   value={desconto || ""}
                   onChange={(e) => setDesconto(Math.max(0, parseFloat(e.target.value) || 0))}
                   placeholder="0,00"
-                  className="w-24 rounded-lg border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-right text-sm"
+                  className="w-24 rounded-xl border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-right text-sm"
                 />
                 <span className="hidden sm:inline text-[10px] text-slate-400 dark:text-slate-500">F2</span>
               </div>
@@ -751,7 +751,7 @@ ${itensTexto}
                     setMetodoPagamento(e.target.value);
                     if (e.target.value !== "credito") setParcelas(1);
                   }}
-                  className="rounded-lg border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-sm"
+                  className="rounded-xl border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-sm"
                 >
                   <option value="pix">PIX</option>
                   <option value="debito">Cartão de débito</option>
@@ -765,7 +765,7 @@ ${itensTexto}
                   <select
                     value={parcelas}
                     onChange={(e) => setParcelas(parseInt(e.target.value))}
-                    className="rounded-lg border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-sm"
+                    className="rounded-xl border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-sm"
                   >
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
                       <option key={n} value={n}>
@@ -812,7 +812,7 @@ ${itensTexto}
       {/* Modal de seleção de produto */}
       {modalProdutos && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-[var(--card-bg)] p-4 sm:p-6 shadow-xl animate-slide-in">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-[var(--card-bg)] p-4 sm:p-6 shadow-lg animate-slide-in">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
                 Selecione o produto
@@ -822,7 +822,7 @@ ${itensTexto}
                   setModalProdutos(null);
                   setSearchQuery("");
                 }}
-                className="rounded-lg p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                className="rounded-xl p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -841,10 +841,10 @@ ${itensTexto}
                       <img
                         src={normalizeImageUrl(p.imagem_url)}
                         alt={p.nome}
-                        className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-lg object-cover"
+                        className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-xl object-cover"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                      <div className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700">
                         <ImageOff className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                       </div>
                     )}
@@ -873,14 +873,14 @@ ${itensTexto}
       {/* Modal de venda finalizada */}
       {vendaFinalizada && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-xl animate-slide-in">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-lg animate-slide-in">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
                 Venda finalizada!
               </h3>
               <button
                 onClick={fecharModal}
-                className="rounded-lg p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                className="rounded-xl p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -925,7 +925,7 @@ ${itensTexto}
           onClick={() => setProdutoDetalhe(null)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-xl animate-slide-in"
+            className="w-full max-w-sm rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-lg animate-slide-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
@@ -934,7 +934,7 @@ ${itensTexto}
               </h3>
               <button
                 onClick={() => setProdutoDetalhe(null)}
-                className="rounded-lg p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                className="rounded-xl p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 <X className="h-5 w-5" />
               </button>

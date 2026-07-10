@@ -81,7 +81,7 @@ export function Nav({ user }: { user: User }) {
           </div>
           <button
             onClick={() => setMobileOpen(false)}
-            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 lg:hidden active:scale-95 transition-transform"
+            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 lg:hidden active:scale-[0.98] transition-transform"
           >
             <X className="h-5 w-5" />
           </button>
@@ -147,7 +147,7 @@ export function Nav({ user }: { user: User }) {
     <>
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-40 rounded-xl bg-white dark:bg-[var(--card-bg)] p-3 shadow-lg shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-[var(--card-border)] lg:hidden active:scale-95 transition-transform"
+        className="fixed left-4 top-4 z-40 rounded-xl bg-white dark:bg-[var(--card-bg)] p-3 shadow-lg shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-[var(--card-border)] lg:hidden active:scale-[0.98] transition-transform"
       >
         <Menu className="h-5 w-5 text-violet-700 dark:text-violet-400" />
       </button>

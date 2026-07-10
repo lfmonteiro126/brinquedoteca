@@ -179,7 +179,7 @@ export function GlobalSearch() {
                 placeholder="Buscar produtos, páginas..."
                 className="flex-1 bg-transparent text-base text-slate-800 dark:text-slate-200 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
-              <button onClick={closeSearch} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform">
+              <button onClick={closeSearch} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-[0.98] transition-transform">
                 <X className="h-4 w-4" />
               </button>
             </div>

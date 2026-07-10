@@ -16,6 +16,9 @@
   --input-border: #e2e8f0;
   --sidebar-bg: #ffffff;
   --sidebar-border: #e9e5f5;
+  --color-success: #059669;
+  --color-danger: #dc2626;
+  --color-warning: #d97706;
 }
 
 .dark {
@@ -32,6 +35,9 @@
   --input-border: #2d2942;
   --sidebar-bg: #14111f;
   --sidebar-border: #2d2942;
+  --color-success: #34d399;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
 }
 
 @theme inline {
@@ -193,24 +199,18 @@ textarea {
   animation: fade-in-scale 0.2s ease-out;
 }
 
-/* Acessibilidade: Foco visível */
-*:focus-visible {
-  outline: 2px solid #7c3aed;
-  outline-offset: 2px;
-  border-radius: 4px;
-}
+/* Acessibilidade: Foco visível — usando Tailwind focus:ring-2 via componentes */
 
-/* Remover outline padrão para inputs (manter focus-visible) */
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
+/* Estado de erro nos inputs */
+input.error,
+select.error,
+textarea.error {
+  border-color: var(--color-danger) !important;
 }
-
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid #7c3aed;
+input.error:focus-visible,
+select.error:focus-visible,
+textarea.error:focus-visible {
+  outline: 2px solid var(--color-danger) !important;
   outline-offset: 2px;
 }
 

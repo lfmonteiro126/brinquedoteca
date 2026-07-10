@@ -41,7 +41,7 @@ export function ShortcutHelp({ shortcuts }: ShortcutHelpProps) {
       {isOpen && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50" onClick={() => setIsOpen(false)}>
           <div
-            className="mx-4 w-full max-w-md rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-xl animate-slide-in"
+            className="mx-4 w-full max-w-md rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-lg animate-slide-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
@@ -51,7 +51,7 @@ export function ShortcutHelp({ shortcuts }: ShortcutHelpProps) {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform"
+                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-[0.98] transition-transform"
               >
                 <X className="h-5 w-5" />
               </button>

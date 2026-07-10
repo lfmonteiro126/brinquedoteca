@@ -41,7 +41,7 @@ function StatCard({
   onClick?: () => void;
 }) {
   const content = (
-    <div className="group rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-violet-200 dark:hover:border-violet-700 cursor-pointer">
+    <div className="group rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-violet-200 dark:hover:border-violet-700 cursor-pointer">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
@@ -312,7 +312,7 @@ export function DashboardView() {
 
       {/* KPIs */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-emerald-500" />
             <p className="text-sm text-slate-500 dark:text-slate-400">Ticket médio</p>
@@ -320,7 +320,7 @@ export function DashboardView() {
           <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{formatCurrency(data.kpis.ticketMedio)}</p>
           <p className="text-xs text-slate-400 dark:text-slate-500">por venda</p>
         </div>
-        <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
           <div className="flex items-center gap-2">
             <ShoppingBag className="h-4 w-4 text-blue-500" />
             <p className="text-sm text-slate-500 dark:text-slate-400">Itens por venda</p>
@@ -328,7 +328,7 @@ export function DashboardView() {
           <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{data.kpis.itensPorVenda.toFixed(1)}</p>
           <p className="text-xs text-slate-400 dark:text-slate-500">média no período</p>
         </div>
-        <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-red-500" />
             <p className="text-sm text-slate-500 dark:text-slate-400">Taxa de devolução</p>
@@ -341,7 +341,7 @@ export function DashboardView() {
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
+      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
         <div className="flex items-center gap-3">
           <label className="text-sm font-medium text-slate-500 dark:text-slate-400">Período:</label>
           <select
@@ -366,7 +366,7 @@ export function DashboardView() {
       </div>
 
       {/* Gráfico de vendas por hora */}
-      <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
         <div className="mb-4 flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-violet-500" />
           <h2 className="font-semibold text-slate-800 dark:text-slate-200">Vendas por hora</h2>
@@ -376,7 +376,7 @@ export function DashboardView() {
 
       {/* Estoque baixo e Mais vendidos */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
@@ -412,7 +412,7 @@ export function DashboardView() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShoppingBag className="h-5 w-5 text-violet-500" />
@@ -453,7 +453,7 @@ export function DashboardView() {
       </div>
 
       {/* Vendas recentes */}
-      <div className="rounded-2xl border border-white/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-semibold text-slate-800 dark:text-slate-200">Vendas recentes</h2>
           {data.vendasRecentes.length > 0 && (

@@ -250,7 +250,7 @@ export function UsuariosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-md rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-xl">
+          <div className="mx-4 w-full max-w-md rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-lg">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
                 {editing ? "Editar usuário" : "Novo usuário"}

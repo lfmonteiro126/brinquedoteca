@@ -213,7 +213,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
             <div className="flex rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-slate-50 dark:bg-slate-800 p-1">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors active:scale-95 ${
+                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors active:scale-[0.98] ${
                   viewMode === "grid"
                     ? "bg-white dark:bg-slate-700 text-violet-600 shadow-sm"
                     : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
@@ -224,7 +224,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors active:scale-95 ${
+                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors active:scale-[0.98] ${
                   viewMode === "list"
                     ? "bg-white dark:bg-slate-700 text-violet-600 shadow-sm"
                     : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
@@ -263,7 +263,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
               <select
                 value={stockFilter}
                 onChange={(e) => setStockFilter(e.target.value as StockFilter)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
               >
                 <option value="all">Todos</option>
                 <option value="ok">Estoque OK</option>
@@ -277,7 +277,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
               <select
                 value={categoriaFilter}
                 onChange={(e) => setCategoriaFilter(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
               >
                 <option value="">Todas</option>
                 {categorias.map((cat) => (
@@ -294,7 +294,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                   placeholder="Mín"
                   value={priceMin}
                   onChange={(e) => setPriceMin(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
                 />
                 <span className="text-slate-400">-</span>
                 <input
@@ -302,7 +302,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                   placeholder="Máx"
                   value={priceMax}
                   onChange={(e) => setPriceMax(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
                 />
               </div>
             </div>
@@ -312,7 +312,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
               >
                 <option value="nome">Nome (A-Z)</option>
                 <option value="preco_asc">Preço (menor)</option>
@@ -354,7 +354,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:bg-[var(--card-bg)] dark:border-[var(--card-border)]">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 border-b border-slate-100 dark:border-[var(--card-border)] py-4 last:border-0">
-                <div className="h-12 w-12 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700" />
+                <div className="h-12 w-12 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 w-1/3 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
                   <div className="h-3 w-1/4 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
@@ -388,16 +388,16 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                 <Link href={`/produtos/${p.id}/editar`} className="flex flex-1 flex-col">
                   <div className="relative">
                     {semEstoque ? (
-                      <span className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                      <span className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-full bg-slate-800 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
                         SEM ESTOQUE
                       </span>
                     ) : baixo ? (
-                      <span className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-lg bg-red-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                      <span className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
                         <AlertTriangle className="h-3 w-3" />
                         REPOR! QTD: {p.estoque}
                       </span>
                     ) : (
-                      <span className="absolute left-3 top-3 z-10 rounded-lg bg-emerald-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                      <span className="absolute left-3 top-3 z-10 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
                         ESTOQUE OK
                       </span>
                     )}
@@ -462,7 +462,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                           e.preventDefault();
                           setStockAdjust({ produto: p, tipo: "saida" });
                         }}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                        className="flex h-7 w-7 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                       >
                         −
                       </button>
@@ -471,7 +471,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                           e.preventDefault();
                           setStockAdjust({ produto: p, tipo: "entrada" });
                         }}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                        className="flex h-7 w-7 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                       >
                         +
                       </button>
@@ -494,7 +494,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                       <Link
                         href={`/produtos/${p.id}/editar`}
                         onClick={(e) => e.stopPropagation()}
-                        className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-600 transition-colors hover:bg-slate-50 active:scale-95 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 dark:hover:bg-slate-700"
+                        className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-600 transition-colors hover:bg-slate-50 active:scale-[0.98] dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 dark:hover:bg-slate-700"
                       >
                         <Pencil className="h-4 w-4" />
                       </Link>
@@ -505,7 +505,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                           e.stopPropagation();
                           setDeleteTarget(p);
                         }}
-                        className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 active:scale-95 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                        className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 active:scale-[0.98] dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -574,7 +574,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                       <button
                         onClick={() => addToCart(p)}
                         disabled={semEstoque}
-                        className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white active:scale-95 disabled:opacity-50 transition-transform"
+                        className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white active:scale-[0.98] disabled:opacity-50 transition-transform"
                       >
                         <ShoppingCart className="h-4 w-4" />
                         Adicionar
@@ -582,7 +582,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                       {isAdmin && (
                         <Link
                           href={`/produtos/${p.id}/editar`}
-                          className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 active:scale-95 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 transition-transform"
+                          className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 active:scale-[0.98] dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 transition-transform"
                         >
                           <Pencil className="h-4 w-4" />
                         </Link>
@@ -590,7 +590,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                       {isAdmin && (
                         <button
                           onClick={() => setDeleteTarget(p)}
-                          className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 active:scale-95 hover:text-red-600 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 transition-transform"
+                          className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 active:scale-[0.98] hover:text-red-600 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 transition-transform"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -626,9 +626,9 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
-                              <img src={normalizeImageUrl(p.imagem_url)} alt={p.nome} className="h-10 w-10 rounded-lg object-cover" />
+                              <img src={normalizeImageUrl(p.imagem_url)} alt={p.nome} className="h-10 w-10 rounded-xl object-cover" />
                             ) : (
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700">
                                 <Package className="h-5 w-5 text-slate-400" />
                               </div>
                             )}
@@ -667,7 +667,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                             <button
                               onClick={() => addToCart(p)}
                               disabled={semEstoque}
-                              className="flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              className="flex items-center gap-1 rounded-xl bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                               title="Adicionar ao PDV"
                             >
                               <ShoppingCart className="h-3.5 w-3.5" />
@@ -675,7 +675,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                             {isAdmin && (
                               <Link
                                 href={`/produtos/${p.id}/editar`}
-                                className="flex items-center justify-center rounded-lg border border-slate-200 dark:border-[var(--card-border)] p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                className="flex items-center justify-center rounded-xl border border-slate-200 dark:border-[var(--card-border)] p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                                 title="Editar"
                               >
                                 <Pencil className="h-3.5 w-3.5" />
@@ -684,7 +684,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                             {isAdmin && (
                               <button
                                 onClick={() => setDeleteTarget(p)}
-                                className="flex items-center justify-center rounded-lg border border-slate-200 dark:border-[var(--card-border)] p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
+                                className="flex items-center justify-center rounded-xl border border-slate-200 dark:border-[var(--card-border)] p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
                                 title="Excluir"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -708,7 +708,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 active:scale-95 disabled:opacity-40 dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] dark:text-slate-400 dark:hover:bg-slate-700 transition-transform"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 active:scale-[0.98] disabled:opacity-40 dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] dark:text-slate-400 dark:hover:bg-slate-700 transition-transform"
           >
             Anterior
           </button>
@@ -718,7 +718,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
           <button
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= Math.ceil(total / PAGE_SIZE)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 active:scale-95 disabled:opacity-40 dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] dark:text-slate-400 dark:hover:bg-slate-700 transition-transform"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 active:scale-[0.98] disabled:opacity-40 dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] dark:text-slate-400 dark:hover:bg-slate-700 transition-transform"
           >
             Próxima
           </button>

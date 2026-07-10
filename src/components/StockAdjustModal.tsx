@@ -103,7 +103,7 @@ export function StockAdjustModal({ open, onClose, produto, tipo, onConfirm }: St
               <p className="text-xs text-slate-500 dark:text-slate-400">{produto.nome}</p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform">
+          <button onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-[0.98] transition-transform">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -122,7 +122,7 @@ export function StockAdjustModal({ open, onClose, produto, tipo, onConfirm }: St
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setQuantidade(Math.max(1, quantidade - 1))}
-                className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all"
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-[0.98] transition-all"
               >
                 <Minus className="h-5 w-5" />
               </button>
@@ -135,7 +135,7 @@ export function StockAdjustModal({ open, onClose, produto, tipo, onConfirm }: St
               />
               <button
                 onClick={() => setQuantidade(quantidade + 1)}
-                className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all"
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-[0.98] transition-all"
               >
                 <Plus className="h-5 w-5" />
               </button>
@@ -188,14 +188,14 @@ export function StockAdjustModal({ open, onClose, produto, tipo, onConfirm }: St
         <div className="flex items-center gap-3 border-t border-slate-200 dark:border-[var(--card-border)] px-5 py-4">
           <button
             onClick={onClose}
-            className="flex-1 rounded-xl border border-slate-200 dark:border-[var(--card-border)] px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all"
+            className="flex-1 rounded-xl border border-slate-200 dark:border-[var(--card-border)] px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-[0.98] transition-all"
           >
             Cancelar
           </button>
           <button
             onClick={handleConfirm}
             disabled={!isValid || loading}
-            className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
               tipo === "entrada"
                 ? "bg-emerald-600 hover:bg-emerald-700"
                 : "bg-red-600 hover:bg-red-700"

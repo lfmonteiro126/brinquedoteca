@@ -37,7 +37,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-violet-100 via-white to-amber-100 dark:from-[var(--background)] dark:via-[var(--background)] dark:to-[var(--background)] p-4">
-      <div className="w-full max-w-md rounded-2xl border border-violet-100 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-8 shadow-xl shadow-violet-100/50 dark:shadow-black/20">
+      <div className="w-full max-w-md rounded-2xl border border-violet-100 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-8 shadow-lg shadow-violet-100/50 dark:shadow-black/20">
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500 text-white shadow-lg shadow-violet-200 dark:shadow-violet-900/30">
             <ToyBrick className="h-8 w-8" />

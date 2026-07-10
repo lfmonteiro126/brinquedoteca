@@ -8,7 +8,7 @@ export function Skeleton({ className = "" }: { className?: string }) {
 
 export function SkeletonCard() {
   return (
-    <div className="rounded-2xl border border-white/60 dark:border-slate-700 bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <Skeleton className="h-4 w-24" />

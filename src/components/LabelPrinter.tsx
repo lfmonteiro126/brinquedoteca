@@ -156,7 +156,7 @@ export function LabelPrinter({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="mx-4 flex max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl bg-white shadow-xl">
+      <div className="mx-4 flex max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl bg-white shadow-lg">
         <div className="flex items-center justify-between border-b px-6 py-4">
           <h2 className="text-lg font-bold text-slate-800">Imprimir Etiquetas</h2>
           <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100">

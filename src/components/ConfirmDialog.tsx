@@ -53,7 +53,7 @@ export function ConfirmDialog({
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      <div className="mx-4 w-full max-w-sm rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-xl">
+      <div className="mx-4 w-full max-w-sm rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-lg">
         <div className="mb-4 flex items-start gap-3">
           <div className={`rounded-xl p-2 ${danger ? "bg-red-100 dark:bg-red-900/30" : "bg-amber-100 dark:bg-amber-900/30"}`}>
             <AlertTriangle className={`h-5 w-5 ${danger ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"}`} />
