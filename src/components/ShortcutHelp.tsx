@@ -31,7 +31,7 @@ export function ShortcutHelp({ shortcuts }: ShortcutHelpProps) {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 left-4 z-50 hidden sm:flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-violet-700 transition-colors lg:left-[280px]"
+        className="fixed bottom-4 left-4 z-50 hidden sm:flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-violet-700 transition-colors lg:left-[300px]"
         title="Ver atalhos de teclado"
       >
         <Keyboard className="h-4 w-4" />
