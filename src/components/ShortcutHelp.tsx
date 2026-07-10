@@ -31,11 +31,11 @@ export function ShortcutHelp({ shortcuts }: ShortcutHelpProps) {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-violet-700 transition-colors"
+        className="fixed bottom-4 left-4 z-50 hidden sm:flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-violet-700 transition-colors"
         title="Ver atalhos de teclado"
       >
         <Keyboard className="h-4 w-4" />
-        <span className="hidden sm:inline">Atalhos</span>
+        <span>Atalhos</span>
       </button>
 
       {isOpen && (
@@ -51,7 +51,7 @@ export function ShortcutHelp({ shortcuts }: ShortcutHelpProps) {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform"
               >
                 <X className="h-5 w-5" />
               </button>

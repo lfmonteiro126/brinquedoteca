@@ -211,7 +211,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
             <div className="flex rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-slate-50 dark:bg-slate-800 p-1">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+                className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors active:scale-95 ${
                   viewMode === "grid"
                     ? "bg-white dark:bg-slate-700 text-violet-600 shadow-sm"
                     : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
@@ -222,7 +222,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+                className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors active:scale-95 ${
                   viewMode === "list"
                     ? "bg-white dark:bg-slate-700 text-violet-600 shadow-sm"
                     : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
@@ -477,18 +477,18 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                         addToCart(p);
                       }}
                       disabled={semEstoque}
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <ShoppingCart className="h-3.5 w-3.5" />
+                      <ShoppingCart className="h-4 w-4" />
                       Adicionar ao PDV
                     </button>
                     {isAdmin && (
                       <Link
                         href={`/produtos/${p.id}/editar`}
                         onClick={(e) => e.stopPropagation()}
-                        className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-600 transition-colors hover:bg-slate-50 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 dark:hover:bg-slate-700"
+                        className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-600 transition-colors hover:bg-slate-50 active:scale-95 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 dark:hover:bg-slate-700"
                       >
-                        <Pencil className="h-3.5 w-3.5" />
+                        <Pencil className="h-4 w-4" />
                       </Link>
                     )}
                     {isAdmin && (
@@ -497,9 +497,9 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                           e.stopPropagation();
                           setDeleteTarget(p);
                         }}
-                        className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                        className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600 hover:border-red-200 active:scale-95 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     )}
                   </div>
@@ -510,102 +510,188 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
         </div>
       ) : (
         // Visualização em lista
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-[var(--card-border)]">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Produto</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">SKU</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Categoria</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Preço</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estoque</th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-[var(--card-border)]">
-                {produtosFiltrados.map((p) => {
-                  const baixo = p.estoque <= p.estoque_minimo;
-                  const semEstoque = p.estoque === 0;
-                  return (
-                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
-                            <img src={normalizeImageUrl(p.imagem_url)} alt={p.nome} className="h-10 w-10 rounded-lg object-cover" />
-                          ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
-                              <Package className="h-5 w-5 text-slate-400" />
+        <>
+          {/* Cards no mobile */}
+          <div className="sm:hidden space-y-3">
+            {produtosFiltrados.map((p) => {
+              const baixo = p.estoque <= p.estoque_minimo;
+              const semEstoque = p.estoque === 0;
+              return (
+                <div
+                  key={p.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:bg-[var(--card-bg)] dark:border-[var(--card-border)]"
+                >
+                  <div className="flex items-start gap-3">
+                    {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
+                      <img src={normalizeImageUrl(p.imagem_url)} alt={p.nome} className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+                    ) : (
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700">
+                        <Package className="h-6 w-6 text-slate-400" />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <Link href={`/produtos/${p.id}/editar`} className="font-medium text-slate-800 dark:text-slate-200 hover:text-violet-600 dark:hover:text-violet-400 line-clamp-1">
+                        {p.nome}
+                      </Link>
+                      {p.descricao && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{p.descricao}</p>
+                      )}
+                      <div className="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                        <span>{p.categoria || "Sem categoria"}</span>
+                        <span>·</span>
+                        <span className="font-mono">{p.codigo_barras || "Sem SKU"}</span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(p.preco_venda)}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Estoque: {p.estoque}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    {semEstoque ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-700 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                        Sem estoque
+                      </span>
+                    ) : baixo ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/30 px-2.5 py-1 text-xs font-semibold text-red-600 dark:text-red-400">
+                        <AlertTriangle className="h-3 w-3" />
+                        Baixo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                        OK
+                      </span>
+                    )}
+                    <div className="ml-auto flex items-center gap-2">
+                      <button
+                        onClick={() => addToCart(p)}
+                        disabled={semEstoque}
+                        className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white active:scale-95 disabled:opacity-50 transition-transform"
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                        Adicionar
+                      </button>
+                      {isAdmin && (
+                        <Link
+                          href={`/produtos/${p.id}/editar`}
+                          className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 active:scale-95 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 transition-transform"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                      )}
+                      {isAdmin && (
+                        <button
+                          onClick={() => setDeleteTarget(p)}
+                          className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 active:scale-95 hover:text-red-600 dark:border-[var(--card-border)] dark:bg-transparent dark:text-slate-400 transition-transform"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Tabela no desktop */}
+          <div className="hidden sm:block rounded-2xl border border-slate-200 bg-white shadow-sm dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-[var(--card-border)]">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Produto</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">SKU</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Categoria</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Preço</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estoque</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-[var(--card-border)]">
+                  {produtosFiltrados.map((p) => {
+                    const baixo = p.estoque <= p.estoque_minimo;
+                    const semEstoque = p.estoque === 0;
+                    return (
+                      <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
+                              <img src={normalizeImageUrl(p.imagem_url)} alt={p.nome} className="h-10 w-10 rounded-lg object-cover" />
+                            ) : (
+                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                                <Package className="h-5 w-5 text-slate-400" />
+                              </div>
+                            )}
+                            <div>
+                              <Link href={`/produtos/${p.id}/editar`} className="font-medium text-slate-800 dark:text-slate-200 hover:text-violet-600 dark:hover:text-violet-400">
+                                {p.nome}
+                              </Link>
+                              {p.descricao && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]">{p.descricao}</p>
+                              )}
                             </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">{p.codigo_barras || "—"}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{p.categoria || "—"}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(p.preco_venda)}</td>
+                        <td className="px-4 py-3 text-right font-medium text-slate-800 dark:text-slate-200">{p.estoque}</td>
+                        <td className="px-4 py-3 text-center">
+                          {semEstoque ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                              Sem estoque
+                            </span>
+                          ) : baixo ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/30 px-2 py-1 text-xs font-semibold text-red-600 dark:text-red-400">
+                              <AlertTriangle className="h-3 w-3" />
+                              Baixo
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                              OK
+                            </span>
                           )}
-                          <div>
-                            <Link href={`/produtos/${p.id}/editar`} className="font-medium text-slate-800 dark:text-slate-200 hover:text-violet-600 dark:hover:text-violet-400">
-                              {p.nome}
-                            </Link>
-                            {p.descricao && (
-                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]">{p.descricao}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => addToCart(p)}
+                              disabled={semEstoque}
+                              className="flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              title="Adicionar ao PDV"
+                            >
+                              <ShoppingCart className="h-3.5 w-3.5" />
+                            </button>
+                            {isAdmin && (
+                              <Link
+                                href={`/produtos/${p.id}/editar`}
+                                className="flex items-center justify-center rounded-lg border border-slate-200 dark:border-[var(--card-border)] p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                title="Editar"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Link>
+                            )}
+                            {isAdmin && (
+                              <button
+                                onClick={() => setDeleteTarget(p)}
+                                className="flex items-center justify-center rounded-lg border border-slate-200 dark:border-[var(--card-border)] p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
+                                title="Excluir"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
                             )}
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">{p.codigo_barras || "—"}</td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{p.categoria || "—"}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(p.preco_venda)}</td>
-                      <td className="px-4 py-3 text-right font-medium text-slate-800 dark:text-slate-200">{p.estoque}</td>
-                      <td className="px-4 py-3 text-center">
-                        {semEstoque ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400">
-                            Sem estoque
-                          </span>
-                        ) : baixo ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/30 px-2 py-1 text-xs font-semibold text-red-600 dark:text-red-400">
-                            <AlertTriangle className="h-3 w-3" />
-                            Baixo
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                            OK
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => addToCart(p)}
-                            disabled={semEstoque}
-                            className="flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            title="Adicionar ao PDV"
-                          >
-                            <ShoppingCart className="h-3.5 w-3.5" />
-                          </button>
-                          {isAdmin && (
-                            <Link
-                              href={`/produtos/${p.id}/editar`}
-                              className="flex items-center justify-center rounded-lg border border-slate-200 dark:border-[var(--card-border)] p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                              title="Editar"
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Link>
-                          )}
-                          {isAdmin && (
-                            <button
-                              onClick={() => setDeleteTarget(p)}
-                              className="flex items-center justify-center rounded-lg border border-slate-200 dark:border-[var(--card-border)] p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Paginação */}
@@ -614,7 +700,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] dark:text-slate-400 dark:hover:bg-slate-700"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 active:scale-95 disabled:opacity-40 dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] dark:text-slate-400 dark:hover:bg-slate-700 transition-transform"
           >
             Anterior
           </button>
@@ -624,7 +710,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
           <button
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= Math.ceil(total / PAGE_SIZE)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] dark:text-slate-400 dark:hover:bg-slate-700"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 active:scale-95 disabled:opacity-40 dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] dark:text-slate-400 dark:hover:bg-slate-700 transition-transform"
           >
             Próxima
           </button>

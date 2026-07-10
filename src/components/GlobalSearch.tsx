@@ -179,7 +179,7 @@ export function GlobalSearch() {
                 placeholder="Buscar produtos, páginas..."
                 className="flex-1 bg-transparent text-base text-slate-800 dark:text-slate-200 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
-              <button onClick={closeSearch} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700">
+              <button onClick={closeSearch} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -258,7 +258,7 @@ export function GlobalSearch() {
               )}
             </div>
 
-            <div className="border-t border-slate-200 dark:border-[var(--card-border)] px-4 py-2 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
+            <div className="hidden sm:flex border-t border-slate-200 dark:border-[var(--card-border)] px-4 py-2 items-center justify-between text-xs text-slate-400 dark:text-slate-500">
               <span>Navegar com <kbd className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-1 py-0.5 font-mono">↑↓</kbd></span>
               <span>Selecionar com <kbd className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-1 py-0.5 font-mono">Enter</kbd></span>
               <span>Fechar com <kbd className="rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-1 py-0.5 font-mono">Esc</kbd></span>

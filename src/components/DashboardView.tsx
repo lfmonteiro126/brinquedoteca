@@ -98,12 +98,12 @@ function HeatmapChart({ data }: { data: DashboardData["vendasPorHora"] }) {
   });
 
   return (
-    <div className="flex items-end gap-1" style={{ height: 120 }}>
+    <div className="scroll-snap-x flex items-end gap-1 overflow-x-auto pb-2" style={{ height: 120 }}>
       {hours.map(({ hora, total, quantidade }) => {
         const pct = maxVal > 0 ? (total / maxVal) * 100 : 0;
         const intensity = pct > 66 ? "bg-violet-600" : pct > 33 ? "bg-violet-400" : pct > 0 ? "bg-violet-200 dark:bg-violet-800" : "bg-slate-100 dark:bg-slate-700";
         return (
-          <div key={hora} className="group relative flex flex-1 flex-col items-center gap-1">
+          <div key={hora} className="group relative flex flex-col items-center gap-1 shrink-0 w-8 sm:w-auto sm:flex-1">
             <div className="absolute -top-8 hidden group-hover:block z-10 rounded-lg bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs text-white whitespace-nowrap">
               {String(hora).padStart(2, "0")}h — {quantidade} venda(s) — {formatCurrency(total)}
             </div>
@@ -383,7 +383,7 @@ export function DashboardView() {
               <h2 className="font-semibold text-slate-800 dark:text-slate-200">Estoque baixo</h2>
             </div>
             {data.produtosEstoqueBaixo.length > 0 && (
-              <Link href="/produtos" className="text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline">
+              <Link href="/produtos" className="rounded-lg px-2 py-1 text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline">
                 Ver todos →
               </Link>
             )}
@@ -419,7 +419,7 @@ export function DashboardView() {
               <h2 className="font-semibold text-slate-800 dark:text-slate-200">Mais vendidos</h2>
             </div>
             {data.topProdutos.length > 0 && (
-              <Link href="/relatorios" className="text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline">
+              <Link href="/relatorios" className="rounded-lg px-2 py-1 text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline">
                 Ver relatório →
               </Link>
             )}
@@ -457,7 +457,7 @@ export function DashboardView() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-semibold text-slate-800 dark:text-slate-200">Vendas recentes</h2>
           {data.vendasRecentes.length > 0 && (
-            <Link href="/vendas/historico" className="text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline">
+            <Link href="/vendas/historico" className="rounded-lg px-2 py-1 text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline">
               Ver histórico →
             </Link>
           )}
@@ -465,30 +465,49 @@ export function DashboardView() {
         {data.vendasRecentes.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">Nenhuma venda ainda</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 dark:border-[var(--card-border)] text-left text-slate-500 dark:text-slate-400">
-                  <th className="pb-2 pr-4">#</th>
-                  <th className="pb-2 pr-4">Vendedor</th>
-                  <th className="pb-2 pr-4">Total</th>
-                  <th className="pb-2">Data</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.vendasRecentes.map((v) => (
-                  <tr key={v.id} className="border-b border-slate-50 dark:border-[var(--card-border)] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="py-2.5 pr-4 font-medium text-foreground dark:text-slate-200">#{v.numero}</td>
-                    <td className="py-2.5 pr-4 text-foreground dark:text-slate-200">{v.usuario_nome}</td>
-                    <td className="py-2.5 pr-4 font-semibold text-emerald-600 dark:text-emerald-400">
-                      {formatCurrency(v.total)}
-                    </td>
-                    <td className="py-2.5 text-slate-500 dark:text-slate-400">{formatDate(v.created_at)}</td>
+          <>
+            {/* Cards no mobile */}
+            <div className="sm:hidden space-y-2">
+              {data.vendasRecentes.map((v) => (
+                <div key={v.id} className="flex items-center justify-between rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-2.5">
+                  <div>
+                    <span className="font-medium text-foreground dark:text-slate-200">#{v.numero}</span>
+                    <span className="ml-2 text-sm text-foreground dark:text-slate-200">{v.usuario_nome}</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(v.total)}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{formatDate(v.created_at)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabela no desktop */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-[var(--card-border)] text-left text-slate-500 dark:text-slate-400">
+                    <th className="pb-2 pr-4">#</th>
+                    <th className="pb-2 pr-4">Vendedor</th>
+                    <th className="pb-2 pr-4">Total</th>
+                    <th className="pb-2">Data</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {data.vendasRecentes.map((v) => (
+                    <tr key={v.id} className="border-b border-slate-50 dark:border-[var(--card-border)] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="py-2.5 pr-4 font-medium text-foreground dark:text-slate-200">#{v.numero}</td>
+                      <td className="py-2.5 pr-4 text-foreground dark:text-slate-200">{v.usuario_nome}</td>
+                      <td className="py-2.5 pr-4 font-semibold text-emerald-600 dark:text-emerald-400">
+                        {formatCurrency(v.total)}
+                      </td>
+                      <td className="py-2.5 text-slate-500 dark:text-slate-400">{formatDate(v.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

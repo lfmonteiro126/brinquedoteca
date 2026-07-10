@@ -559,7 +559,7 @@ ${itensTexto}
                   setRecentSearches([]);
                   setShowRecent(false);
                 }}
-                className="text-xs text-slate-400 dark:text-slate-500 hover:text-red-500"
+                className="rounded-lg px-2 py-1.5 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-red-500 active:scale-95 transition-transform"
               >
                 Limpar
               </button>
@@ -616,9 +616,9 @@ ${itensTexto}
               {cart.length > 0 && (
                 <button
                   onClick={clearCart}
-                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-transform"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                   Limpar
                 </button>
               )}
@@ -673,19 +673,19 @@ ${itensTexto}
                     <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                       <button
                         onClick={() => updateQty(item.produto.id, -1)}
-                        className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-white dark:bg-[var(--card-bg)] shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform"
+                        className="flex h-11 w-11 items-center justify-center rounded-xl bg-white dark:bg-[var(--card-bg)] shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform"
                       >
-                        <Minus className="h-4 w-4" />
+                        <Minus className="h-5 w-5" />
                       </button>
-                      <span className="w-6 sm:w-8 text-center font-bold text-sm sm:text-base">
+                      <span className="w-8 text-center font-bold text-base">
                         {item.quantidade}
                       </span>
                       <button
                         onClick={() => updateQty(item.produto.id, 1)}
                         disabled={item.quantidade >= item.produto.estoque}
-                        className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-white dark:bg-[var(--card-bg)] shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="flex h-11 w-11 items-center justify-center rounded-xl bg-white dark:bg-[var(--card-bg)] shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-5 w-5" />
                       </button>
                     </div>
 
@@ -697,9 +697,9 @@ ${itensTexto}
                     {/* Botão remover */}
                     <button
                       onClick={() => removeItem(item.produto.id)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg p-1 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 active:scale-95 transition-transform"
+                      className="flex h-11 w-11 items-center justify-center rounded-xl p-1 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 active:scale-95 transition-transform"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-5 w-5" />
                     </button>
                   </li>
                 ))}

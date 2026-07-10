@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -39,11 +39,26 @@ export function Nav({ user }: { user: User }) {
   const { theme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [prevPathname, setPrevPathname] = useState(pathname);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
 
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
     setMobileOpen(false);
   }
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+    if (deltaX < -80 && deltaY < 50) {
+      setMobileOpen(false);
+    }
+  }, []);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -66,7 +81,7 @@ export function Nav({ user }: { user: User }) {
           </div>
           <button
             onClick={() => setMobileOpen(false)}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 lg:hidden"
+            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 lg:hidden active:scale-95 transition-transform"
           >
             <X className="h-5 w-5" />
           </button>
@@ -81,7 +96,7 @@ export function Nav({ user }: { user: User }) {
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                className={`relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 ${
                   active
                     ? "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300"
                     : "text-slate-600 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300"
@@ -97,17 +112,17 @@ export function Nav({ user }: { user: User }) {
           })}
         </nav>
 
-        <div className="shrink-0 border-t border-violet-100 dark:border-[var(--sidebar-border)] p-4 space-y-2">
+        <div className="shrink-0 border-t border-violet-100 dark:border-[var(--sidebar-border)] p-4 space-y-1">
           <button
             onClick={toggleTheme}
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300"
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300 active:scale-[0.98] transition-all"
           >
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             {theme === "dark" ? "Tema claro" : "Tema escuro"}
           </button>
           <Link
             href="/perfil"
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300"
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300 active:scale-[0.98] transition-all"
           >
             <UserCircle className="h-4 w-4" />
             Meu Perfil
@@ -118,7 +133,7 @@ export function Nav({ user }: { user: User }) {
           </div>
           <button
             onClick={logout}
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400"
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 active:scale-[0.98] transition-all"
           >
             <LogOut className="h-4 w-4" />
             Sair
@@ -132,7 +147,7 @@ export function Nav({ user }: { user: User }) {
     <>
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-40 rounded-xl bg-white dark:bg-[var(--card-bg)] p-2.5 shadow-lg shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-[var(--card-border)] lg:hidden"
+        className="fixed left-4 top-4 z-40 rounded-xl bg-white dark:bg-[var(--card-bg)] p-3 shadow-lg shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-[var(--card-border)] lg:hidden active:scale-95 transition-transform"
       >
         <Menu className="h-5 w-5 text-violet-700 dark:text-violet-400" />
       </button>
@@ -145,6 +160,8 @@ export function Nav({ user }: { user: User }) {
       )}
 
       <aside
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-violet-100 dark:border-[var(--sidebar-border)] bg-white dark:bg-[var(--sidebar-bg)] transition-transform duration-200 lg:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
