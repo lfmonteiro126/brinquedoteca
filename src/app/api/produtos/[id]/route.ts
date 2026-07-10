@@ -24,10 +24,26 @@ export async function PUT(request: NextRequest, { params }: Params) {
     const user = await requireAdmin();
     const { id } = await params;
     const body = await request.json();
+    const produtoId = parseInt(id);
 
+    // Ajuste rápido de estoque (apenas motivo + quantidade)
+    if (body.ajuste_estoque && body.ajuste_quantidade) {
+      const tipo = body.ajuste_tipo === "saida" ? "saida" : "entrada";
+      await registrarMovimentacao({
+        produtoId,
+        tipo,
+        quantidade: body.ajuste_quantidade,
+        usuarioId: user.id,
+        motivo: body.ajuste_motivo || `Ajuste manual (${tipo})`,
+      });
+      const produto = await sqlGet("SELECT * FROM produtos WHERE id = $1", produtoId);
+      return NextResponse.json({ produto });
+    }
+
+    // Edição completa do produto
     const atual = await sqlGet(
       "SELECT estoque FROM produtos WHERE id = $1",
-      parseInt(id)
+      produtoId
     ) as { estoque: number } | undefined;
 
     if (!atual) {
@@ -46,21 +62,10 @@ export async function PUT(request: NextRequest, { params }: Params) {
         estoque_minimo = ${body.estoque_minimo ?? 5},
         ativo = ${body.ativo ?? true},
         updated_at = NOW()
-      WHERE id = ${parseInt(id)}
+      WHERE id = ${produtoId}
     `;
 
-    if (body.ajuste_estoque && body.ajuste_quantidade) {
-      const tipo = body.ajuste_tipo === "saida" ? "saida" : "entrada";
-      await registrarMovimentacao({
-        produtoId: parseInt(id),
-        tipo,
-        quantidade: body.ajuste_quantidade,
-        usuarioId: user.id,
-        motivo: body.ajuste_motivo || `Ajuste manual (${tipo})`,
-      });
-    }
-
-    const produto = await sqlGet("SELECT * FROM produtos WHERE id = $1", parseInt(id));
+    const produto = await sqlGet("SELECT * FROM produtos WHERE id = $1", produtoId);
     return NextResponse.json({ produto });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Erro";
