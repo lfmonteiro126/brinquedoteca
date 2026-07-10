@@ -21,6 +21,7 @@ import { formatCurrency, normalizeImageUrl } from "@/lib/format";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "@/components/Toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { StockAdjustModal } from "@/components/StockAdjustModal";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Produto } from "@/lib/types";
 
@@ -45,6 +46,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [sortBy, setSortBy] = useState("nome");
+  const [stockAdjust, setStockAdjust] = useState<{ produto: Produto; tipo: "entrada" | "saida" } | null>(null);
   const router = useRouter();
   const { showToast } = useToast();
 
@@ -456,13 +458,19 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                     </span>
                     <div className="flex gap-1">
                       <button
-                        onClick={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setStockAdjust({ produto: p, tipo: "saida" });
+                        }}
                         className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                       >
                         −
                       </button>
                       <button
-                        onClick={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setStockAdjust({ produto: p, tipo: "entrada" });
+                        }}
                         className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                       >
                         +
@@ -726,6 +734,23 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
         confirmLabel={deleting ? "Excluindo..." : "Excluir"}
         danger
       />
+
+      {stockAdjust && (
+        <StockAdjustModal
+          key={`${stockAdjust.produto.id}-${stockAdjust.tipo}`}
+          open={!!stockAdjust}
+          onClose={() => setStockAdjust(null)}
+          produto={stockAdjust.produto}
+          tipo={stockAdjust.tipo}
+          onConfirm={(novoEstoque) => {
+            setProdutos((prev) =>
+              prev.map((p) =>
+                p.id === stockAdjust.produto.id ? { ...p, estoque: novoEstoque } : p
+              )
+            );
+          }}
+        />
+      )}
     </div>
   );
 }
