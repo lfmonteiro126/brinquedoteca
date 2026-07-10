@@ -604,7 +604,7 @@ ${itensTexto}
       </div>
 
       {/* Layout principal: Carrinho + Resumo */}
-      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Carrinho */}
         <div className="lg:col-span-2">
           <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-4 sm:p-5 shadow-sm">
@@ -638,7 +638,7 @@ ${itensTexto}
                 {cart.map((item) => (
                   <li
                     key={item.produto.id}
-                    className={`flex items-center gap-2 sm:gap-3 rounded-xl bg-slate-50 dark:bg-slate-800 px-3 sm:px-4 py-3 transition-all duration-200 ${
+                    className={`flex items-center gap-2 sm:gap-3 rounded-xl bg-slate-50 dark:bg-slate-800 px-3 sm:px-4 py-3 overflow-hidden min-w-0 transition-all duration-200 ${
                       addedItemId === item.produto.id ? "animate-flash-success ring-2 ring-emerald-400" : ""
                     }`}
                   >

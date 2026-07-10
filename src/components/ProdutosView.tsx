@@ -196,7 +196,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
       {/* Barra de busca e filtros */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:bg-[var(--card-bg)] dark:border-[var(--card-border)]">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <input
               value={q}

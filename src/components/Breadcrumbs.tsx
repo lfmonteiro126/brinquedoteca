@@ -10,7 +10,7 @@ export interface BreadcrumbItem {
 
 export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 overflow-x-auto">
+    <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 overflow-x-auto scrollbar-hide min-w-0">
       <Link
         href="/"
         className="flex items-center gap-1 rounded-lg px-2 py-1.5 hover:text-violet-600 dark:hover:text-violet-400 transition-colors shrink-0"
@@ -24,12 +24,12 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
           {item.href ? (
             <Link
               href={item.href}
-              className="rounded-lg px-2 py-1.5 hover:text-violet-600 dark:hover:text-violet-400 transition-colors truncate max-w-[150px] sm:max-w-none"
+              className="rounded-lg px-2 py-1.5 hover:text-violet-600 dark:hover:text-violet-400 transition-colors truncate max-w-[120px] sm:max-w-[200px]"
             >
               {item.label}
             </Link>
           ) : (
-            <span className="rounded-lg px-2 py-1.5 font-medium text-slate-700 dark:text-slate-200 truncate max-w-[150px] sm:max-w-none">{item.label}</span>
+            <span className="rounded-lg px-2 py-1.5 font-medium text-slate-700 dark:text-slate-200 truncate max-w-[120px] sm:max-w-[200px]">{item.label}</span>
           )}
         </span>
       ))}
