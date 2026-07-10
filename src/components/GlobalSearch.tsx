@@ -34,6 +34,8 @@ export function GlobalSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
+  const displayResults = query.trim().length < 2 ? [] : results;
+
   const openSearch = useCallback(() => {
     setIsOpen(true);
     setQuery("");
@@ -84,10 +86,7 @@ export function GlobalSearch() {
   }, [isOpen, closeSearch]);
 
   useEffect(() => {
-    if (query.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+    if (query.trim().length < 2) return;
 
     const timer = setTimeout(async () => {
       setLoading(true);
@@ -118,6 +117,7 @@ export function GlobalSearch() {
           icon: p.icon,
         }));
 
+        setSelectedIndex(0);
         setResults([...filteredPages, ...searchResults]);
       } catch {
         setResults([]);
@@ -129,20 +129,16 @@ export function GlobalSearch() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [results]);
-
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((i) => Math.min(i + 1, results.length - 1));
+      setSelectedIndex((i) => Math.min(i + 1, displayResults.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setSelectedIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && results[selectedIndex]) {
+    } else if (e.key === "Enter" && displayResults[selectedIndex]) {
       e.preventDefault();
-      navigateTo(results[selectedIndex]);
+      navigateTo(displayResults[selectedIndex]);
     } else if (e.key === "Escape") {
       closeSearch();
     }
@@ -195,7 +191,7 @@ export function GlobalSearch() {
                 </div>
               )}
 
-              {!loading && query.trim().length >= 2 && results.length === 0 && (
+              {!loading && query.trim().length >= 2 && displayResults.length === 0 && (
                 <div className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
                   Nenhum resultado para &ldquo;{query}&rdquo;
                 </div>
@@ -220,9 +216,9 @@ export function GlobalSearch() {
                 </div>
               )}
 
-              {results.length > 0 && (
+              {displayResults.length > 0 && (
                 <ul className="py-2">
-                  {results.map((result, i) => (
+                  {displayResults.map((result, i) => (
                     <li key={`${result.type}-${result.href}`}>
                       <button
                         onClick={() => navigateTo(result)}

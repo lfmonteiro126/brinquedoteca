@@ -4,6 +4,7 @@ import { Nav } from "@/components/Nav";
 import { IdleTimer } from "@/components/IdleTimer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { RoutePreloader } from "@/components/RoutePreloader";
 import type { UserRole } from "@/lib/types";
 
 export async function AppShell({
@@ -24,8 +25,11 @@ export async function AppShell({
     <ThemeProvider>
       <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-amber-50 dark:from-[var(--background)] dark:via-[var(--background)] dark:to-[var(--background)]">
         <Nav user={user} />
-        <main className="min-h-screen p-4 pt-16 lg:pl-72 lg:pr-8 lg:pb-8 lg:pt-8">{children}</main>
+        <main id="main-content" tabIndex={-1} className="min-h-screen p-4 pt-16 lg:pl-72 lg:pr-8 lg:pb-8 lg:pt-8 animate-fade-in">
+          {children}
+        </main>
         <GlobalSearch />
+        <RoutePreloader />
         <IdleTimer />
       </div>
     </ThemeProvider>

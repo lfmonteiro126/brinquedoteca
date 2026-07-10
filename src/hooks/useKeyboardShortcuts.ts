@@ -14,7 +14,10 @@ export interface ShortcutConfig {
 
 export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
   const shortcutsRef = useRef(shortcuts);
-  shortcutsRef.current = shortcuts;
+
+  useEffect(() => {
+    shortcutsRef.current = shortcuts;
+  });
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Ignorar se estiver digitando em um input/textarea

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, startTransition } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -182,9 +182,7 @@ export function DashboardView() {
   }, [periodo]);
 
   useEffect(() => {
-    let cancelled = false;
-    if (!cancelled) loadData();
-    return () => { cancelled = true; };
+    startTransition(() => { loadData(); });
   }, [periodo, retryCount, loadData]);
 
   // Auto-refresh a cada 30 segundos
