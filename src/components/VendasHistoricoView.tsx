@@ -6,6 +6,7 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { Pagination } from "@/components/Pagination";
 import { SkeletonTable } from "@/components/Skeleton";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useToast } from "@/components/Toast";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Venda } from "@/lib/types";
 
@@ -27,6 +28,7 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
   const [showFilters, setShowFilters] = useState(false);
   const [estornando, setEstornando] = useState<number | null>(null);
   const [confirmEstorno, setConfirmEstorno] = useState<Venda | null>(null);
+  const { showToast } = useToast();
 
   const [data, setData] = useState("");
   const [vendedor, setVendedor] = useState("");
@@ -92,10 +94,10 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
       if (res.ok) {
         setReloadKey((k) => k + 1);
       } else {
-        alert(data.error || "Erro ao estornar venda");
+        showToast("error", data.error || "Erro ao estornar venda");
       }
     } catch {
-      alert("Erro de conexão ao estornar venda");
+      showToast("error", "Erro de conexão ao estornar venda");
     }
     setEstornando(null);
   }
@@ -105,7 +107,7 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
       {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Histórico de vendas</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-violet-900 dark:text-violet-300">Histórico de vendas</h1>
           <p className="text-slate-500 dark:text-slate-400">Todas as vendas registradas no sistema</p>
         </div>
         <button
@@ -135,7 +137,7 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
                 type="date"
                 value={data}
                 onChange={(e) => setData(e.target.value)}
-                className="w-full rounded-lg border px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800 outline-none"
               />
             </div>
             <div>
@@ -144,7 +146,7 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
                 value={vendedor}
                 onChange={(e) => setVendedor(e.target.value)}
                 placeholder="Nome do vendedor..."
-                className="w-full rounded-lg border px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800 outline-none"
               />
             </div>
             <div>
@@ -152,7 +154,7 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
               <select
                 value={metodo}
                 onChange={(e) => setMetodo(e.target.value)}
-                className="w-full rounded-lg border px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800 outline-none"
               >
                 <option value="">Todos</option>
                 <option value="pix">PIX</option>
@@ -167,7 +169,7 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
                 type="date"
                 value={desde}
                 onChange={(e) => setDesde(e.target.value)}
-                className="w-full rounded-lg border px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800 outline-none"
               />
             </div>
             <div>
@@ -176,21 +178,21 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
                 type="date"
                 value={ate}
                 onChange={(e) => setAte(e.target.value)}
-                className="w-full rounded-lg border px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800 outline-none"
               />
             </div>
           </div>
           <div className="mt-3 flex gap-2">
             <button
               onClick={handleFilter}
-              className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
+              className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 active:scale-[0.98]"
             >
               Aplicar
             </button>
             {hasFilters && (
               <button
                 onClick={clearFilters}
-                className="flex items-center gap-1 rounded-lg border px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-[var(--card-border)] px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98]"
               >
                 <X className="h-3.5 w-3.5" />
                 Limpar
@@ -208,23 +210,23 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
         ) : (
           <>
             <table className="w-full text-sm">
-              <thead className="bg-violet-50 dark:bg-violet-900/20 text-left text-violet-800">
+              <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-[var(--card-border)] text-left text-slate-500 dark:text-slate-400">
                 <tr>
-                  <th className="px-4 py-3">#</th>
-                  <th className="px-4 py-3">Vendedor</th>
-                  <th className="px-4 py-3">Total</th>
-                  <th className="px-4 py-3 hidden sm:table-cell">Pagamento</th>
-                  <th className="px-4 py-3 hidden md:table-cell">Desconto</th>
-                  <th className="px-4 py-3">Data</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">#</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Vendedor</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Total</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Pagamento</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider hidden md:table-cell">Desconto</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Data</th>
                   <th className="px-4 py-3 w-10"></th>
                   {isAdmin && <th className="px-4 py-3 w-10"></th>}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100 dark:divide-[var(--card-border)]">
                 {vendas.map((v) => (
                   <Fragment key={v.id}>
                     <tr
-                      className="border-t border-slate-50 cursor-pointer hover:bg-slate-50/50"
+                      className="cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
                       onClick={() => setExpanded(expanded === v.id ? null : v.id)}
                     >
                       <td className="px-4 py-3 font-bold">#{v.numero}</td>

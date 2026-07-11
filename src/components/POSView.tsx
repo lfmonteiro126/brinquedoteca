@@ -548,7 +548,7 @@ ${itensTexto}
         )}
         {showRecent && !showResults && recentSearches.length > 0 && (
           <div className="absolute z-30 mt-1 w-full rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] shadow-lg">
-            <div className="flex items-center justify-between border-b px-4 py-2">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[var(--card-border)] px-4 py-2">
               <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
                 Buscas recentes
               </span>
@@ -732,7 +732,7 @@ ${itensTexto}
                   value={desconto || ""}
                   onChange={(e) => setDesconto(Math.max(0, parseFloat(e.target.value) || 0))}
                   placeholder="0,00"
-                  className="w-24 rounded-xl border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-right text-sm"
+                  className="w-24 rounded-xl border border-slate-200 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-right text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800"
                 />
                 <span className="hidden sm:inline text-[10px] text-slate-400 dark:text-slate-500">F2</span>
               </div>
@@ -765,7 +765,7 @@ ${itensTexto}
                   <select
                     value={parcelas}
                     onChange={(e) => setParcelas(parseInt(e.target.value))}
-                    className="rounded-xl border dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-sm"
+                  className="rounded-xl border border-slate-200 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-sm outline-none"
                   >
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
                       <option key={n} value={n}>
@@ -778,7 +778,7 @@ ${itensTexto}
             </div>
 
             {/* Total */}
-            <div className="border-t dark:border-[var(--card-border)] pt-3 flex justify-between text-lg font-bold">
+            <div className="border-t border-slate-200 dark:border-[var(--card-border)] pt-3 flex justify-between text-lg font-bold">
               <span>Total</span>
               <span className="text-emerald-600 dark:text-emerald-400">
                 {formatCurrency(total)}

@@ -247,7 +247,7 @@ export function InventarioView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
     <div className="space-y-6">
       {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <div>
-        <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Inventário físico</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-violet-900 dark:text-violet-300">Inventário físico</h1>
         <p className="text-slate-500 dark:text-slate-400">
           Conte os produtos e compare com o sistema — detecta desvios de mercadoria
         </p>
@@ -275,7 +275,7 @@ export function InventarioView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
 
       {message && (
         <div
-          className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm ${
+          className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm ${
             message.type === "ok" ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700" : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
           }`}
         >
@@ -428,7 +428,7 @@ export function InventarioView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
                       onChange={(e) =>
                         setManualCount(produto.id, parseInt(e.target.value, 10) || 0)
                       }
-                      className="w-16 rounded-lg border dark:border-[var(--card-border)] bg-white dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1 text-center text-sm"
+                      className="w-16 rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1 text-center text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800"
                     />
                     <button
                       onClick={() => incrementCount(produto.id)}

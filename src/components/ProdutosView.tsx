@@ -172,7 +172,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Brinquedos</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-violet-900 dark:text-violet-300">Brinquedos</h1>
           <p className="text-slate-500 dark:text-slate-400">
             {total} produto{total !== 1 ? "s" : ""} cadastrado{total !== 1 ? "s" : ""}
           </p>

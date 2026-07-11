@@ -228,7 +228,7 @@ export function DashboardView() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-violet-900 dark:text-violet-300">Dashboard</h1>
         </div>
         <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-8 text-center shadow-sm">
           <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-red-400" />
@@ -251,7 +251,7 @@ export function DashboardView() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-violet-900 dark:text-violet-300">Dashboard</h1>
           <p className="text-slate-500 dark:text-slate-400">Ateliê Angels Kids — Loja Praia Grande</p>
         </div>
         <div className="flex items-center gap-3">

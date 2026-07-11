@@ -396,7 +396,7 @@ export function RelatoriosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
     <div className="space-y-6">
       {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
       <div>
-        <h1 className="text-2xl font-bold text-violet-900 dark:text-violet-300">Relatórios</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-violet-900 dark:text-violet-300">Relatórios</h1>
         <p className="text-slate-500 dark:text-slate-400">Análise de vendas e desempenho</p>
       </div>
 
