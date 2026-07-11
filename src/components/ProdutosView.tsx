@@ -22,6 +22,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "@/components/Toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { StockAdjustModal } from "@/components/StockAdjustModal";
+import { ProductDetailModal } from "@/components/ProductDetailModal";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Produto } from "@/lib/types";
 
@@ -47,6 +48,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
   const [priceMax, setPriceMax] = useState("");
   const [sortBy, setSortBy] = useState("nome");
   const [stockAdjust, setStockAdjust] = useState<{ produto: Produto; tipo: "entrada" | "saida" } | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Produto | null>(null);
   const router = useRouter();
   const { showToast } = useToast();
 
@@ -383,9 +385,9 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
             return (
               <div
                 key={p.id}
-                className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md hover:border-violet-200 dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] dark:hover:border-violet-700"
+                className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md hover:border-violet-200 dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] dark:hover:border-violet-700 cursor-pointer"
               >
-                <Link href={`/produtos/${p.id}/editar`} className="flex flex-1 flex-col">
+                <div onClick={() => setSelectedProduct(p)} className="flex flex-1 flex-col">
                   <div className="relative">
                     {semEstoque ? (
                       <span className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-full bg-slate-800 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
@@ -449,7 +451,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                       </div>
                     </div>
                   </div>
-                </Link>
+                </div>
 
                 <div className="p-4 pt-0">
                   <div className="mb-3 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-[var(--card-border)] dark:bg-slate-800/50">
@@ -538,9 +540,9 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <Link href={`/produtos/${p.id}/editar`} className="font-medium text-slate-800 dark:text-slate-200 hover:text-violet-600 dark:hover:text-violet-400 line-clamp-1">
+                      <button onClick={() => setSelectedProduct(p)} className="text-left font-medium text-slate-800 dark:text-slate-200 hover:text-violet-600 dark:hover:text-violet-400 line-clamp-1">
                         {p.nome}
-                      </Link>
+                      </button>
                       {p.descricao && (
                         <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{p.descricao}</p>
                       )}
@@ -633,9 +635,9 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                               </div>
                             )}
                             <div>
-                              <Link href={`/produtos/${p.id}/editar`} className="font-medium text-slate-800 dark:text-slate-200 hover:text-violet-600 dark:hover:text-violet-400">
+                              <button onClick={() => setSelectedProduct(p)} className="text-left font-medium text-slate-800 dark:text-slate-200 hover:text-violet-600 dark:hover:text-violet-400">
                                 {p.nome}
-                              </Link>
+                              </button>
                               {p.descricao && (
                                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]">{p.descricao}</p>
                               )}
@@ -748,6 +750,25 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                 p.id === stockAdjust.produto.id ? { ...p, estoque: novoEstoque } : p
               )
             );
+          }}
+        />
+      )}
+
+      {selectedProduct && (
+        <ProductDetailModal
+          produto={selectedProduct}
+          isAdmin={isAdmin}
+          onClose={() => setSelectedProduct(null)}
+          onEdit={() => {
+            router.push(`/produtos/${selectedProduct.id}/editar`);
+          }}
+          onAddToCart={() => {
+            addToCart(selectedProduct);
+            setSelectedProduct(null);
+          }}
+          onStockAdjust={(tipo) => {
+            setStockAdjust({ produto: selectedProduct, tipo });
+            setSelectedProduct(null);
           }}
         />
       )}

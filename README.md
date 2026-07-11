@@ -60,6 +60,7 @@ src/
 ├── app/                          # Rotas (Next.js App Router)
 │   ├── api/                      # API routes (REST)
 │   │   ├── auth/                 #   Login, logout, troca de senha
+│   │   ├── auditoria/            #   Log de movimentacoes de estoque
 │   │   ├── dashboard/            #   Dados do dashboard
 │   │   ├── inventario/           #   Sessoes de inventario
 │   │   ├── produtos/             #   CRUD produtos + busca por barcode
@@ -67,8 +68,10 @@ src/
 │   │   ├── usuarios/             #   CRUD usuarios (admin)
 │   │   └── vendas/               #   Vendas + estorno
 │   ├── auditoria/page.tsx        # Pagina de auditoria
+│   ├── error.tsx                 # Error boundary global
 │   ├── inventario/page.tsx       # Pagina de inventario
 │   ├── login/page.tsx            # Login
+│   ├── not-found.tsx             # Pagina 404 personalizada
 │   ├── perfil/                   # Perfil do usuario
 │   ├── produtos/                  # CRUD produtos (listar/novo/editar)
 │   ├── relatorios/page.tsx       # Relatorios (admin)
@@ -78,24 +81,33 @@ src/
 ├── components/                   # Componentes React
 │   ├── AppShell.tsx              # Layout autenticado
 │   ├── AuditoriaView.tsx         # View de auditoria
+│   ├── Breadcrumbs.tsx           # Navegacao hierarquica
 │   ├── ConfirmDialog.tsx         # Modal de confirmacao
 │   ├── DashboardView.tsx         # Dashboard com charts
+│   ├── EmptyState.tsx            # Estados vazios ilustrados (8 tipos)
+│   ├── GlobalSearch.tsx          # Busca global (Ctrl+K)
 │   ├── IdleTimer.tsx             # Logout por inatividade
 │   ├── InventarioView.tsx        # View de inventario
 │   ├── LabelPrinter.tsx          # Impressao de etiquetas
 │   ├── Nav.tsx                   # Sidebar de navegacao
+│   ├── OptimizedImage.tsx        # Imagem com lazy loading e fallback
 │   ├── Pagination.tsx            # Componente de paginacao
 │   ├── PerfilView.tsx            # View de perfil
 │   ├── POSView.tsx               # Ponto de venda (PDV)
 │   ├── ProductForm.tsx           # Formulario de produto
 │   ├── ProdutosView.tsx          # View de produtos
 │   ├── RelatoriosView.tsx        # View de relatorios
+│   ├── RoutePreloader.tsx        # Prefetch de rotas criticas
+│   ├── ShortcutHelp.tsx          # Ajuda de atalhos de teclado
 │   ├── Skeleton.tsx              # Loading skeletons
+│   ├── StockAdjustModal.tsx      # Modal de ajuste de estoque
 │   ├── ThemeProvider.tsx          # Provider do tema (dark/light)
+│   ├── Toast.tsx                 # Sistema de notificacoes
 │   ├── UsuariosView.tsx          # View de usuarios
 │   └── VendasHistoricoView.tsx   # Historico de vendas
 ├── hooks/                        # Custom hooks React
 │   ├── useDebounce.ts            # Debounce para buscas
+│   ├── useKeyboardShortcuts.ts   # Atalhos de teclado (PDV)
 │   └── usePreferences.ts         # Preferencias do usuario
 ├── lib/                          # Utilitarios e logica
 │   ├── auth.ts                   # Autenticacao (JWT, sessao)
@@ -103,6 +115,7 @@ src/
 │   ├── schema.ts                 # Schema Drizzle ORM (tabelas do banco)
 │   ├── api.ts                    # Helpers de error handling para API
 │   ├── format.ts                 # Formatacao (moeda, data)
+│   ├── sanitize.ts               # Sanitizacao de inputs (XSS)
 │   └── types.ts                  # Tipagens TypeScript
 ├── drizzle.config.ts              # Config do Drizzle Kit (migrations)
 └── middleware.ts                  # Middleware de autenticacao
@@ -145,6 +158,7 @@ O schema e criado automaticamente via `initSchema()` na primeira execucao. Para 
 - Cadastro completo: nome, código de barras, preço de custo/venda, estoque mínimo, categoria
 - Edição e listagem com paginação
 - **Impressão de etiquetas** — etiquetas com código de barras em 3 tamanhos (38x25mm, 50x30mm, 70x40mm), configuráveis (preço, código, categoria)
+- **Ajuste de estoque** — modal com motivo obrigatório (entrada/saída/correção/inventário/outros), histórico registrado
 
 ### Histórico de Vendas
 - Lista paginada de todas as vendas
@@ -186,6 +200,19 @@ O schema e criado automaticamente via `initSchema()` na primeira execucao. Para 
 - **Logout automático** após 15 minutos de inatividade
 - **Tema escuro** — alterna entre claro e escuro (salva preferência)
 - **Navegação responsiva** — menu lateral colapsável no mobile
+
+### UX e Interface
+- **Busca global** — Ctrl+K para buscar em todo o sistema
+- **Atalhos de teclado** — F1 (ajuda), F2 (novo), F3 (buscar), F4 (limpar)
+- **Toasts** — notificações visuais de sucesso/erro/aviso
+- **Breadcrumbs** — navegação hierárquica em todas as páginas
+- **Empty states ilustrados** — mensagens amigáveis quando não há dados
+- **Loading skeletons** — feedback visual durante carregamento
+- **Imagens otimizadas** — lazy loading com fallback automático
+- **Ajuste de estoque** — modal dedicado com motivo obrigatório (admin)
+- **Escurecimento suave** — dark mode sem flash (anti-FOUC)
+- **Touch targets** — botões com pelo menos 44px para mobile
+- **Micro-interações** — feedback visual em botões e ações
 
 ## Leitor de código de barras
 
