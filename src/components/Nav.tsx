@@ -87,7 +87,7 @@ export function Nav({ user }: { user: User }) {
           </button>
         </div>
 
-        <nav className="flex-1 min-h-0 space-y-1 p-3 overflow-y-auto">
+        <nav className="flex-1 min-h-0 space-y-0.5 p-3 overflow-y-auto">
           {filteredLinks.map(({ href, label, icon: Icon }) => {
             const active =
               href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
@@ -96,16 +96,16 @@ export function Nav({ user }: { user: User }) {
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 ${
+                className={`relative flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-200 ${
                   active
                     ? "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300"
                     : "text-slate-600 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300"
                 }`}
               >
                 {active && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-violet-600 dark:bg-violet-400" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-r-full bg-violet-600 dark:bg-violet-400" />
                 )}
-                <Icon className="h-4 w-4" />
+                <Icon className="h-3.5 w-3.5" />
                 {label}
               </Link>
             );
@@ -115,16 +115,16 @@ export function Nav({ user }: { user: User }) {
         <div className="shrink-0 border-t border-violet-100 dark:border-[var(--sidebar-border)] p-4 space-y-1">
           <button
             onClick={toggleTheme}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300 active:scale-[0.98] transition-all"
+            className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300 active:scale-[0.98] transition-all"
           >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
             {theme === "dark" ? "Tema claro" : "Tema escuro"}
           </button>
           <Link
             href="/perfil"
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300 active:scale-[0.98] transition-all"
+            className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300 active:scale-[0.98] transition-all"
           >
-            <UserCircle className="h-4 w-4" />
+            <UserCircle className="h-3.5 w-3.5" />
             Meu Perfil
           </Link>
           <div className="border-t border-violet-100 dark:border-[var(--sidebar-border)] pt-2">
@@ -133,9 +133,9 @@ export function Nav({ user }: { user: User }) {
           </div>
           <button
             onClick={logout}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 active:scale-[0.98] transition-all"
+            className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs text-slate-500 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 active:scale-[0.98] transition-all"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-3.5 w-3.5" />
             Sair
           </button>
         </div>
