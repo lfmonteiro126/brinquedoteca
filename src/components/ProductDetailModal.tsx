@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AlertTriangle, Calendar, Edit, Package, ShoppingCart, Tag, X } from "lucide-react";
 import { formatCurrency, normalizeImageUrl } from "@/lib/format";
 import type { Produto } from "@/lib/types";
@@ -10,7 +11,6 @@ interface ProductDetailModalProps {
   onClose: () => void;
   onEdit: () => void;
   onAddToCart: () => void;
-  onStockAdjust: (tipo: "entrada" | "saida") => void;
 }
 
 export function ProductDetailModal({
@@ -19,7 +19,6 @@ export function ProductDetailModal({
   onClose,
   onEdit,
   onAddToCart,
-  onStockAdjust,
 }: ProductDetailModalProps) {
   const p = produto;
   const baixo = p.estoque <= p.estoque_minimo;
@@ -27,6 +26,14 @@ export function ProductDetailModal({
   const margem = p.preco_custo > 0
     ? ((p.preco_venda - p.preco_custo) / p.preco_custo * 100).toFixed(1)
     : null;
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [onClose]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
@@ -179,23 +186,6 @@ export function ProductDetailModal({
               </button>
             )}
           </div>
-
-          {isAdmin && (
-            <div className="mt-2 flex gap-2">
-              <button
-                onClick={() => onStockAdjust("entrada")}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-transparent px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-[0.98]"
-              >
-                + Entrada
-              </button>
-              <button
-                onClick={() => onStockAdjust("saida")}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-transparent px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-[0.98]"
-              >
-                − Saída
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

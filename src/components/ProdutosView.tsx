@@ -766,10 +766,6 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
             addToCart(selectedProduct);
             setSelectedProduct(null);
           }}
-          onStockAdjust={(tipo) => {
-            setStockAdjust({ produto: selectedProduct, tipo });
-            setSelectedProduct(null);
-          }}
         />
       )}
     </div>
