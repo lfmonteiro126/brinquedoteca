@@ -166,22 +166,22 @@ export function ProductDetailModal({
           </div>
 
           {/* Botoes de acao */}
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex items-center justify-center gap-2">
             <button
               onClick={onAddToCart}
               disabled={semEstoque}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ShoppingCart className="h-4 w-4" />
+              <ShoppingCart className="h-3.5 w-3.5" />
               Adicionar ao PDV
             </button>
 
             {isAdmin && (
               <button
                 onClick={onEdit}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-transparent px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-[0.98]"
+                className="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-transparent px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-[0.98]"
               >
-                <Edit className="h-4 w-4" />
+                <Edit className="h-3.5 w-3.5" />
                 Editar
               </button>
             )}
