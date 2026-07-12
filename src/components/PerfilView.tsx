@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { usePreferences } from "@/hooks/usePreferences";
-import { User, Save } from "lucide-react";
+import { User, Moon, Sun, Save } from "lucide-react";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { User as UserType } from "@/lib/types";
 
 export function PerfilView({ user, breadcrumbs }: { user: UserType; breadcrumbs?: BreadcrumbItem[] }) {
-  const { resolvedTheme, toggleTheme } = useTheme();
+  const { resolvedTheme: theme, toggleTheme } = useTheme();
   const { prefs, updatePreferences } = usePreferences();
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
@@ -97,16 +97,9 @@ export function PerfilView({ user, breadcrumbs }: { user: UserType; breadcrumbs?
             </div>
             <button
               onClick={toggleTheme}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                resolvedTheme === "dark" ? "bg-violet-600" : "bg-slate-200 dark:bg-slate-800"
-              }`}
-              aria-label="Alternar tema escuro"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-card-border bg-surface-hover text-foreground transition hover:bg-violet-100 dark:hover:bg-violet-900/30"
             >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
-                  resolvedTheme === "dark" ? "translate-x-5" : "translate-x-0"
-                }`}
-              />
+              {theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </button>
           </div>
           <div className="flex items-center justify-between">

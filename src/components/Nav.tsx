@@ -113,13 +113,25 @@ export function Nav({ user }: { user: User }) {
         </nav>
 
         <div className="shrink-0 border-t border-violet-100 dark:border-[var(--sidebar-border)] p-4 space-y-1">
-          <button
-            onClick={toggleTheme}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300 active:scale-[0.98] transition-all"
-          >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            {theme === "dark" ? "Tema claro" : "Tema escuro"}
-          </button>
+          <div className="flex w-full items-center justify-between px-3 py-2.5 text-sm text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-2">
+              <Moon className="h-4 w-4" />
+              Tema escuro
+            </span>
+            <button
+              onClick={toggleTheme}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                theme === "dark" ? "bg-violet-600" : "bg-slate-200 dark:bg-slate-800"
+              }`}
+              aria-label="Alternar tema escuro"
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                  theme === "dark" ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
           <Link
             href="/perfil"
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-500 dark:text-slate-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300 active:scale-[0.98] transition-all"
