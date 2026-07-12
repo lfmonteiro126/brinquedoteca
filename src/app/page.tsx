@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <AppShell allowedRoles={["admin", "vendedor"]}>
+    <AppShell allowedRoles={["admin"]}>
       <DashboardView />
     </AppShell>
   );

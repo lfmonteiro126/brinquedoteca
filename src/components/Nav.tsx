@@ -23,10 +23,10 @@ import { useTheme } from "@/components/ThemeProvider";
 import type { User } from "@/lib/types";
 
 const links = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard, adminOnly: true },
   { href: "/vendas", label: "PDV / Vendas", icon: ShoppingCart },
-  { href: "/produtos", label: "Brinquedos", icon: Package },
-  { href: "/vendas/historico", label: "Histórico", icon: ClipboardList },
+  { href: "/produtos", label: "Brinquedos", icon: Package, adminOnly: true },
+  { href: "/vendas/historico", label: "Histórico", icon: ClipboardList, adminOnly: true },
   { href: "/inventario", label: "Inventário", icon: ClipboardList, adminOnly: true },
   { href: "/auditoria", label: "Auditoria", icon: Shield, adminOnly: true },
   { href: "/usuarios", label: "Usuários", icon: Users, adminOnly: true },

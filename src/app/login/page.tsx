@@ -31,7 +31,11 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/");
+    if (data.user?.role === "vendedor") {
+      router.push("/vendas");
+    } else {
+      router.push("/");
+    }
     router.refresh();
   }
 

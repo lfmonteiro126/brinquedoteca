@@ -11,7 +11,7 @@ export default async function ProdutosPage() {
   const user = await getSessionUser();
 
   return (
-    <AppShell allowedRoles={["admin", "vendedor"]}>
+    <AppShell allowedRoles={["admin"]}>
       <ProdutosView isAdmin={user?.role === "admin"} breadcrumbs={[{ label: "Brinquedos" }]} />
     </AppShell>
   );

@@ -12,7 +12,7 @@ export default async function HistoricoPage() {
   const isAdmin = user?.role === "admin";
 
   return (
-    <AppShell allowedRoles={["admin", "vendedor"]}>
+    <AppShell allowedRoles={["admin"]}>
       <VendasHistoricoView isAdmin={isAdmin} breadcrumbs={[{ label: "Histórico" }]} />
     </AppShell>
   );
