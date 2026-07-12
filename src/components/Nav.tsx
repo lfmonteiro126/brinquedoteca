@@ -145,12 +145,41 @@ export function Nav({ user }: { user: User }) {
 
   return (
     <>
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-40 rounded-xl bg-white dark:bg-[var(--card-bg)] p-3 shadow-lg shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-[var(--card-border)] lg:hidden active:scale-[0.98] transition-transform"
-      >
-        <Menu className="h-5 w-5 text-violet-700 dark:text-violet-400" />
-      </button>
+      {/* Barra superior no mobile */}
+      <header className="fixed top-0 left-0 right-0 z-30 h-16 flex items-center justify-between px-4 border-b border-slate-200/60 bg-white/95 backdrop-blur-md dark:border-[var(--card-border)] dark:bg-[var(--card-bg)]/95 lg:hidden shadow-xs transition-colors">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-650 hover:bg-slate-50 dark:border-slate-800 dark:bg-transparent dark:text-slate-450 dark:hover:bg-slate-800 active:scale-[0.97] transition-all cursor-pointer"
+            aria-label="Abrir menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500 text-white shadow-xs">
+              <ToyBrick className="h-4 w-4" />
+            </div>
+            <span className="font-bold text-sm text-slate-850 dark:text-slate-100">Angels Kids</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={toggleTheme}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 dark:border-slate-800 dark:bg-transparent dark:text-slate-450 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.97] transition-all cursor-pointer"
+            title={theme === "dark" ? "Tema claro" : "Tema escuro"}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          <Link
+            href="/perfil"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 dark:border-slate-800 dark:bg-transparent dark:text-slate-450 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.97] transition-all"
+            title="Meu Perfil"
+          >
+            <UserCircle className="h-4 w-4" />
+          </Link>
+        </div>
+      </header>
 
       {mobileOpen && (
         <div
