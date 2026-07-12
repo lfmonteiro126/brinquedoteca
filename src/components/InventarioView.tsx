@@ -11,6 +11,9 @@ import {
   Plus,
   Search,
   X,
+  ArrowUp,
+  ArrowDown,
+  Check,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -403,15 +406,27 @@ export function InventarioView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
                   }`}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium truncate">{produto.nome}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Sistema: {produto.estoque} · Contado: {contado}
-                      {diff !== 0 && (
-                        <span className="ml-2 font-bold text-amber-700 dark:text-amber-400">
-                          ({diff > 0 ? "+" : ""}
-                          {diff})
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium truncate max-w-[200px] sm:max-w-xs">{produto.nome}</p>
+                      {diff > 0 ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40">
+                          <ArrowUp className="h-2.5 w-2.5" />
+                          Sobra (+{diff})
+                        </span>
+                      ) : diff < 0 ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-50 dark:bg-red-950/40 px-2.5 py-0.5 text-[10px] font-semibold text-red-700 dark:text-red-400 border border-red-200/50 dark:border-red-800/40">
+                          <ArrowDown className="h-2.5 w-2.5" />
+                          Falta ({diff})
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                          <Check className="h-2.5 w-2.5" />
+                          Correto
                         </span>
                       )}
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      Sistema: {produto.estoque} · Contado: {contado}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -499,8 +514,23 @@ export function InventarioView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
                         <td className="px-3 py-2 text-slate-500 dark:text-slate-400">{item.categoria || "—"}</td>
                         <td className="px-3 py-2 text-center">{item.estoque_sistema}</td>
                         <td className="px-3 py-2 text-center">{item.estoque_contado}</td>
-                        <td className={`px-3 py-2 text-center font-bold ${item.diferenca > 0 ? "text-emerald-600 dark:text-emerald-400" : item.diferenca < 0 ? "text-red-600 dark:text-red-400" : "text-slate-400 dark:text-slate-500"}`}>
-                          {item.diferenca > 0 ? "+" : ""}{item.diferenca}
+                        <td className="px-3 py-2 text-center">
+                          {item.diferenca > 0 ? (
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40">
+                              <ArrowUp className="h-2.5 w-2.5" />
+                              +{item.diferenca}
+                            </span>
+                          ) : item.diferenca < 0 ? (
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-red-50 dark:bg-red-950/40 px-2 py-0.5 text-xs font-semibold text-red-700 dark:text-red-400 border border-red-200/50 dark:border-red-800/40">
+                              <ArrowDown className="h-2.5 w-2.5" />
+                              {item.diferenca}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-medium text-slate-400 dark:text-slate-500">
+                              <Check className="h-2.5 w-2.5" />
+                              0
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}

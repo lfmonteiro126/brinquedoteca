@@ -21,6 +21,34 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { SkeletonCard } from "@/components/Skeleton";
 import type { DashboardData } from "@/lib/types";
 
+function Sparkline({ data }: { data: number[] }) {
+  if (!data || data.length < 2) return null;
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data, 0);
+  const range = max - min || 1;
+  const width = 60;
+  const height = 16;
+  const points = data.map((val, index) => {
+    const x = (index / (data.length - 1)) * width;
+    const y = height - ((val - min) / range) * height;
+    return `${x},${y}`;
+  }).join(" ");
+
+  return (
+    <svg width={width} height={height} className="overflow-visible opacity-80 group-hover:opacity-100 transition-opacity">
+      <polyline
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+        className="text-violet-500 dark:text-violet-400"
+      />
+    </svg>
+  );
+}
+
 function StatCard({
   title,
   value,
@@ -30,6 +58,7 @@ function StatCard({
   trend,
   href,
   onClick,
+  sparklineData,
 }: {
   title: string;
   value: string;
@@ -39,26 +68,33 @@ function StatCard({
   trend?: { value: number; label: string };
   href?: string;
   onClick?: () => void;
+  sparklineData?: number[];
 }) {
   const content = (
     <div className="group rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-violet-200 dark:hover:border-violet-700 cursor-pointer">
       <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{title}</p>
-          <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100 group-hover:text-violet-700 dark:group-hover:text-violet-300 transition-colors">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{title}</p>
+          <p className="mt-1 text-2xl font-bold font-display tabular-nums text-slate-900 dark:text-slate-100 group-hover:text-violet-700 dark:group-hover:text-violet-300 transition-colors">
             {value}
           </p>
-          {subtitle && <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{subtitle}</p>}
+          {subtitle && <p className="mt-1 text-xs text-slate-400 dark:text-slate-500 truncate">{subtitle}</p>}
           {trend && (
             <div className={`mt-1 flex items-center gap-1 text-xs font-medium ${
               trend.value > 0 ? "text-emerald-600" : trend.value < 0 ? "text-red-500" : "text-slate-400"
             }`}>
               {trend.value > 0 ? <ArrowUp className="h-3 w-3" /> : trend.value < 0 ? <ArrowDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-              <span>{Math.abs(trend.value).toFixed(1)}% vs período anterior</span>
+              <span>{Math.abs(trend.value).toFixed(1)}% vs anterior</span>
+            </div>
+          )}
+          {sparklineData && sparklineData.length > 1 && (
+            <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Tendência</span>
+              <Sparkline data={sparklineData} />
             </div>
           )}
         </div>
-        <div className={`rounded-xl p-3 transition-transform group-hover:scale-110 ${color}`}>
+        <div className={`rounded-xl p-3 shrink-0 ml-3 transition-transform group-hover:scale-110 ${color}`}>
           <Icon className="h-5 w-5" />
         </div>
       </div>
@@ -282,6 +318,7 @@ export function DashboardView() {
           icon={DollarSign}
           color="bg-emerald-100 text-emerald-600"
           href="/vendas/historico"
+          sparklineData={data.vendasPorHora.map((d) => d.total)}
         />
         <StatCard
           title="Vendas no período"
@@ -291,6 +328,7 @@ export function DashboardView() {
           color="bg-blue-100 text-blue-600"
           trend={{ value: trendVendas, label: "vs anterior" }}
           href="/vendas/historico"
+          sparklineData={data.vendasPorHora.map((d) => d.quantidade)}
         />
         <StatCard
           title="Produtos em estoque"
@@ -317,7 +355,7 @@ export function DashboardView() {
             <DollarSign className="h-4 w-4 text-emerald-500" />
             <p className="text-sm text-slate-500 dark:text-slate-400">Ticket médio</p>
           </div>
-          <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{formatCurrency(data.kpis.ticketMedio)}</p>
+          <p className="mt-2 text-2xl font-bold font-display tabular-nums text-slate-900 dark:text-slate-100">{formatCurrency(data.kpis.ticketMedio)}</p>
           <p className="text-xs text-slate-400 dark:text-slate-500">por venda</p>
         </div>
         <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
@@ -325,7 +363,7 @@ export function DashboardView() {
             <ShoppingBag className="h-4 w-4 text-blue-500" />
             <p className="text-sm text-slate-500 dark:text-slate-400">Itens por venda</p>
           </div>
-          <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">{data.kpis.itensPorVenda.toFixed(1)}</p>
+          <p className="mt-2 text-2xl font-bold font-display tabular-nums text-slate-900 dark:text-slate-100">{data.kpis.itensPorVenda.toFixed(1)}</p>
           <p className="text-xs text-slate-400 dark:text-slate-500">média no período</p>
         </div>
         <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
@@ -333,7 +371,7 @@ export function DashboardView() {
             <BarChart3 className="h-4 w-4 text-red-500" />
             <p className="text-sm text-slate-500 dark:text-slate-400">Taxa de devolução</p>
           </div>
-          <p className={`mt-2 text-2xl font-bold ${data.kpis.taxaDevolucao > 5 ? "text-red-600 dark:text-red-400" : "text-slate-900 dark:text-slate-100"}`}>
+          <p className={`mt-2 text-2xl font-bold font-display tabular-nums ${data.kpis.taxaDevolucao > 5 ? "text-red-600 dark:text-red-400" : "text-slate-900 dark:text-slate-100"}`}>
             {data.kpis.taxaDevolucao.toFixed(1)}%
           </p>
           <p className="text-xs text-slate-400 dark:text-slate-500">estornos / total</p>

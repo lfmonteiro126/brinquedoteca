@@ -80,6 +80,18 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
   const [modalProdutos, setModalProdutos] = useState<Produto[] | null>(null);
   const [produtoDetalhe, setProdutoDetalhe] = useState<Produto | null>(null);
   const [addedItemId, setAddedItemId] = useState<number | null>(null);
+  const cartTotalItems = cart.reduce((acc, item) => acc + item.quantidade, 0);
+  const [animateCart, setAnimateCart] = useState(false);
+
+  useEffect(() => {
+    if (cartTotalItems > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setAnimateCart(true);
+      const timer = setTimeout(() => setAnimateCart(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [cartTotalItems]);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -502,8 +514,11 @@ ${itensTexto}
             }, 200)
           }
           placeholder="Buscar por nome ou código de barras..."
-          className="w-full rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--input-bg)] dark:text-slate-200 py-3 pl-11 pr-4 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800"
+          className="w-full rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--input-bg)] dark:text-slate-200 py-3 pl-11 pr-12 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800"
         />
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1.5 pointer-events-none">
+          <kbd className="rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-400 dark:text-slate-500 shadow-2xs font-semibold">F3</kbd>
+        </div>
         {showResults && searchResults.length > 0 && (
           <ul className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] shadow-lg">
             {searchResults.map((p) => (
@@ -610,16 +625,20 @@ ${itensTexto}
           <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-4 sm:p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5 text-violet-500" />
-                Itens da venda ({cart.length})
+                <ShoppingCart className={`h-5 w-5 text-violet-500 transition-transform duration-200 ${animateCart ? "scale-125 text-violet-600 animate-bounce-subtle" : ""}`} />
+                <span>Itens da venda</span>
+                <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-900/60 px-1.5 text-xs font-bold text-violet-800 dark:text-violet-200 transition-all ${animateCart ? "scale-110 bg-violet-200 dark:bg-violet-800" : ""}`}>
+                  {cartTotalItems}
+                </span>
               </h2>
               {cart.length > 0 && (
                 <button
                   onClick={clearCart}
-                  className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-[0.98] transition-transform"
+                  className="flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-[0.98] transition-transform"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Limpar
+                  <span>Limpar</span>
+                  <kbd className="hidden sm:inline-block rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-1 py-0.5 font-mono text-[9px] text-red-500 dark:text-red-400 font-semibold shadow-2xs ml-0.5">F5</kbd>
                 </button>
               )}
             </div>
@@ -734,7 +753,7 @@ ${itensTexto}
                   placeholder="0,00"
                   className="w-24 rounded-xl border border-slate-200 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-right text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800"
                 />
-                <span className="hidden sm:inline text-[10px] text-slate-400 dark:text-slate-500">F2</span>
+                <kbd className="hidden sm:inline-block rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[10px] text-slate-400 dark:text-slate-500 shadow-2xs font-semibold">F2</kbd>
               </div>
             </div>
 
@@ -794,7 +813,7 @@ ${itensTexto}
           >
             <Check className="h-5 w-5" />
             {loading ? "Processando..." : "Finalizar venda"}
-            <span className="hidden sm:inline text-xs opacity-75 ml-1">F4</span>
+            <kbd className="hidden sm:inline-block rounded border border-emerald-500 bg-emerald-500/30 px-1.5 py-0.5 font-mono text-[10px] text-white shadow-2xs font-semibold ml-1">F4</kbd>
           </button>
         </div>
       </div>
