@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin, requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { sqlAll, registrarMovimentacao, getClient } from "@/lib/db";
 import { handleApiError } from "@/lib/api";
 
 export async function GET() {
   try {
-    await requireAuth();
+    await requireAdmin();
 
     const sessoes = await sqlAll`
       SELECT s.*, u.nome as usuario_nome,

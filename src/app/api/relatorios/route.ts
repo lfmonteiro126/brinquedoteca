@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { getClient } from "@/lib/db";
 import { handleApiError } from "@/lib/api";
 
 export async function GET(request: NextRequest) {
   try {
-    await requireAuth();
+    await requireAdmin();
     const { searchParams } = new URL(request.url);
     const tipo = searchParams.get("tipo") || "vendas_periodo";
     const desde = searchParams.get("desde") || "";
