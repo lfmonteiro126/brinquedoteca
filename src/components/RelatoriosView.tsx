@@ -21,10 +21,13 @@ import {
   Package,
   TrendingUp,
   Users,
+  Tag,
+  Receipt,
+  ShoppingBag,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
-import { SkeletonTable } from "@/components/Skeleton";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
+import { SkeletonTable } from "@/components/Skeleton";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -44,6 +47,37 @@ const COLORS = [
   "#8b5cf6", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444",
 ];
 
+interface CustomChartTooltipProps {
+  active?: boolean;
+  payload?: {
+    name: string;
+    value: number;
+    color?: string;
+    fill?: string;
+  }[];
+  label?: string | number;
+  formatter?: (value: number, name?: string) => string;
+}
+
+// Glassmorphism tooltip for Recharts
+function CustomChartTooltip({ active, payload, label, formatter }: CustomChartTooltipProps) {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-xl border border-slate-200/50 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-3 shadow-md">
+        {label && <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mb-1">{label}</p>}
+        {payload.map((item, i) => (
+          <p key={i} className="text-sm font-bold text-slate-800 dark:text-slate-200 font-display tabular-nums flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color || item.fill }} />
+            <span>{item.name}:</span>
+            <span className="text-violet-650 dark:text-violet-400">{formatter ? formatter(item.value, item.name) : item.value}</span>
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
+
 function EmptyState() {
   return (
     <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-12 text-center shadow-sm">
@@ -55,25 +89,38 @@ function EmptyState() {
 
 function TableRenderer({ headers, rows }: { headers: string[]; rows: string[][] }) {
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white dark:bg-[var(--card-bg)] shadow-sm">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-50 dark:bg-slate-700 text-left text-slate-600 dark:text-slate-400">
-          <tr>
-            {headers.map((h) => (
-              <th key={h} className="px-4 py-3 font-medium">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className="border-t border-slate-50 dark:border-[var(--card-border)]">
-              {row.map((cell, j) => (
-                <td key={j} className="px-4 py-2.5">{cell}</td>
+    <div className="overflow-hidden rounded-2xl border border-slate-200/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] shadow-xs">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200/60 dark:border-[var(--card-border)] text-left text-slate-500 dark:text-slate-400">
+            <tr>
+              {headers.map((h) => (
+                <th key={h} className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">{h}</th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-slate-100 dark:divide-[var(--card-border)]">
+            {rows.map((row, i) => (
+              <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                {row.map((cell, j) => {
+                  const isNumber = cell.includes("R$") || cell.includes("%") || /^\d+$/.test(cell) || (cell.includes("-R$"));
+                  const isFirst = j === 0;
+                  return (
+                    <td
+                      key={j}
+                      className={`px-5 py-3.5 ${isFirst ? "font-semibold text-slate-850 dark:text-slate-100 font-display" : "text-slate-600 dark:text-slate-350"} ${
+                        isNumber ? "font-display tabular-nums" : ""
+                      }`}
+                    >
+                      {cell}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -81,11 +128,11 @@ function TableRenderer({ headers, rows }: { headers: string[]; rows: string[][] 
 function ExportButtons({ data, filename, onExportCSV, onExportPDF }: { data: object[]; filename: string; onExportCSV: (d: object[], f: string) => void; onExportPDF: (d: object[], f: string) => void }) {
   return (
     <div className="flex justify-end gap-2">
-      <button onClick={() => onExportCSV(data, filename)} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800">
-        <Download className="h-4 w-4" /> CSV
+      <button onClick={() => onExportCSV(data, filename)} className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[var(--card-bg)] hover:bg-slate-50 dark:hover:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 active:scale-[0.97] transition-all shadow-2xs">
+        <Download className="h-4 w-4 text-slate-500" /> CSV
       </button>
-      <button onClick={() => onExportPDF(data, filename)} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800">
-        <FileText className="h-4 w-4" /> PDF
+      <button onClick={() => onExportPDF(data, filename)} className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[var(--card-bg)] hover:bg-slate-50 dark:hover:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 active:scale-[0.97] transition-all shadow-2xs">
+        <FileText className="h-4 w-4 text-slate-500" /> PDF
       </button>
     </div>
   );
@@ -111,26 +158,36 @@ interface MargemData extends ProdutoData { custo_total: number; lucro: number; m
 function ResumoTab({ dados, onExportPDF }: { dados: ResumoData | null; onExportPDF: (d: object[], f: string) => void }) {
   if (!dados) return null;
   const cards = [
-    { label: "Total de vendas", value: String(dados.totalVendas) },
-    { label: "Valor total", value: formatCurrency(dados.valorTotal) },
-    { label: "Ticket médio", value: formatCurrency(dados.ticketMedio) },
-    { label: "Itens vendidos", value: String(dados.totalItens) },
-    { label: "Descontos", value: formatCurrency(dados.totalDescontos) },
+    { label: "Total de vendas", value: String(dados.totalVendas), icon: ShoppingBag, color: "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400" },
+    { label: "Valor total", value: formatCurrency(dados.valorTotal), icon: DollarSign, color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400" },
+    { label: "Ticket médio", value: formatCurrency(dados.ticketMedio), icon: Receipt, color: "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400" },
+    { label: "Itens vendidos", value: String(dados.totalItens), icon: Package, color: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400" },
+    { label: "Descontos", value: formatCurrency(dados.totalDescontos), icon: Tag, color: "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400" },
   ];
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <button onClick={() => onExportPDF([{ ...dados }], "resumo")} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800">
-          <FileText className="h-4 w-4" /> PDF
+        <button onClick={() => onExportPDF([{ ...dados }], "resumo")} className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[var(--card-bg)] hover:bg-slate-50 dark:hover:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 active:scale-[0.97] transition-all shadow-2xs">
+          <FileText className="h-4 w-4 text-slate-500" /> PDF
         </button>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {cards.map((c) => (
-          <div key={c.label} className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-5 shadow-sm">
-            <p className="text-sm text-slate-500 dark:text-slate-400">{c.label}</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100">{c.value}</p>
-          </div>
-        ))}
+        {cards.map((c) => {
+          const Icon = c.icon;
+          return (
+            <div key={c.label} className="group rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs transition-all duration-200 hover:shadow-md">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{c.label}</p>
+                  <p className="mt-1.5 text-2xl font-bold font-display tabular-nums text-slate-900 dark:text-slate-100 group-hover:text-violet-650 dark:group-hover:text-violet-400 transition-colors">{c.value}</p>
+                </div>
+                <div className={`rounded-xl p-2.5 shrink-0 ${c.color}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -141,15 +198,21 @@ function PeriodoTab({ dados, onExportCSV, onExportPDF }: { dados: PeriodoData[];
   return (
     <div className="space-y-4">
       <ExportButtons data={dados} filename="vendas_por_periodo" onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
-      <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
         <h3 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Vendas por período</h3>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={dados}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <defs>
+              <linearGradient id="colorPeriodo" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.15}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="opacity-50" />
             <XAxis dataKey="periodo" tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-            <Bar dataKey="valor" fill="#7c3aed" radius={[4, 4, 0, 0]} name="Valor" />
+            <Tooltip content={<CustomChartTooltip formatter={formatCurrency} />} />
+            <Bar dataKey="valor" fill="url(#colorPeriodo)" radius={[4, 4, 0, 0]} name="Valor" />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -164,7 +227,7 @@ function CategoriaTab({ dados, onExportCSV, onExportPDF }: { dados: CategoriaDat
     <div className="space-y-4">
       <ExportButtons data={dados} filename="vendas_por_categoria" onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
           <h3 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Receita por categoria</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -172,19 +235,25 @@ function CategoriaTab({ dados, onExportCSV, onExportPDF }: { dados: CategoriaDat
                 label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}>
                 {dados.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
               </Pie>
-              <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+              <Tooltip content={<CustomChartTooltip formatter={formatCurrency} />} />
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
           <h3 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Quantidade por categoria</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={dados} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <defs>
+                <linearGradient id="colorCategoriaQtd" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0.15}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="opacity-50" />
               <XAxis type="number" tick={{ fontSize: 12 }} />
               <YAxis dataKey="categoria" type="category" width={120} tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Bar dataKey="quantidade" fill="#2563eb" radius={[0, 4, 4, 0]} name="Qtd" />
+              <Tooltip content={<CustomChartTooltip />} />
+              <Bar dataKey="quantidade" fill="url(#colorCategoriaQtd)" radius={[0, 4, 4, 0]} name="Qtd" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -199,15 +268,21 @@ function FuncionarioTab({ dados, onExportCSV, onExportPDF }: { dados: Funcionari
   return (
     <div className="space-y-4">
       <ExportButtons data={dados} filename="vendas_por_funcionario" onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
-      <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
         <h3 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Vendas por funcionário</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={dados}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <defs>
+              <linearGradient id="colorFuncionario" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.15}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="opacity-50" />
             <XAxis dataKey="funcionario" tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-            <Bar dataKey="valor" fill="#7c3aed" radius={[4, 4, 0, 0]} name="Valor" />
+            <Tooltip content={<CustomChartTooltip formatter={formatCurrency} />} />
+            <Bar dataKey="valor" fill="url(#colorFuncionario)" radius={[4, 4, 0, 0]} name="Valor" />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -225,28 +300,40 @@ function ProdutosTab({ dados, onExportCSV, onExportPDF }: { dados: ProdutoData[]
     <div className="space-y-6">
       <ExportButtons data={dados} filename="produtos_vendidos" onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
           <h3 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Mais vendidos</h3>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={top10}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <defs>
+                <linearGradient id="colorTopProdutos" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.15}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="opacity-50" />
               <XAxis dataKey="produto" tick={{ fontSize: 11 }} angle={-30} textAnchor="end" height={80} />
               <YAxis tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Bar dataKey="quantidade_vendida" fill="#7c3aed" radius={[4, 4, 0, 0]} name="Qtd" />
+              <Tooltip content={<CustomChartTooltip />} />
+              <Bar dataKey="quantidade_vendida" fill="url(#colorTopProdutos)" radius={[4, 4, 0, 0]} name="Qtd" />
             </BarChart>
           </ResponsiveContainer>
         </div>
         {bottom10.length > 0 && (
-          <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
             <h3 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Menos vendidos</h3>
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={bottom10}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <defs>
+                  <linearGradient id="colorBottomProdutos" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#dc2626" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#dc2626" stopOpacity={0.15}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="opacity-50" />
                 <XAxis dataKey="produto" tick={{ fontSize: 11 }} angle={-30} textAnchor="end" height={80} />
                 <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="quantidade_vendida" fill="#dc2626" radius={[4, 4, 0, 0]} name="Qtd" />
+                <Tooltip content={<CustomChartTooltip />} />
+                <Bar dataKey="quantidade_vendida" fill="url(#colorBottomProdutos)" radius={[4, 4, 0, 0]} name="Qtd" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -267,16 +354,26 @@ function MargemTab({ dados, onExportCSV, onExportPDF }: { dados: MargemData[]; o
   return (
     <div className="space-y-4">
       <ExportButtons data={comMargem} filename="margem_lucro" onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
-      <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
         <h3 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Margem de lucro por produto</h3>
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={comMargem.slice(0, 15)}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <defs>
+              <linearGradient id="colorMargemLucro" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#059669" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#059669" stopOpacity={0.15}/>
+              </linearGradient>
+              <linearGradient id="colorMargemCusto" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#dc2626" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#dc2626" stopOpacity={0.15}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="opacity-50" />
             <XAxis dataKey="produto" tick={{ fontSize: 11 }} angle={-30} textAnchor="end" height={80} />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip formatter={(value, name) => name === "margem" ? `${Number(value).toFixed(1)}%` : formatCurrency(Number(value))} />
-            <Bar dataKey="lucro" fill="#059669" radius={[4, 4, 0, 0]} name="Lucro" />
-            <Bar dataKey="custo_total" fill="#dc2626" radius={[4, 4, 0, 0]} name="Custo" />
+            <Tooltip content={<CustomChartTooltip formatter={(value, name) => name === "margem" ? `${Number(value).toFixed(1)}%` : formatCurrency(Number(value))} />} />
+            <Bar dataKey="lucro" fill="url(#colorMargemLucro)" radius={[4, 4, 0, 0]} name="Lucro" />
+            <Bar dataKey="custo_total" fill="url(#colorMargemCusto)" radius={[4, 4, 0, 0]} name="Custo" />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -400,45 +497,66 @@ export function RelatoriosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
         <p className="text-slate-500 dark:text-slate-400">Análise de vendas e desempenho</p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-white dark:bg-[var(--card-bg)] p-4 shadow-sm">
-        <div>
-          <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">Desde</label>
-          <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} className="rounded-lg border px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200" />
+      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
+        <div className="flex-1 min-w-[200px] sm:flex-initial">
+          <label className="mb-1 block text-xs font-semibold text-slate-500 dark:text-slate-400">Desde</label>
+          <input
+            type="date"
+            value={desde}
+            onChange={(e) => setDesde(e.target.value)}
+            className="w-full rounded-xl border border-slate-250/60 dark:border-slate-800 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:text-slate-200 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800/30"
+          />
         </div>
-        <div>
-          <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">Até</label>
-          <input type="date" value={ate} onChange={(e) => setAte(e.target.value)} className="rounded-lg border px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200" />
+        <div className="flex-1 min-w-[200px] sm:flex-initial">
+          <label className="mb-1 block text-xs font-semibold text-slate-500 dark:text-slate-400">Até</label>
+          <input
+            type="date"
+            value={ate}
+            onChange={(e) => setAte(e.target.value)}
+            className="w-full rounded-xl border border-slate-250/60 dark:border-slate-800 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:text-slate-200 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800/30"
+          />
         </div>
         {activeTab === "periodo" && (
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">Agrupar</label>
-            <select value={agrupar} onChange={(e) => setAgrupar(e.target.value)} className="rounded-lg border px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200">
+          <div className="flex-1 min-w-[120px] sm:flex-initial">
+            <label className="mb-1 block text-xs font-semibold text-slate-500 dark:text-slate-400">Agrupar</label>
+            <select
+              value={agrupar}
+              onChange={(e) => setAgrupar(e.target.value)}
+              className="w-full rounded-xl border border-slate-250/60 dark:border-slate-800 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:text-slate-200 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800/30"
+            >
               <option value="dia">Dia</option>
               <option value="semana">Semana</option>
               <option value="mes">Mês</option>
             </select>
           </div>
         )}
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-2 mt-4 sm:mt-0 w-full sm:w-auto">
           <button
             onClick={() => { setAppliedDesde(desde); setAppliedAte(ate); setHasFetched(true); }}
-            className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
+            className="flex-1 sm:flex-initial rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-750 active:scale-[0.98] transition-all"
           >
             Aplicar
           </button>
           <button
             onClick={() => { setDesde(""); setAte(""); setAppliedDesde(""); setAppliedAte(""); setDados(null); setHasFetched(false); }}
-            className="rounded-lg border px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+            className="flex-1 sm:flex-initial rounded-xl border border-slate-200 dark:border-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.98] transition-all"
           >
             Limpar
           </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1 rounded-2xl bg-white dark:bg-[var(--card-bg)] p-1 shadow-sm">
+      <div className="flex flex-wrap gap-1.5 rounded-2xl bg-slate-100/80 dark:bg-slate-900/50 p-1.5 border border-slate-200/50 dark:border-slate-800/40 shadow-2xs">
         {TABS.map(({ key, label, icon: Icon }) => (
-          <button key={key} onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition ${activeTab === key ? "bg-violet-100 dark:bg-violet-900/30 text-violet-800 dark:text-violet-300" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+              activeTab === key
+                ? "bg-white dark:bg-slate-800 text-violet-750 dark:text-violet-300 font-semibold shadow-xs"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800/40"
+            }`}
+          >
             <Icon className="h-4 w-4" />
             <span className="hidden sm:inline">{label}</span>
           </button>
