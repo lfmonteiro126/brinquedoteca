@@ -8,7 +8,7 @@ import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { User as UserType } from "@/lib/types";
 
 export function PerfilView({ user, breadcrumbs }: { user: UserType; breadcrumbs?: BreadcrumbItem[] }) {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, toggleTheme } = useTheme();
   const { prefs, updatePreferences } = usePreferences();
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
@@ -90,43 +90,24 @@ export function PerfilView({ user, breadcrumbs }: { user: UserType; breadcrumbs?
       <div className="rounded-2xl border border-card-border bg-card p-6">
         <h2 className="text-lg font-semibold text-foreground mb-4">Preferências</h2>
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-foreground">Tema do Sistema</p>
-              <p className="text-sm text-secondary">Escolha a aparência visual da interface</p>
+              <p className="font-medium text-foreground">Tema escuro</p>
+              <p className="text-sm text-secondary">Alternar entre tema claro e escuro</p>
             </div>
-            <div className="flex rounded-xl bg-slate-100 dark:bg-slate-900 p-1 border border-slate-200 dark:border-slate-800 max-w-xs">
-              <button
-                onClick={() => setTheme("light")}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                  theme === "light"
-                    ? "bg-white dark:bg-slate-800 text-violet-755 dark:text-violet-300 shadow-xs"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-450 dark:hover:text-slate-200"
+            <button
+              onClick={toggleTheme}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                resolvedTheme === "dark" ? "bg-violet-600" : "bg-slate-200 dark:bg-slate-800"
+              }`}
+              aria-label="Alternar tema escuro"
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                  resolvedTheme === "dark" ? "translate-x-5" : "translate-x-0"
                 }`}
-              >
-                Claro
-              </button>
-              <button
-                onClick={() => setTheme("dark")}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                  theme === "dark"
-                    ? "bg-white dark:bg-slate-800 text-violet-755 dark:text-violet-300 shadow-xs"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-450 dark:hover:text-slate-200"
-                }`}
-              >
-                Escuro
-              </button>
-              <button
-                onClick={() => setTheme("system")}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
-                  theme === "system"
-                    ? "bg-white dark:bg-slate-800 text-violet-755 dark:text-violet-300 shadow-xs"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-450 dark:hover:text-slate-200"
-                }`}
-              >
-                Sistema
-              </button>
-            </div>
+              />
+            </button>
           </div>
           <div className="flex items-center justify-between">
             <div>
