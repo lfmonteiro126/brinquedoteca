@@ -605,18 +605,18 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
           </div>
 
           {/* Tabela no desktop */}
-          <div className="hidden sm:block rounded-2xl border border-slate-200 bg-white shadow-sm dark:bg-[var(--card-bg)] dark:border-[var(--card-border)] overflow-hidden">
+          <div className="hidden sm:block overflow-hidden rounded-2xl border border-slate-200/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-[var(--card-border)]">
+                <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200/60 dark:border-[var(--card-border)] text-left text-slate-500 dark:text-slate-400">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Produto</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">SKU</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Categoria</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Preço</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Estoque</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ações</th>
+                    <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Produto</th>
+                    <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">SKU</th>
+                    <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Categoria</th>
+                    <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider">Preço</th>
+                    <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider">Estoque</th>
+                    <th className="px-5 py-3.5 text-center text-xs font-semibold uppercase tracking-wider">Status</th>
+                    <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wider">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-[var(--card-border)]">
@@ -624,52 +624,52 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                     const baixo = p.estoque <= p.estoque_minimo;
                     const semEstoque = p.estoque === 0;
                     return (
-                      <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="px-4 py-3">
+                      <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
                             {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
-                              <img src={normalizeImageUrl(p.imagem_url)} alt={p.nome} className="h-10 w-10 rounded-xl object-cover" />
+                              <img src={normalizeImageUrl(p.imagem_url)} alt={p.nome} className="h-10 w-10 rounded-xl object-cover border border-slate-150/40" />
                             ) : (
-                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-850">
                                 <Package className="h-5 w-5 text-slate-400" />
                               </div>
                             )}
                             <div>
-                              <button onClick={() => setSelectedProduct(p)} className="text-left font-medium text-slate-800 dark:text-slate-200 hover:text-violet-600 dark:hover:text-violet-400">
+                              <button onClick={() => setSelectedProduct(p)} className="text-left font-semibold text-slate-850 dark:text-slate-100 hover:text-violet-650 dark:hover:text-violet-400 transition-colors">
                                 {p.nome}
                               </button>
                               {p.descricao && (
-                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]">{p.descricao}</p>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 truncate max-w-[240px]">{p.descricao}</p>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">{p.codigo_barras || "—"}</td>
-                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">{p.categoria || "—"}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(p.preco_venda)}</td>
-                        <td className="px-4 py-3 text-right font-medium text-slate-800 dark:text-slate-200">{p.estoque}</td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-5 py-3.5 font-mono text-xs text-slate-500 dark:text-slate-400">{p.codigo_barras || "—"}</td>
+                        <td className="px-5 py-3.5 text-slate-600 dark:text-slate-400">{p.categoria || "—"}</td>
+                        <td className="px-5 py-3.5 text-right font-bold text-emerald-600 dark:text-emerald-400 font-display tabular-nums">{formatCurrency(p.preco_venda)}</td>
+                        <td className="px-5 py-3.5 text-right font-semibold text-slate-800 dark:text-slate-200 font-display tabular-nums">{p.estoque}</td>
+                        <td className="px-5 py-3.5 text-center">
                           {semEstoque ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 text-slate-65 border border-slate-200/50 dark:bg-slate-900/40 dark:text-slate-450 dark:border-slate-800 px-2.5 py-1 text-xs font-bold font-display">
                               Sem estoque
                             </span>
                           ) : baixo ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/30 px-2 py-1 text-xs font-semibold text-red-600 dark:text-red-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 text-red-700 border border-red-200/40 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/30 px-2.5 py-1 text-xs font-bold font-display">
                               <AlertTriangle className="h-3 w-3" />
                               Baixo
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-250/40 dark:bg-emerald-950/40 dark:text-emerald-450 dark:border-emerald-900/30 px-2.5 py-1 text-xs font-bold font-display">
                               OK
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-end gap-1">
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => addToCart(p)}
                               disabled={semEstoque}
-                              className="flex items-center gap-1 rounded-xl bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              className="flex items-center justify-center rounded-xl bg-emerald-650 hover:bg-emerald-750 p-2 text-white active:scale-[0.97] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs"
                               title="Adicionar ao PDV"
                             >
                               <ShoppingCart className="h-3.5 w-3.5" />
@@ -677,7 +677,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                             {isAdmin && (
                               <Link
                                 href={`/produtos/${p.id}/editar`}
-                                className="flex items-center justify-center rounded-xl border border-slate-200 dark:border-[var(--card-border)] p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 active:scale-[0.97] transition-all shadow-2xs"
                                 title="Editar"
                               >
                                 <Pencil className="h-3.5 w-3.5" />
@@ -686,7 +686,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                             {isAdmin && (
                               <button
                                 onClick={() => setDeleteTarget(p)}
-                                className="flex items-center justify-center rounded-xl border border-slate-200 dark:border-[var(--card-border)] p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
+                                className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-red-50 hover:text-red-655 dark:border-slate-800 dark:bg-transparent dark:text-slate-400 dark:hover:bg-red-950/20 dark:hover:text-red-400 active:scale-[0.97] transition-all shadow-2xs"
                                 title="Excluir"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />

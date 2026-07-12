@@ -149,64 +149,66 @@ export function UsuariosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }
         </button>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl bg-white dark:bg-[var(--card-bg)] shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-slate-200/60 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] shadow-xs">
         {loading ? (
           <SkeletonTable rows={4} cols={5} />
         ) : ativos.length === 0 ? (
-          <div className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">Nenhum usuário cadastrado</div>
+          <div className="px-5 py-8 text-center text-slate-400 dark:text-slate-500">Nenhum usuário cadastrado</div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-violet-50 dark:bg-violet-900/20 text-left text-violet-800 dark:text-violet-300">
-              <tr>
-                <th className="px-4 py-3">Nome</th>
-                <th className="px-4 py-3 hidden sm:table-cell">Email</th>
-                <th className="px-4 py-3">Perfil</th>
-                <th className="px-4 py-3 hidden md:table-cell">Criado em</th>
-                <th className="px-4 py-3 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ativos.map((u) => (
-                <tr key={u.id} className="border-t border-slate-50 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                  <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-200">{u.nome}</td>
-                  <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden sm:table-cell">{u.email}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                        u.role === "admin"
-                          ? "bg-violet-100 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300"
-                          : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400"
-                      }`}
-                    >
-                      {u.role === "admin" && <Shield className="h-3 w-3" />}
-                      {u.role === "admin" ? "Admin" : "Vendedor"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden md:table-cell">
-                    {new Date(u.created_at).toLocaleDateString("pt-BR")}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => openEdit(u)}
-                        className="rounded-lg p-1.5 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20"
-                        title="Editar"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => setConfirmDeactivate(u)}
-                        className="rounded-lg p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        title="Desativar"
-                      >
-                        <UserX className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200/60 dark:border-[var(--card-border)] text-left text-slate-500 dark:text-slate-400">
+                <tr>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Nome</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Email</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Perfil</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider hidden md:table-cell">Criado em</th>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-right">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-[var(--card-border)]">
+                {ativos.map((u) => (
+                  <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="px-5 py-3.5 font-semibold text-slate-850 dark:text-slate-100">{u.nome}</td>
+                    <td className="px-5 py-3.5 text-slate-550 dark:text-slate-400 hidden sm:table-cell">{u.email}</td>
+                    <td className="px-5 py-3.5">
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold font-display ${
+                          u.role === "admin"
+                            ? "bg-violet-50 text-violet-755 border border-violet-250/40 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-900/30"
+                            : "bg-slate-50 text-slate-650 border border-slate-250/40 dark:bg-slate-900/40 dark:text-slate-450 dark:border-slate-800"
+                        }`}
+                      >
+                        {u.role === "admin" && <Shield className="h-3 w-3" />}
+                        {u.role === "admin" ? "Admin" : "Vendedor"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-slate-550 dark:text-slate-400 hidden md:table-cell">
+                      {new Date(u.created_at).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="px-5 py-3.5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => openEdit(u)}
+                          className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-transparent dark:text-slate-400 dark:hover:bg-slate-800 active:scale-[0.97] transition-all shadow-2xs"
+                          title="Editar"
+                        >
+                          <Edit className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeactivate(u)}
+                          className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-slate-600 hover:bg-red-50 hover:text-red-655 dark:border-slate-800 dark:bg-transparent dark:text-slate-400 dark:hover:bg-red-950/20 dark:hover:text-red-400 active:scale-[0.97] transition-all shadow-2xs"
+                          title="Desativar"
+                        >
+                          <UserX className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
