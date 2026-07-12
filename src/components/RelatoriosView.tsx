@@ -103,7 +103,8 @@ function TableRenderer({ headers, rows }: { headers: string[]; rows: string[][] 
             {rows.map((row, i) => (
               <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                 {row.map((cell, j) => {
-                  const isNumber = cell.includes("R$") || cell.includes("%") || /^\d+$/.test(cell) || (cell.includes("-R$"));
+                  const cellStr = cell !== undefined && cell !== null ? String(cell) : "";
+                  const isNumber = cellStr.includes("R$") || cellStr.includes("%") || /^\d+$/.test(cellStr) || cellStr.includes("-R$");
                   const isFirst = j === 0;
                   return (
                     <td
@@ -112,7 +113,7 @@ function TableRenderer({ headers, rows }: { headers: string[]; rows: string[][] 
                         isNumber ? "font-display tabular-nums" : ""
                       }`}
                     >
-                      {cell}
+                      {cellStr}
                     </td>
                   );
                 })}
