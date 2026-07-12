@@ -692,6 +692,7 @@ ${itensTexto}
                     <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                       <button
                         onClick={() => updateQty(item.produto.id, -1)}
+                        aria-label="Diminuir quantidade"
                         className="flex h-11 w-11 items-center justify-center rounded-xl bg-white dark:bg-[var(--card-bg)] shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-[0.98] transition-transform"
                       >
                         <Minus className="h-5 w-5" />
@@ -702,6 +703,7 @@ ${itensTexto}
                       <button
                         onClick={() => updateQty(item.produto.id, 1)}
                         disabled={item.quantidade >= item.produto.estoque}
+                        aria-label="Aumentar quantidade"
                         className="flex h-11 w-11 items-center justify-center rounded-xl bg-white dark:bg-[var(--card-bg)] shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-[0.98] transition-transform disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <Plus className="h-5 w-5" />
@@ -716,6 +718,7 @@ ${itensTexto}
                     {/* Botão remover */}
                     <button
                       onClick={() => removeItem(item.produto.id)}
+                      aria-label={`Remover ${item.produto.nome} do carrinho`}
                       className="flex h-11 w-11 items-center justify-center rounded-xl p-1 text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 active:scale-[0.98] transition-transform"
                     >
                       <Trash2 className="h-5 w-5" />
@@ -805,16 +808,19 @@ ${itensTexto}
             </div>
           </div>
 
-          {/* Botão finalizar - maior no mobile */}
-          <button
-            onClick={handleFinalizar}
-            disabled={cart.length === 0 || loading}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 sm:py-4 font-semibold text-white hover:bg-emerald-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-          >
-            <Check className="h-5 w-5" />
-            {loading ? "Processando..." : "Finalizar venda"}
-            <kbd className="hidden sm:inline-block rounded border border-emerald-500 bg-emerald-500/30 px-1.5 py-0.5 font-mono text-[10px] text-white shadow-2xs font-semibold ml-1">F4</kbd>
-          </button>
+          {/* Botão finalizar - sticky no mobile */}
+          <div className="sticky bottom-0 -mx-4 sm:-mx-5 -mb-4 sm:-mb-5 mt-6 border-t border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-4 sm:p-5 sm:rounded-b-2xl">
+            <button
+              onClick={handleFinalizar}
+              disabled={cart.length === 0 || loading}
+              aria-label="Finalizar venda"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 sm:py-4 font-semibold text-white hover:bg-emerald-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+            >
+              <Check className="h-5 w-5" />
+              {loading ? "Processando..." : "Finalizar venda"}
+              <kbd className="hidden sm:inline-block rounded border border-emerald-500 bg-emerald-500/30 px-1.5 py-0.5 font-mono text-[10px] text-white shadow-2xs font-semibold ml-1">F4</kbd>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -828,10 +834,14 @@ ${itensTexto}
         onCancel={() => setConfirmOpen(false)}
       />
 
-      {/* Modal de seleção de produto */}
+      {/* Modal de seleção de produto - Bottom Sheet no mobile */}
       {modalProdutos && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-[var(--card-bg)] p-4 sm:p-6 shadow-lg animate-slide-in">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4">
+          <div className="w-full max-w-lg rounded-t-2xl sm:rounded-2xl bg-white dark:bg-[var(--card-bg)] p-4 sm:p-6 shadow-lg animate-slide-up sm:animate-slide-in max-h-[85vh] flex flex-col">
+            {/* Handle bar - apenas mobile */}
+            <div className="mb-3 flex justify-center sm:hidden">
+              <div className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-600" />
+            </div>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">
                 Selecione o produto
@@ -841,6 +851,7 @@ ${itensTexto}
                   setModalProdutos(null);
                   setSearchQuery("");
                 }}
+                aria-label="Fechar modal de seleção"
                 className="rounded-xl p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 <X className="h-5 w-5" />
@@ -849,11 +860,12 @@ ${itensTexto}
             <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
               {modalProdutos.length} resultados para &ldquo;{searchQuery}&rdquo;
             </p>
-            <ul className="max-h-80 space-y-2 overflow-y-auto">
+            <ul className="flex-1 overflow-y-auto max-h-80 space-y-2">
               {modalProdutos.map((p) => (
                 <li key={p.id}>
                   <button
                     onClick={() => selecionarDoModal(p)}
+                    aria-label={`Adicionar ${p.nome} ao carrinho`}
                     className="flex w-full items-center gap-3 rounded-xl border border-slate-100 dark:border-[var(--card-border)] px-4 py-3 text-left transition hover:border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20 active:bg-violet-100 dark:active:bg-violet-900/40"
                   >
                     {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
@@ -899,6 +911,7 @@ ${itensTexto}
               </h3>
               <button
                 onClick={fecharModal}
+                aria-label="Fechar modal de venda finalizada"
                 className="rounded-xl p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 <X className="h-5 w-5" />
@@ -953,6 +966,7 @@ ${itensTexto}
               </h3>
               <button
                 onClick={() => setProdutoDetalhe(null)}
+                aria-label="Fechar detalhes do produto"
                 className="rounded-xl p-2 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 <X className="h-5 w-5" />
