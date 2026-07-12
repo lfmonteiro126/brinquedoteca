@@ -36,7 +36,7 @@ const links = [
 export function Nav({ user }: { user: User }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { theme, toggleTheme } = useTheme();
+  const { resolvedTheme: theme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [prevPathname, setPrevPathname] = useState(pathname);
   const touchStartX = useRef(0);

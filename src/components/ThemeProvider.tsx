@@ -2,52 +2,96 @@
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
-type Theme = "light" | "dark";
+type ThemeMode = "light" | "dark" | "system";
+type ResolvedTheme = "light" | "dark";
 
 interface ThemeContextValue {
-  theme: Theme;
+  theme: ThemeMode;
+  resolvedTheme: ResolvedTheme;
+  setTheme: (t: ThemeMode) => void;
   toggleTheme: () => void;
-  setTheme: (t: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: "light",
-  toggleTheme: () => {},
+  theme: "system",
+  resolvedTheme: "light",
   setTheme: () => {},
+  toggleTheme: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("light");
+  const [theme, setThemeState] = useState<ThemeMode>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("theme") as ThemeMode | null) || "system";
+    }
+    return "system";
+  });
+
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    function load() {
-      const stored = localStorage.getItem("theme") as Theme | null;
-      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const initial = stored || (systemDark ? "dark" : "light");
-      setThemeState(initial);
-      document.documentElement.classList.toggle("dark", initial === "dark");
-      setMounted(true);
+  // Calcula resolvedTheme reativamente em render time
+  const resolvedTheme: ResolvedTheme = (() => {
+    if (theme === "system") {
+      if (typeof window !== "undefined") {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      return "light";
     }
-    load();
+    return theme;
+  })();
+
+  // Define mounted de forma assíncrona após montagem para evitar cascading render warnings
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
-  const setTheme = useCallback((t: Theme) => {
+  // Aplica a classe CSS no document element de forma segura na montagem
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
+  }, [resolvedTheme]);
+
+  // Escuta mudanças de tema no sistema operacional
+  useEffect(() => {
+    if (theme !== "system") return;
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => {
+      const resolved = mediaQuery.matches ? "dark" : "light";
+      document.documentElement.classList.toggle("dark", resolved === "dark");
+    };
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", handleChange);
+    } else {
+      mediaQuery.addListener(handleChange);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener("change", handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, [theme]);
+
+  const setTheme = useCallback((t: ThemeMode) => {
     setThemeState(t);
     localStorage.setItem("theme", t);
-    document.documentElement.classList.toggle("dark", t === "dark");
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme(theme === "light" ? "dark" : "light");
-  }, [theme, setTheme]);
+    const nextTheme = resolvedTheme === "light" ? "dark" : "light";
+    setTheme(nextTheme);
+  }, [resolvedTheme, setTheme]);
 
   if (!mounted) {
     return <>{children}</>;
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
