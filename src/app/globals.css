@@ -22,22 +22,22 @@
 }
 
 .dark {
-  --background: #0f0d1a;
-  --foreground: #e2e8f0;
-  --card-bg: #1a1726;
-  --card-border: #2d2942;
-  --text-primary: #f1f5f9;
+  --background: #08090d;
+  --foreground: #f8fafc;
+  --card-bg: #11131e;
+  --card-border: #1d2136;
+  --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --surface-hover: #1f1b2e;
-  --border-color: #2d2942;
-  --input-bg: #1a1726;
-  --input-border: #2d2942;
-  --sidebar-bg: #14111f;
-  --sidebar-border: #2d2942;
-  --color-success: #34d399;
-  --color-danger: #f87171;
-  --color-warning: #fbbf24;
+  --surface-hover: #1c1e2d;
+  --border-color: #1d2136;
+  --input-bg: #0d0e14;
+  --input-border: #1d2136;
+  --sidebar-bg: #06070a;
+  --sidebar-border: #141724;
+  --color-success: #10b981;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
 }
 
 @theme inline {
