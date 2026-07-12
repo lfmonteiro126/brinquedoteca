@@ -26,6 +26,14 @@ Acesse [http://localhost:3000](http://localhost:3000)
 
 As tabelas e o usuario admin sao criados automaticamente na primeira execucao.
 
+### Testes
+
+```bash
+npm test
+```
+
+Os testes usam Vitest e ficam em `src/lib/*.test.ts`.
+
 ## Deploy (Vercel + Neon)
 
 1. Crie um repositorio no GitHub e faca push do codigo
@@ -52,32 +60,52 @@ As tabelas e o usuario admin sao criados automaticamente na primeira execucao.
 | Codigo de barras | JsBarcode (geracao de etiquetas) |
 | Fontes | Geist Sans / Geist Mono |
 | Hospedagem | Vercel (frontend + API) + Neon (banco de dados) |
+| Analiticas | @vercel/speed-insights |
+| Datas | date-fns |
+| Testes | Vitest |
 
 ## Estrutura do projeto
 
 ```
 src/
-├── app/                          # Rotas (Next.js App Router)
+├── proxy.ts                       # Proxy de autenticacao (verificacao de sessao)
+├── app/                           # Rotas (Next.js App Router)
+│   ├── globals.css               # Estilos globais (Tailwind)
+│   ├── layout.tsx                # Layout raiz
+│   ├── page.tsx                  # Pagina raiz (redirect)
+│   ├── error.tsx                 # Error boundary global
+│   ├── not-found.tsx             # Pagina 404 personalizada
 │   ├── api/                      # API routes (REST)
-│   │   ├── auth/                 #   Login, logout, troca de senha
+│   │   ├── auth/                 #   Login, logout, me, troca de senha
+│   │   │   ├── login/            #     POST login
+│   │   │   ├── logout/           #     POST logout
+│   │   │   ├── me/               #     GET usuario atual
+│   │   │   └── trocar-senha/     #     POST trocar senha
 │   │   ├── auditoria/            #   Log de movimentacoes de estoque
 │   │   ├── dashboard/            #   Dados do dashboard
 │   │   ├── inventario/           #   Sessoes de inventario
 │   │   ├── produtos/             #   CRUD produtos + busca por barcode
+│   │   │   ├── [id]/             #     Operacoes por ID
+│   │   │   └── barcode/[code]/   #   Busca por codigo de barras
 │   │   ├── relatorios/           #   Dados dos relatorios
 │   │   ├── usuarios/             #   CRUD usuarios (admin)
 │   │   └── vendas/               #   Vendas + estorno
 │   ├── auditoria/page.tsx        # Pagina de auditoria
-│   ├── error.tsx                 # Error boundary global
 │   ├── inventario/page.tsx       # Pagina de inventario
 │   ├── login/page.tsx            # Login
-│   ├── not-found.tsx             # Pagina 404 personalizada
 │   ├── perfil/                   # Perfil do usuario
+│   │   ├── page.tsx              #   Pagina de perfil
+│   │   └── PerfilClient.tsx      #   Componente client-side
 │   ├── produtos/                  # CRUD produtos (listar/novo/editar)
+│   │   ├── page.tsx              #   Listar produtos
+│   │   ├── novo/page.tsx         #   Novo produto
+│   │   └── [id]/editar/page.tsx  #   Editar produto
 │   ├── relatorios/page.tsx       # Relatorios (admin)
 │   ├── trocar-senha/page.tsx     # Troca de senha
 │   ├── usuarios/page.tsx         # Gerenciar usuarios (admin)
 │   └── vendas/                   # PDV + historico
+│       ├── page.tsx              #   PDV
+│       └── historico/page.tsx    #   Historico de vendas
 ├── components/                   # Componentes React
 │   ├── AppShell.tsx              # Layout autenticado
 │   ├── AuditoriaView.tsx         # View de auditoria
@@ -94,6 +122,7 @@ src/
 │   ├── Pagination.tsx            # Componente de paginacao
 │   ├── PerfilView.tsx            # View de perfil
 │   ├── POSView.tsx               # Ponto de venda (PDV)
+│   ├── ProductDetailModal.tsx    # Modal de detalhes do produto
 │   ├── ProductForm.tsx           # Formulario de produto
 │   ├── ProdutosView.tsx          # View de produtos
 │   ├── RelatoriosView.tsx        # View de relatorios
@@ -115,7 +144,9 @@ src/
 │   ├── schema.ts                 # Schema Drizzle ORM (tabelas do banco)
 │   ├── api.ts                    # Helpers de error handling para API
 │   ├── format.ts                 # Formatacao (moeda, data)
+│   ├── format.test.ts            # Testes de formatacao
 │   ├── sanitize.ts               # Sanitizacao de inputs (XSS)
+│   ├── sanitize.test.ts          # Testes de sanitizacao
 │   └── types.ts                  # Tipagens TypeScript
 ├── drizzle.config.ts              # Config do Drizzle Kit (migrations)
 └── middleware.ts                  # Middleware de autenticacao
@@ -157,6 +188,7 @@ O schema e criado automaticamente via `initSchema()` na primeira execucao. Para 
 ### Produtos
 - Cadastro completo: nome, código de barras, preço de custo/venda, estoque mínimo, categoria
 - Edição e listagem com paginação
+- **Detalhes do produto** — modal com imagem, preços, margem, estoque, datas e status visual
 - **Impressão de etiquetas** — etiquetas com código de barras em 3 tamanhos (38x25mm, 50x30mm, 70x40mm), configuráveis (preço, código, categoria)
 - **Ajuste de estoque** — modal com motivo obrigatório (entrada/saída/correção/inventário/outros), histórico registrado
 
