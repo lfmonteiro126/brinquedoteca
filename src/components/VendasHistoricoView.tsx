@@ -1,16 +1,52 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
-import { ChevronDown, ChevronRight, Filter, Undo2, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Filter,
+  Undo2,
+  X,
+  CreditCard,
+  Wallet,
+  Banknote,
+  Coins,
+  Percent,
+  Calendar,
+  Receipt,
+} from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Pagination } from "@/components/Pagination";
-import { SkeletonTable } from "@/components/Skeleton";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useToast } from "@/components/Toast";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Venda } from "@/lib/types";
 
 const PAGE_SIZE = 20;
+
+function getInitials(name: string) {
+  if (!name) return "U";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length > 1) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
+function getPaymentIcon(metodo: string) {
+  switch (metodo) {
+    case "pix":
+      return <Coins className="h-3.5 w-3.5 text-emerald-500" />;
+    case "debito":
+      return <CreditCard className="h-3.5 w-3.5 text-blue-500" />;
+    case "credito":
+      return <CreditCard className="h-3.5 w-3.5 text-indigo-500" />;
+    case "dinheiro":
+      return <Banknote className="h-3.5 w-3.5 text-amber-500" />;
+    default:
+      return <Wallet className="h-3.5 w-3.5 text-slate-400" />;
+  }
+}
 
 const metodoLabels: Record<string, string> = {
   pix: "PIX",
@@ -202,94 +238,152 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-2xl bg-white dark:bg-[var(--card-bg)] shadow-sm">
+      <div className="space-y-4">
         {loading ? (
-          <SkeletonTable rows={5} cols={6} />
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-20 w-full animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+            ))}
+          </div>
         ) : vendas.length === 0 ? (
-          <div className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">Nenhuma venda encontrada</div>
+          <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] border border-slate-200 dark:border-[var(--card-border)] px-4 py-12 text-center text-slate-400 dark:text-slate-500 shadow-sm">
+            Nenhuma venda encontrada
+          </div>
         ) : (
           <>
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-[var(--card-border)] text-left text-slate-500 dark:text-slate-400">
-                <tr>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">#</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Vendedor</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Total</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Pagamento</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider hidden md:table-cell">Desconto</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Data</th>
-                  <th className="px-4 py-3 w-10"></th>
-                  {isAdmin && <th className="px-4 py-3 w-10"></th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-[var(--card-border)]">
-                {vendas.map((v) => (
-                  <Fragment key={v.id}>
-                    <tr
-                      className="cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
-                      onClick={() => setExpanded(expanded === v.id ? null : v.id)}
+            <div className="space-y-3">
+              {vendas.map((v) => {
+                const isExpanded = expanded === v.id;
+                return (
+                  <div
+                    key={v.id}
+                    className={`group rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] shadow-xs transition-all duration-200 hover:shadow-md hover:border-violet-200 dark:hover:border-violet-800/80 ${
+                      isExpanded ? "border-violet-300 dark:border-violet-700 ring-2 ring-violet-50 dark:ring-violet-950/20" : ""
+                    }`}
+                  >
+                    {/* Linha Principal do Card */}
+                    <div
+                      onClick={() => setExpanded(isExpanded ? null : v.id)}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 cursor-pointer"
                     >
-                      <td className="px-4 py-3 font-bold">#{v.numero}</td>
-                      <td className="px-4 py-3">{v.usuario_nome}</td>
-                      <td className="px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400">
-                        {formatCurrency(v.total)}
-                      </td>
-                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden sm:table-cell">
-                        {metodoLabels[v.metodo_pagamento] || v.metodo_pagamento}
-                        {v.metodo_pagamento === "credito" && v.parcelas > 1
-                          ? ` ${v.parcelas}x`
-                          : ""}
-                      </td>
-                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden md:table-cell">
-                        {v.desconto > 0 ? formatCurrency(v.desconto) : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{formatDate(v.created_at)}</td>
-                      <td className="px-4 py-3 text-violet-600">
-                        {expanded === v.id ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </td>
-                      {isAdmin && (
-                        <td className="px-4 py-3">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setConfirmEstorno(v);
-                            }}
-                            disabled={estornando === v.id}
-                            className="rounded-lg p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
-                            title="Estornar venda"
-                          >
-                            <Undo2 className="h-4 w-4" />
-                          </button>
-                        </td>
-                      )}
-                    </tr>
-                    {expanded === v.id && v.itens && (
-                      <tr>
-                        <td colSpan={isAdmin ? 8 : 7} className="bg-violet-50/50 dark:bg-violet-900/20 px-8 py-3">
-                          <ul className="space-y-1">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        {/* Avatar do Vendedor */}
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-50 dark:bg-violet-950/50 text-xs font-bold text-violet-700 dark:text-violet-300 border border-violet-100 dark:border-violet-900/40">
+                          {getInitials(v.usuario_nome || "")}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-800 dark:text-slate-100 font-display">
+                              Venda #{v.numero}
+                            </span>
+                            {v.desconto > 0 && (
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 dark:bg-amber-955/40 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/40">
+                                <Percent className="h-2.5 w-2.5" />
+                                -{formatCurrency(v.desconto)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span>Vendido por <span className="font-semibold text-slate-600 dark:text-slate-300">{v.usuario_nome}</span></span>
+                            <span>·</span>
+                            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {formatDate(v.created_at)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Informações à direita */}
+                      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-4 sm:gap-6">
+                        <div className="flex items-center gap-4">
+                          {/* Método de Pagamento */}
+                          <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1.5 text-xs text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-850">
+                            {getPaymentIcon(v.metodo_pagamento)}
+                            <span className="font-medium">
+                              {metodoLabels[v.metodo_pagamento] || v.metodo_pagamento}
+                              {v.metodo_pagamento === "credito" && v.parcelas > 1 ? ` (${v.parcelas}x)` : ""}
+                            </span>
+                          </div>
+
+                          {/* Valor Total */}
+                          <div className="text-right min-w-[70px]">
+                            <p className="text-lg font-bold font-display tabular-nums text-emerald-600 dark:text-emerald-400">
+                              {formatCurrency(v.total)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Ações */}
+                        <div className="flex items-center gap-1.5">
+                          {isAdmin && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmEstorno(v);
+                              }}
+                              disabled={estornando === v.id}
+                              className="rounded-xl p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 active:scale-[0.96] transition-transform"
+                              title="Estornar venda"
+                            >
+                              <Undo2 className="h-4 w-4" />
+                            </button>
+                          )}
+                          <div className="rounded-xl p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                            {isExpanded ? (
+                              <ChevronDown className="h-4.5 w-4.5 text-violet-600 dark:text-violet-400" />
+                            ) : (
+                              <ChevronRight className="h-4.5 w-4.5 group-hover:translate-x-0.5 transition-transform" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Área Expandida (Detalhes/Recibo) */}
+                    {isExpanded && v.itens && (
+                      <div className="border-t border-dashed border-slate-200 dark:border-[var(--card-border)] bg-slate-50/50 dark:bg-slate-800/10 p-5 sm:px-6">
+                        <div className="max-w-md rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900/40 p-4 sm:p-5 shadow-xs relative overflow-hidden">
+                          {/* Receipt Header */}
+                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+                            <Receipt className="h-4 w-4 text-violet-500" />
+                            <span>Itens do Recibo</span>
+                          </div>
+                          
+                          <ul className="divide-y divide-dashed divide-slate-200 dark:divide-slate-850 space-y-2.5 pb-3">
                             {v.itens.map((item) => (
-                              <li key={item.id} className="flex justify-between text-sm">
-                                <span>
-                                  {item.produto_nome} &times; {item.quantidade}
-                                </span>
-                                <span className="font-medium">
+                              <li key={item.id} className="flex justify-between text-sm pt-2.5 first:pt-0">
+                                <div className="pr-4">
+                                  <p className="font-semibold text-slate-700 dark:text-slate-300">{item.produto_nome}</p>
+                                  <p className="text-xs text-slate-400 mt-0.5">Qtd: {item.quantidade}</p>
+                                </div>
+                                <span className="font-semibold font-display tabular-nums text-slate-800 dark:text-slate-200">
                                   {formatCurrency(item.subtotal)}
                                 </span>
                               </li>
                             ))}
                           </ul>
-                        </td>
-                      </tr>
+
+                          {/* Receipt Summary Footer */}
+                          <div className="border-t border-double border-slate-200 dark:border-slate-800 pt-3 mt-1 flex flex-col gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            {v.desconto > 0 && (
+                              <div className="flex justify-between">
+                                <span>Desconto total</span>
+                                <span className="font-semibold text-amber-600 dark:text-amber-400 font-display tabular-nums">-{formatCurrency(v.desconto)}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between text-sm font-bold text-slate-800 dark:text-slate-200 pt-1.5">
+                              <span>Total Final</span>
+                              <span className="font-display tabular-nums text-emerald-600 dark:text-emerald-400">{formatCurrency(v.total)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     )}
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
-            <Pagination page={page} total={total} pageSize={PAGE_SIZE} onPageChange={setPage} />
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-4">
+              <Pagination page={page} total={total} pageSize={PAGE_SIZE} onPageChange={setPage} />
+            </div>
           </>
         )}
       </div>

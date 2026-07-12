@@ -1,32 +1,117 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Filter, X } from "lucide-react";
+import {
+  Filter,
+  X,
+  Plus,
+  Minus,
+  Settings,
+  ShoppingCart,
+  ClipboardList,
+  RotateCcw,
+  Clock,
+  ArrowRight,
+} from "lucide-react";
 import { formatDate } from "@/lib/format";
 import { Pagination } from "@/components/Pagination";
-import { SkeletonTable } from "@/components/Skeleton";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Movimentacao } from "@/lib/types";
 
 const PAGE_SIZE = 30;
 
-const tipoLabels: Record<string, string> = {
-  entrada: "Entrada",
-  saida: "Saída",
-  ajuste: "Ajuste",
-  venda: "Venda",
-  inventario: "Inventário",
-  estorno: "Estorno",
-};
+function getTipoStyles(tipo: string) {
+  switch (tipo) {
+    case "entrada":
+      return {
+        icon: Plus,
+        color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30",
+        label: "Entrada",
+      };
+    case "saida":
+      return {
+        icon: Minus,
+        color: "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400 border-red-100 dark:border-red-900/30",
+        label: "Saída",
+      };
+    case "ajuste":
+      return {
+        icon: Settings,
+        color: "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border-blue-100 dark:border-blue-900/30",
+        label: "Ajuste",
+      };
+    case "venda":
+      return {
+        icon: ShoppingCart,
+        color: "bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400 border-violet-100 dark:border-violet-900/30",
+        label: "Venda",
+      };
+    case "inventario":
+      return {
+        icon: ClipboardList,
+        color: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border-amber-100 dark:border-amber-900/30",
+        label: "Inventário",
+      };
+    case "estorno":
+      return {
+        icon: RotateCcw,
+        color: "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border-rose-100 dark:border-rose-900/30",
+        label: "Estorno",
+      };
+    default:
+      return {
+        icon: Settings,
+        color: "bg-slate-50 text-slate-600 dark:bg-slate-900/40 dark:text-slate-400 border-slate-100 dark:border-slate-800",
+        label: "Ajuste",
+      };
+  }
+}
 
-const tipoColors: Record<string, string> = {
-  entrada: "bg-emerald-100 text-emerald-700",
-  saida: "bg-red-100 text-red-700",
-  ajuste: "bg-blue-100 text-blue-700",
-  venda: "bg-violet-100 text-violet-700",
-  inventario: "bg-amber-100 text-amber-700",
-  estorno: "bg-rose-100 text-rose-700",
-};
+function renderEventMessage(m: Movimentacao) {
+  const user = <span className="font-semibold text-slate-800 dark:text-slate-200">{m.usuario_nome}</span>;
+  const product = <span className="font-semibold text-slate-800 dark:text-slate-200">{m.produto_nome}</span>;
+  const qty = <span className="font-bold text-slate-950 dark:text-slate-100">{Math.abs(m.quantidade)}</span>;
+
+  switch (m.tipo) {
+    case "entrada":
+      return (
+        <p className="text-sm text-slate-600 dark:text-slate-350">
+          {user} adicionou {qty} unidade(s) de {product} ao estoque.
+        </p>
+      );
+    case "saida":
+      return (
+        <p className="text-sm text-slate-600 dark:text-slate-355">
+          {user} retirou {qty} unidade(s) de {product} do estoque.
+        </p>
+      );
+    case "venda":
+      return (
+        <p className="text-sm text-slate-600 dark:text-slate-355">
+          {user} registrou a venda de {qty} unidade(s) de {product}.
+        </p>
+      );
+    case "estorno":
+      return (
+        <p className="text-sm text-slate-600 dark:text-slate-355">
+          {user} estornou a venda de {qty} unidade(s) de {product}, devolvendo-as ao estoque.
+        </p>
+      );
+    case "inventario":
+      return (
+        <p className="text-sm text-slate-600 dark:text-slate-355">
+          {user} atualizou o estoque de {product} via inventário.
+        </p>
+      );
+    case "ajuste":
+    default:
+      return (
+        <p className="text-sm text-slate-600 dark:text-slate-355">
+          {user} realizou um ajuste manual no estoque de {product}.
+        </p>
+      );
+  }
+}
 
 export function AuditoriaView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
@@ -173,54 +258,82 @@ export function AuditoriaView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] 
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-2xl bg-white dark:bg-[var(--card-bg)] shadow-sm">
+      <div className="space-y-4">
         {loading ? (
-          <SkeletonTable rows={5} cols={7} />
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-20 w-full animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
+            ))}
+          </div>
         ) : movimentacoes.length === 0 ? (
-          <div className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
+          <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] border border-slate-200 dark:border-[var(--card-border)] px-4 py-12 text-center text-slate-400 dark:text-slate-500 shadow-xs">
             Nenhuma movimentação encontrada
           </div>
         ) : (
           <>
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-[var(--card-border)] text-left text-slate-500 dark:text-slate-400">
-                <tr>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Data</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Produto</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Tipo</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Qtd</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider hidden md:table-cell">Estoque</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider">Funcionário</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider hidden lg:table-cell">Motivo</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-[var(--card-border)]">
-                {movimentacoes.map((m) => (
-                  <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                      {formatDate(m.created_at)}
-                    </td>
-                    <td className="px-4 py-3 font-medium">{m.produto_nome}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${tipoColors[m.tipo]}`}
-                      >
-                        {tipoLabels[m.tipo]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-bold hidden sm:table-cell">{m.quantidade}</td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden md:table-cell">
-                      {m.estoque_anterior} &rarr; {m.estoque_novo}
-                    </td>
-                    <td className="px-4 py-3">{m.usuario_nome}</td>
-                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden lg:table-cell">
-                      {m.motivo || "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <Pagination page={page} total={total} pageSize={PAGE_SIZE} onPageChange={setPage} />
+            {/* Timeline container */}
+            <div className="relative border-l border-slate-200 dark:border-slate-800 ml-4 sm:ml-6 pl-6 sm:pl-8 space-y-5 py-2">
+              {movimentacoes.map((m) => {
+                const styles = getTipoStyles(m.tipo);
+                const Icon = styles.icon;
+                const isPositive = m.quantidade > 0;
+                
+                return (
+                  <div key={m.id} className="relative group">
+                    {/* Circle icon marker on the timeline */}
+                    <div className={`absolute -left-[37px] sm:-left-[45px] top-2 flex h-6 sm:h-8 w-6 sm:w-8 items-center justify-center rounded-full border bg-white dark:bg-slate-900 shadow-xs transition-transform group-hover:scale-105 ${styles.color}`}>
+                      <Icon className="h-3 sm:h-4 w-3 sm:w-4" />
+                    </div>
+
+                    {/* Event block card */}
+                    <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-4 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:border-violet-100 dark:hover:border-violet-850">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          {/* Narrative sentence */}
+                          {renderEventMessage(m)}
+
+                          {/* Time details */}
+                          <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>{formatDate(m.created_at)}</span>
+                          </div>
+                        </div>
+
+                        {/* Stock differences and badges at the right */}
+                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0 self-start sm:self-center">
+                          {/* Stock diff indicators */}
+                          <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1.5 text-xs text-slate-500 dark:text-slate-350 border border-slate-100 dark:border-slate-850 font-display tabular-nums">
+                            <span>{m.estoque_anterior}</span>
+                            <ArrowRight className="h-3 w-3 text-slate-400" />
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">{m.estoque_novo}</span>
+                          </div>
+
+                          {/* Quantidade diff pill */}
+                          <span className={`inline-flex items-center gap-0.5 rounded-full px-2.5 py-1 text-xs font-bold font-display tabular-nums border ${
+                            isPositive
+                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-900/40"
+                              : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border-red-200/50 dark:border-red-900/40"
+                          }`}>
+                            {isPositive ? "+" : ""}{m.quantidade}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Motivo description note if it exists */}
+                      {m.motivo && (
+                        <div className="mt-3 rounded-xl bg-slate-50/55 dark:bg-slate-900/40 px-3 py-2 border-l-2 border-violet-400 dark:border-violet-500 text-xs italic text-slate-500 dark:text-slate-400">
+                          &ldquo;{m.motivo}&rdquo;
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="mt-4">
+              <Pagination page={page} total={total} pageSize={PAGE_SIZE} onPageChange={setPage} />
+            </div>
           </>
         )}
       </div>
