@@ -154,7 +154,7 @@ export function Nav({ user }: { user: User }) {
 
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm lg:hidden animate-fade-in-opacity"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -162,7 +162,7 @@ export function Nav({ user }: { user: User }) {
       <aside
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-violet-100 dark:border-[var(--sidebar-border)] bg-white dark:bg-[var(--sidebar-bg)] transition-transform duration-200 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-violet-100 dark:border-[var(--sidebar-border)] bg-white dark:bg-[var(--sidebar-bg)] transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >

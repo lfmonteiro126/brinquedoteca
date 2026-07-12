@@ -200,6 +200,19 @@ textarea {
   animation: fade-in-scale 0.2s ease-out;
 }
 
+@keyframes fade-in-opacity {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-opacity {
+  animation: fade-in-opacity 0.25s ease-out;
+}
+
 /* Acessibilidade: Foco visível — usando Tailwind focus:ring-2 via componentes */
 
 /* Estado de erro nos inputs */
