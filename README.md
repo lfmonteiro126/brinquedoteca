@@ -17,7 +17,11 @@ JWT_SECRET=uma_senha_forte_com_pelo_menos_32_caracteres
 ```
 
 ```bash
+# Iniciar o servidor de desenvolvimento
 npm run dev
+
+# Executar testes unitários (Vitest)
+npm run test
 ```
 
 Acesse [http://localhost:3000](http://localhost:3000)
@@ -60,13 +64,13 @@ As tabelas e o usuário admin são criados automaticamente na primeira execuçã
 
 ```
 src/
-├── proxy.ts                       # Proxy de autenticacao (verificacao de sessao)
+├── proxy.ts                       # Proxy de autenticação (verificação de sessão)
 ├── app/                           # Rotas (Next.js App Router)
 │   ├── globals.css               # Estilos globais (Tailwind)
 │   ├── layout.tsx                # Layout raiz
-│   ├── page.tsx                  # Pagina raiz (redirect)
+│   ├── page.tsx                  # Página raiz (redirect)
 │   ├── error.tsx                 # Error boundary global
-│   ├── not-found.tsx             # Pagina 404 personalizada
+│   ├── not-found.tsx             # Página 404 personalizada
 │   ├── api/                      # API routes (REST)
 │   │   ├── auth/                 #   Login, logout, troca de senha
 │   │   ├── auditoria/            #   Log de movimentações de estoque (Admin-only)
@@ -77,16 +81,21 @@ src/
 │   │   ├── usuarios/             #   CRUD usuários (Admin-only)
 │   │   └── vendas/               #   Vendas + estorno
 │   ├── auditoria/page.tsx        # Página de auditoria (Admin-only)
-│   ├── error.tsx                 # Error boundary global
 │   ├── inventario/page.tsx       # Página de inventário (Admin-only)
 │   ├── login/page.tsx            # Login
-│   ├── not-found.tsx             # Página 404 personalizada
 │   ├── perfil/                   # Perfil do usuário (Vendedor/Admin)
+│   │   ├── page.tsx              #   Página de perfil
+│   │   └── PerfilClient.tsx      #   Componente de perfil (Client-side)
 │   ├── produtos/                 # CRUD produtos (listar/novo/editar) (Admin-only)
+│   │   ├── page.tsx              #   Lista de produtos
+│   │   ├── novo/page.tsx         #   Adicionar produto
+│   │   └── [id]/editar/page.tsx  #   Editar produto
 │   ├── relatorios/page.tsx       # Relatórios (Admin-only)
 │   ├── trocar-senha/page.tsx     # Troca de senha
 │   ├── usuarios/page.tsx         # Gerenciar usuários (Admin-only)
 │   └── vendas/                   # PDV + histórico
+│       ├── page.tsx              #   Página do PDV (Frente de Caixa)
+│       └── historico/page.tsx    #   Página de histórico de vendas
 ├── components/                   # Componentes React
 │   ├── AppShell.tsx              # Layout autenticado com controle de rotas por papel
 │   ├── AuditoriaView.tsx         # View de auditoria (Linha do Tempo / Activity Feed)
@@ -103,6 +112,7 @@ src/
 │   ├── Pagination.tsx            # Componente de paginação
 │   ├── PerfilView.tsx            # View de perfil
 │   ├── POSView.tsx               # Ponto de venda (PDV) com atalhos de teclado
+│   ├── ProductDetailModal.tsx    # Modal de detalhes do produto (SaaS premium)
 │   ├── ProductForm.tsx           # Formulário de produto
 │   ├── ProdutosView.tsx          # View de produtos (Cards premium + tabela tabular)
 │   ├── RelatoriosView.tsx        # View de relatórios com gráficos estilizados
@@ -119,12 +129,14 @@ src/
 │   ├── useKeyboardShortcuts.ts   # Atalhos de teclado (PDV)
 │   └── usePreferences.ts         # Preferências do usuário
 ├── lib/                          # Utilitários e lógica
+│   ├── api.ts                    # Helpers de error handling para API
 │   ├── auth.ts                   # Autenticação (JWT, sessão)
 │   ├── db.ts                     # Conexão PostgreSQL (postgres.js) + helpers
-│   ├── schema.ts                 # Schema Drizzle ORM (tabelas do banco)
-│   ├── api.ts                    # Helpers de error handling para API
 │   ├── format.ts                 # Formatação (moeda, data)
+│   ├── format.test.ts            # Teste unitário de formatação
 │   ├── sanitize.ts               # Sanitização de inputs (XSS)
+│   ├── sanitize.test.ts          # Teste unitário de sanitização
+│   ├── schema.ts                 # Schema Drizzle ORM (tabelas do banco)
 │   └── types.ts                  # Tipagens TypeScript
 ├── drizzle.config.ts             # Config do Drizzle Kit (migrations)
 └── middleware.ts                 # Middleware de autenticação
