@@ -52,12 +52,21 @@ As tabelas e o usuário admin são criados automaticamente na primeira execuçã
 | Geração de Código de barras | JsBarcode (geração de etiquetas) |
 | Fontes | Geist Sans / Geist Mono + **Inter** (Display de métricas) |
 | Hospedagem | Vercel (frontend + API) + Neon (banco de dados) |
+| Analiticas | @vercel/speed-insights |
+| Datas | date-fns |
+| Testes | Vitest |
 
 ## Estrutura do projeto
 
 ```
 src/
-├── app/                          # Rotas (Next.js App Router)
+├── proxy.ts                       # Proxy de autenticacao (verificacao de sessao)
+├── app/                           # Rotas (Next.js App Router)
+│   ├── globals.css               # Estilos globais (Tailwind)
+│   ├── layout.tsx                # Layout raiz
+│   ├── page.tsx                  # Pagina raiz (redirect)
+│   ├── error.tsx                 # Error boundary global
+│   ├── not-found.tsx             # Pagina 404 personalizada
 │   ├── api/                      # API routes (REST)
 │   │   ├── auth/                 #   Login, logout, troca de senha
 │   │   ├── auditoria/            #   Log de movimentações de estoque (Admin-only)
