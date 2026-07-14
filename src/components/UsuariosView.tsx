@@ -138,7 +138,7 @@ export function UsuariosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-violet-900 dark:text-violet-300">Usuários</h1>
-          <p className="text-slate-500 dark:text-slate-400">Gerenciar vendedores e administradores</p>
+          <p className="text-slate-500 dark:text-slate-400">Gerenciar vendedores e administradores. Administradores podem autorizar descontos no PDV.</p>
         </div>
         <button
           onClick={openCreate}
@@ -294,7 +294,7 @@ export function UsuariosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }
                   minLength={6}
                   {...(!editing ? { required: true } : {})}
                 />
-                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Mínimo de 6 caracteres</p>
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Mínimo de 6 caracteres. Senhas de administradores são usadas para autorizar descontos no PDV.</p>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Perfil</label>

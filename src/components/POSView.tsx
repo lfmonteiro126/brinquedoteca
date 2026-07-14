@@ -23,7 +23,7 @@ import { useToast } from "@/components/Toast";
 import { useKeyboardShortcuts, getShortcutLabel } from "@/hooks/useKeyboardShortcuts";
 import { ShortcutHelp } from "@/components/ShortcutHelp";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
-import type { Produto } from "@/lib/types";
+import type { Produto, User } from "@/lib/types";
 
 interface CartItem {
   produto: Produto;
@@ -67,6 +67,16 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
     return [];
   });
   const [desconto, setDesconto] = useState(0);
+  const [descontoInput, setDescontoInput] = useState<string>("0");
+  const [descontoAutorizado, setDescontoAutorizado] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingDesconto, setPendingDesconto] = useState(0);
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [verifyingAuth, setVerifyingAuth] = useState(false);
+  const [authSuccessCallback, setAuthSuccessCallback] = useState<(() => void) | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [metodoPagamento, setMetodoPagamento] = useState("dinheiro");
   const [parcelas, setParcelas] = useState(1);
@@ -92,6 +102,17 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
     }
   }, [cartTotalItems]);
 
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.user) setCurrentUser(data.user);
+      })
+      .catch(() => {});
+  }, []);
+
+  const isAdmin = currentUser?.role === "admin";
+
   const inputRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -111,20 +132,101 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
     descontoRef.current?.select();
   }, []);
 
+  const handleDescontoChange = (valStr: string) => {
+    setDescontoInput(valStr);
+  };
+
+  const processarDesconto = useCallback((onSuccess?: () => void) => {
+    const val = Math.max(0, parseFloat(descontoInput) || 0);
+
+    if (val === 0) {
+      setDesconto(0);
+      setDescontoInput("0");
+      setDescontoAutorizado(false);
+      onSuccess?.();
+      return true;
+    }
+
+    if (val === desconto) {
+      onSuccess?.();
+      return true;
+    }
+
+    if (isAdmin) {
+      setDesconto(val);
+      setDescontoInput(val.toString());
+      setDescontoAutorizado(true);
+      onSuccess?.();
+      return true;
+    }
+
+    setPendingDesconto(val);
+    setAuthPassword("");
+    setAuthError("");
+    setShowAuthModal(true);
+    setAuthSuccessCallback(() => onSuccess || null);
+    return false;
+  }, [descontoInput, desconto, isAdmin]);
+
+  const handleCancelAuth = () => {
+    setShowAuthModal(false);
+    setDescontoInput(desconto > 0 ? desconto.toString() : "0");
+    setAuthSuccessCallback(null);
+  };
+
+  const handleConfirmAuth = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!authPassword) return;
+
+    setVerifyingAuth(true);
+    setAuthError("");
+
+    try {
+      const res = await fetch("/api/auth/autorizar-desconto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ senha: authPassword }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.authorized) {
+        setDesconto(pendingDesconto);
+        setDescontoInput(pendingDesconto.toString());
+        setDescontoAutorizado(true);
+        setShowAuthModal(false);
+        showToast("success", `Desconto de ${formatCurrency(pendingDesconto)} autorizado!`);
+        if (authSuccessCallback) {
+          authSuccessCallback();
+          setAuthSuccessCallback(null);
+        }
+      } else {
+        setAuthError(data.error || "Senha incorreta.");
+      }
+    } catch {
+      setAuthError("Erro ao validar autorização.");
+    } finally {
+      setVerifyingAuth(false);
+    }
+  };
+
   const clearCart = useCallback(() => {
     if (cart.length > 0) {
       setCart([]);
       localStorage.removeItem("pos_cart");
       setDesconto(0);
+      setDescontoInput("0");
+      setDescontoAutorizado(false);
       showToast("info", "Carrinho limpo");
     }
   }, [cart.length, showToast]);
 
   const triggerFinalizar = useCallback(() => {
-    if (cart.length > 0) {
+    if (cart.length === 0) return;
+    const ok = processarDesconto(() => setConfirmOpen(true));
+    if (ok) {
       setConfirmOpen(true);
     }
-  }, [cart.length]);
+  }, [cart.length, processarDesconto]);
 
   // Handler global para ESC - funciona mesmo quando modais estão abertos
   useEffect(() => {
@@ -355,7 +457,10 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
 
   function handleFinalizar() {
     if (cart.length === 0) return;
-    setConfirmOpen(true);
+    const ok = processarDesconto(() => setConfirmOpen(true));
+    if (ok) {
+      setConfirmOpen(true);
+    }
   }
 
   async function finalizarVenda() {
@@ -412,6 +517,8 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
     setCart([]);
     localStorage.removeItem("pos_cart");
     setDesconto(0);
+    setDescontoInput("0");
+    setDescontoAutorizado(false);
     setMetodoPagamento("dinheiro");
     setParcelas(1);
     focusInput();
@@ -751,8 +858,14 @@ ${itensTexto}
                   type="number"
                   min={0}
                   step={0.01}
-                  value={desconto || ""}
-                  onChange={(e) => setDesconto(Math.max(0, parseFloat(e.target.value) || 0))}
+                  value={descontoInput}
+                  onChange={(e) => handleDescontoChange(e.target.value)}
+                  onBlur={() => processarDesconto()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      descontoRef.current?.blur();
+                    }
+                  }}
                   placeholder="0,00"
                   className="w-24 rounded-xl border border-slate-200 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-2 py-1.5 text-right text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800"
                 />
@@ -833,6 +946,68 @@ ${itensTexto}
         onConfirm={finalizarVenda}
         onCancel={() => setConfirmOpen(false)}
       />
+
+      {/* Modal de Autorização de Desconto */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 animate-fade-in">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-xl border border-slate-200/60 dark:border-[var(--card-border)]">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-850 dark:text-slate-100 flex items-center gap-2">
+                <Percent className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                Autorização de Desconto
+              </h3>
+              <button
+                onClick={handleCancelAuth}
+                className="rounded-lg p-1 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className="text-sm text-slate-655 dark:text-slate-400 mb-4">
+              Esta operação requer privilégios de administrador. Insira a senha de um administrador para aplicar o desconto de <strong className="text-slate-850 dark:text-slate-100">{formatCurrency(pendingDesconto)}</strong>.
+            </p>
+
+            <form onSubmit={handleConfirmAuth} className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Senha Admin</label>
+                <input
+                  type="password"
+                  required
+                  autoFocus
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  placeholder="Digite a senha..."
+                  className="w-full rounded-xl border border-slate-200 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200 px-4 py-2.5 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800"
+                />
+              </div>
+
+              {authError && (
+                <p className="text-xs font-medium text-red-655 dark:text-red-450 bg-red-50 dark:bg-red-950/20 px-3 py-2 rounded-lg">
+                  {authError}
+                </p>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleCancelAuth}
+                  className="flex-1 rounded-xl border border-slate-200 dark:border-[var(--card-border)] py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={verifyingAuth}
+                  className="flex-1 rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50 transition-colors"
+                >
+                  {verifyingAuth ? "Verificando..." : "Autorizar"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal de seleção de produto - Bottom Sheet no mobile */}
       {modalProdutos && (
