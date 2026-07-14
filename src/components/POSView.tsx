@@ -59,13 +59,8 @@ function saveRecent(produto: Produto) {
 
 export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
   const [barcode, setBarcode] = useState("");
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("pos_cart");
-      return saved ? JSON.parse(saved) : [];
-    }
-    return [];
-  });
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartLoaded, setCartLoaded] = useState(false);
   const [desconto, setDesconto] = useState(0);
   const [descontoInput, setDescontoInput] = useState<string>("0");
   const [descontoAutorizado, setDescontoAutorizado] = useState(false);
@@ -109,7 +104,31 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
         if (data.user) setCurrentUser(data.user);
       })
       .catch(() => {});
+
+    // Limpa chave legada de carrinho global para não deixar lixo no navegador
+    try {
+      localStorage.removeItem("pos_cart");
+    } catch {}
   }, []);
+
+  // Carrega o carrinho específico do usuário
+  useEffect(() => {
+    if (currentUser) {
+      const saved = localStorage.getItem(`pos_cart_${currentUser.id}`);
+      if (saved) {
+        try {
+          setCart(JSON.parse(saved));
+        } catch {
+          setCart([]);
+        }
+      } else {
+        setCart([]);
+      }
+      setCartLoaded(true);
+    } else {
+      setCartLoaded(false);
+    }
+  }, [currentUser]);
 
   const isAdmin = currentUser?.role === "admin";
 
@@ -212,13 +231,15 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
   const clearCart = useCallback(() => {
     if (cart.length > 0) {
       setCart([]);
-      localStorage.removeItem("pos_cart");
+      if (currentUser) {
+        localStorage.removeItem(`pos_cart_${currentUser.id}`);
+      }
       setDesconto(0);
       setDescontoInput("0");
       setDescontoAutorizado(false);
       showToast("info", "Carrinho limpo");
     }
-  }, [cart.length, showToast]);
+  }, [cart.length, showToast, currentUser]);
 
   const triggerFinalizar = useCallback(() => {
     if (cart.length === 0) return;
@@ -305,8 +326,10 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
   }, [focusInput]);
 
   useEffect(() => {
-    localStorage.setItem("pos_cart", JSON.stringify(cart));
-  }, [cart]);
+    if (currentUser && cartLoaded) {
+      localStorage.setItem(`pos_cart_${currentUser.id}`, JSON.stringify(cart));
+    }
+  }, [cart, currentUser, cartLoaded]);
 
   async function buscarPorCodigo(code: string) {
     const res = await fetch(`/api/produtos/barcode/${encodeURIComponent(code)}`);
@@ -515,7 +538,9 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
     });
 
     setCart([]);
-    localStorage.removeItem("pos_cart");
+    if (currentUser) {
+      localStorage.removeItem(`pos_cart_${currentUser.id}`);
+    }
     setDesconto(0);
     setDescontoInput("0");
     setDescontoAutorizado(false);
