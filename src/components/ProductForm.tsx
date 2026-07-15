@@ -207,6 +207,27 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
         />
       </div>
       <div>
+        <label className="mb-1 block text-sm font-medium">Código de barras</label>
+        <div className="flex gap-2">
+          <input
+            value={form.codigo_barras}
+            onChange={(e) => update("codigo_barras", e.target.value)}
+            className="w-full rounded-xl border px-4 py-2.5 font-mono outline-none focus:border-violet-400"
+            placeholder="Escaneie, digite ou gere um código"
+          />
+          <button
+            type="button"
+            onClick={handleGenerateBarcode}
+            className="shrink-0 flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2.5 text-sm font-medium text-violet-700 hover:bg-violet-100"
+            title="Gerar código automaticamente"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Gerar
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-slate-400">Código único para impressão de etiquetas e busca</p>
+      </div>
+      <div>
         <label className="mb-1 block text-sm font-medium">Descrição</label>
         <textarea
           value={form.descricao}
@@ -345,27 +366,6 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
             )}
           </div>
         )}
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Código de barras</label>
-        <div className="flex gap-2">
-          <input
-            value={form.codigo_barras}
-            onChange={(e) => update("codigo_barras", e.target.value)}
-            className="w-full rounded-xl border px-4 py-2.5 font-mono outline-none focus:border-violet-400"
-            placeholder="Escaneie, digite ou gere um código"
-          />
-          <button
-            type="button"
-            onClick={handleGenerateBarcode}
-            className="shrink-0 flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2.5 text-sm font-medium text-violet-700 hover:bg-violet-100"
-            title="Gerar código automaticamente"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Gerar
-          </button>
-        </div>
-        <p className="mt-1 text-xs text-slate-400">Código único para impressão de etiquetas e busca</p>
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium">Categoria</label>
