@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireAuth();
     const body = await request.json();
-    const { itens, desconto = 0, metodo_pagamento = "dinheiro", parcelas = 1 } = body;
+    const { itens, desconto = 0, metodo_pagamento = "dinheiro", parcelas = 1, desconto_autorizado_por = null } = body;
 
     if (!itens?.length) {
       return NextResponse.json({ error: "Adicione itens à venda" }, { status: 400 });
@@ -157,12 +157,21 @@ export async function POST(request: NextRequest) {
 
     const vendaId = await getClient().begin(async (tx) => {
       const vendaResult = await tx`
-        INSERT INTO vendas (numero, usuario_id, total, desconto, metodo_pagamento, parcelas)
-        VALUES (${numero}, ${user.id}, ${total}, ${desconto}, ${metodo_pagamento}, ${parcelas})
+        INSERT INTO vendas (numero, usuario_id, total, desconto, metodo_pagamento, parcelas, desconto_autorizado_por)
+        VALUES (${numero}, ${user.id}, ${total}, ${desconto}, ${metodo_pagamento}, ${parcelas}, ${desconto_autorizado_por})
         RETURNING id
       `;
 
       const id = vendaResult[0].id;
+
+      const descontoVal = Number(desconto);
+      const descontoFormatado = new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      }).format(descontoVal);
+      const motivoMovimentacao = descontoVal > 0 && desconto_autorizado_por
+        ? `Venda #${numero} (Desconto de ${descontoFormatado} autorizado por ${desconto_autorizado_por})`
+        : `Venda #${numero}`;
 
       for (const item of itensValidados) {
         await tx`
@@ -176,7 +185,7 @@ export async function POST(request: NextRequest) {
           quantidade: item.quantidade,
           usuarioId: user.id,
           referenciaId: id,
-          motivo: `Venda #${numero}`,
+          motivo: motivoMovimentacao,
         });
       }
 

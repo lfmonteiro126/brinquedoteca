@@ -364,10 +364,18 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
                           {/* Receipt Summary Footer */}
                           <div className="border-t border-double border-slate-200 dark:border-slate-800 pt-3 mt-1 flex flex-col gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                             {v.desconto > 0 && (
-                              <div className="flex justify-between">
-                                <span>Desconto total</span>
-                                <span className="font-semibold text-amber-600 dark:text-amber-400 font-display tabular-nums">-{formatCurrency(v.desconto)}</span>
-                              </div>
+                              <>
+                                <div className="flex justify-between">
+                                  <span>Desconto total</span>
+                                  <span className="font-semibold text-amber-600 dark:text-amber-400 font-display tabular-nums">-{formatCurrency(v.desconto)}</span>
+                                </div>
+                                {v.desconto_autorizado_por && (
+                                  <div className="flex justify-between text-[11px] text-slate-400 dark:text-slate-500 italic mt-0.5">
+                                    <span>Autorizado por</span>
+                                    <span>{v.desconto_autorizado_por}</span>
+                                  </div>
+                                )}
+                              </>
                             )}
                             <div className="flex justify-between text-sm font-bold text-slate-800 dark:text-slate-200 pt-1.5">
                               <span>Total Final</span>

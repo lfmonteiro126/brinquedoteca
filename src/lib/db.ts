@@ -125,6 +125,11 @@ export async function initSchema() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
+    DO $$ BEGIN
+      ALTER TABLE vendas ADD COLUMN desconto_autorizado_por TEXT;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+
     CREATE TABLE IF NOT EXISTS venda_itens (
       id SERIAL PRIMARY KEY,
       venda_id INTEGER NOT NULL REFERENCES vendas(id),

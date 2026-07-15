@@ -64,6 +64,7 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
   const [desconto, setDesconto] = useState(0);
   const [descontoInput, setDescontoInput] = useState<string>("0");
   const [descontoAutorizado, setDescontoAutorizado] = useState(false);
+  const [descontoAutorizadoPor, setDescontoAutorizadoPor] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingDesconto, setPendingDesconto] = useState(0);
   const [authPassword, setAuthPassword] = useState("");
@@ -162,6 +163,7 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
       setDesconto(0);
       setDescontoInput("0");
       setDescontoAutorizado(false);
+      setDescontoAutorizadoPor(null);
       onSuccess?.();
       return true;
     }
@@ -175,6 +177,7 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
       setDesconto(val);
       setDescontoInput(val.toString());
       setDescontoAutorizado(true);
+      setDescontoAutorizadoPor(currentUser?.nome || "Administrador");
       onSuccess?.();
       return true;
     }
@@ -185,11 +188,14 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
     setShowAuthModal(true);
     setAuthSuccessCallback(() => onSuccess || null);
     return false;
-  }, [descontoInput, desconto, isAdmin]);
+  }, [descontoInput, desconto, isAdmin, currentUser]);
 
   const handleCancelAuth = () => {
     setShowAuthModal(false);
     setDescontoInput(desconto > 0 ? desconto.toString() : "0");
+    if (desconto === 0) {
+      setDescontoAutorizadoPor(null);
+    }
     setAuthSuccessCallback(null);
   };
 
@@ -212,6 +218,7 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
         setDesconto(pendingDesconto);
         setDescontoInput(pendingDesconto.toString());
         setDescontoAutorizado(true);
+        setDescontoAutorizadoPor(data.adminName || "Administrador");
         setShowAuthModal(false);
         showToast("success", `Desconto de ${formatCurrency(pendingDesconto)} autorizado!`);
         if (authSuccessCallback) {
@@ -237,6 +244,7 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
       setDesconto(0);
       setDescontoInput("0");
       setDescontoAutorizado(false);
+      setDescontoAutorizadoPor(null);
       showToast("info", "Carrinho limpo");
     }
   }, [cart.length, showToast, currentUser]);
@@ -517,6 +525,7 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
         desconto,
         metodo_pagamento: metodoPagamento,
         parcelas: metodoPagamento === "credito" ? parcelas : 1,
+        desconto_autorizado_por: descontoAutorizadoPor,
       }),
     });
 
@@ -544,6 +553,7 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
     setDesconto(0);
     setDescontoInput("0");
     setDescontoAutorizado(false);
+    setDescontoAutorizadoPor(null);
     setMetodoPagamento("dinheiro");
     setParcelas(1);
     focusInput();

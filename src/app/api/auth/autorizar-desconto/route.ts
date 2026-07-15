@@ -18,18 +18,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Busca os hashes de todos os administradores ativos
-    const admins = await sqlAll<{ senha_hash: string }>`
-      SELECT senha_hash FROM users WHERE role = 'admin' AND ativo = true
+    // Busca os nomes e hashes de todos os administradores ativos
+    const admins = await sqlAll<{ nome: string; senha_hash: string }>`
+      SELECT nome, senha_hash FROM users WHERE role = 'admin' AND ativo = true
     `;
 
-    // Compara a senha informada com o hash de cada administrador
-    const authorized = admins.some((admin) =>
+    // Encontra o administrador que possui a senha correspondente
+    const matchingAdmin = admins.find((admin) =>
       bcrypt.compareSync(senha, admin.senha_hash)
     );
 
-    if (authorized) {
-      return NextResponse.json({ authorized: true });
+    if (matchingAdmin) {
+      return NextResponse.json({ authorized: true, adminName: matchingAdmin.nome });
     }
 
     return NextResponse.json(

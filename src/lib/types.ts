@@ -36,6 +36,7 @@ export interface Venda {
   metodo_pagamento: "pix" | "debito" | "credito" | "dinheiro";
   parcelas: number;
   created_at: string;
+  desconto_autorizado_por?: string | null;
   itens?: VendaItem[];
 }
 
