@@ -18,6 +18,7 @@ import {
   UserCircle,
   Moon,
   Sun,
+  Barcode,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import type { User } from "@/lib/types";
@@ -26,6 +27,7 @@ const links = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, adminOnly: true },
   { href: "/vendas", label: "PDV / Vendas", icon: ShoppingCart },
   { href: "/produtos", label: "Brinquedos", icon: Package, adminOnly: true },
+  { href: "/produtos/codigos-de-barra", label: "Cód. de Barras", icon: Barcode, adminOnly: true },
   { href: "/vendas/historico", label: "Histórico", icon: ClipboardList, adminOnly: true },
   { href: "/inventario", label: "Inventário", icon: ClipboardList, adminOnly: true },
   { href: "/auditoria", label: "Auditoria", icon: Shield, adminOnly: true },
