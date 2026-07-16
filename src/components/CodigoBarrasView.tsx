@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Search, Barcode, Package, Check, Printer } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { LabelPrinter } from "@/components/LabelPrinter";
+import { formatCurrency } from "@/lib/format";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Produto } from "@/lib/types";
 
@@ -219,7 +220,7 @@ export function CodigoBarrasView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem
                         </span>
                       </td>
                       <td className="px-5 py-3.5 text-right font-bold text-emerald-600 dark:text-emerald-400">
-                        R$ {p.preco_venda.toFixed(2)}
+                        {formatCurrency(p.preco_venda)}
                       </td>
                       <td className="px-5 py-3.5 text-center">
                         {p.codigo_barras ? (
