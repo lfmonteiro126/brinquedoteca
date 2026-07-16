@@ -33,6 +33,7 @@ interface CartItem {
 interface VendaFinalizada {
   numero: number;
   total: number;
+  desconto: number;
   metodo_pagamento: string;
   parcelas: number;
   itens: { nome: string; quantidade: number; subtotal: number }[];
@@ -540,6 +541,7 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
     setVendaFinalizada({
       numero: data.numero,
       total: data.total,
+      desconto,
       metodo_pagamento: metodoLabel[metodoPagamento] || metodoPagamento,
       parcelas: metodoPagamento === "credito" ? parcelas : 1,
       itens: itensSnapshot,
@@ -569,26 +571,55 @@ export function POSView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
       )
       .join("\n");
 
+    const descontoLinha = vendaFinalizada.desconto > 0
+      ? `DESCONTO:   -${formatCurrency(vendaFinalizada.desconto)}\n`
+      : "";
+
     const cupom = `
-╔══════════════════════════════════╗
-║     ATELÊ ANGELS KIDS            ║
-║     Loja Praia Grande             ║
-╠══════════════════════════════════╣
-║  Venda #${String(vendaFinalizada.numero).padStart(4, "0")}
-║  Data: ${vendaFinalizada.data}
-╠══════════════════════════════════╣
+     ATELE ANGELS KIDS
+      Loja Praia Grande
+--------------------------------
+Venda: #${String(vendaFinalizada.numero).padStart(4, "0")}
+Data:  ${vendaFinalizada.data}
+--------------------------------
 ${itensTexto}
-╠══════════════════════════════════╣
-║  TOTAL: ${formatCurrency(vendaFinalizada.total)}
-║  Pagamento: ${vendaFinalizada.metodo_pagamento}
-╚══════════════════════════════════╝
+--------------------------------
+${descontoLinha}TOTAL:    ${formatCurrency(vendaFinalizada.total)}
+Pgto:    ${vendaFinalizada.metodo_pagamento}
+--------------------------------
+      Obrigado!
     `.trim();
 
-    const printWindow = window.open("", "_blank", "width=320,height=500");
+    const printWindow = window.open("", "_blank", "width=320,height=600");
     if (printWindow) {
-      printWindow.document.write(
-        `<pre style="font-family:monospace;font-size:13px;margin:0;">${escapeHtml(cupom)}</pre>`
-      );
+      printWindow.document.write(`
+        <html>
+        <head>
+          <title>Cupom #${vendaFinalizada.numero}</title>
+          <style>
+            @page { size: 80mm auto; margin: 0; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+              font-family: "Courier New", Courier, monospace;
+              font-size: 12px;
+              line-height: 1.3;
+              width: 80mm;
+              padding: 5mm 3mm;
+              color: #000;
+              background: #fff;
+            }
+            pre {
+              white-space: pre-wrap;
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+            }
+          </style>
+        </head>
+        <body>
+          <pre>${escapeHtml(cupom)}</pre>
+        </body>
+        </html>
+      `);
       printWindow.document.close();
       printWindow.print();
     }

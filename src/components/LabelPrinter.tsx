@@ -6,7 +6,7 @@ import JsBarcode from "jsbarcode";
 import { formatCurrency } from "@/lib/format";
 import type { Produto } from "@/lib/types";
 
-type LabelSize = "small" | "medium" | "large";
+type LabelSize = "small" | "medium" | "large" | "receipt";
 
 interface LabelConfig {
   size: LabelSize;
@@ -17,14 +17,16 @@ interface LabelConfig {
 }
 
 const SIZE_CONFIG: Record<LabelSize, { width: number; height: number; label: string }> = {
-  small: { width: 38, height: 25, label: "38×25mm (Jewelry)" },
-  medium: { width: 50, height: 30, label: "50×30mm (Folha A4)" },
-  large: { width: 70, height: 40, label: "70×40mm (Grande)" },
+  small: { width: 38, height: 25, label: "38×25mm" },
+  medium: { width: 50, height: 30, label: "50×30mm" },
+  large: { width: 70, height: 40, label: "70×40mm" },
+  receipt: { width: 72, height: 40, label: "80mm Térmica (Daruma)" },
 };
 
 function LabelCard({ produto, config }: { produto: Produto; config: LabelConfig }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const size = SIZE_CONFIG[config.size];
+  const isReceipt = config.size === "receipt";
 
   useEffect(() => {
     if (config.showBarcode && svgRef.current && produto.codigo_barras) {
@@ -32,7 +34,7 @@ function LabelCard({ produto, config }: { produto: Produto; config: LabelConfig 
         JsBarcode(svgRef.current, produto.codigo_barras, {
           format: "CODE128",
           width: 1.2,
-          height: 20,
+          height: isReceipt ? 25 : 20,
           displayValue: false,
           margin: 0,
         });
@@ -40,7 +42,34 @@ function LabelCard({ produto, config }: { produto: Produto; config: LabelConfig 
         if (svgRef.current) svgRef.current.innerHTML = "";
       }
     }
-  }, [config.showBarcode, produto.codigo_barras]);
+  }, [config.showBarcode, produto.codigo_barras, isReceipt]);
+
+  if (isReceipt) {
+    return (
+      <div className="flex flex-col items-center justify-between border border-dashed border-slate-300 bg-white p-2 w-full">
+        <div className="w-full text-center">
+          <p className="font-bold text-slate-800 text-sm">{produto.nome}</p>
+          {config.showCategory && produto.categoria && (
+            <p className="text-slate-500 text-xs">{produto.categoria}</p>
+          )}
+        </div>
+        {config.showBarcode && (
+          <div className="flex justify-center">
+            {produto.codigo_barras ? (
+              <svg ref={svgRef} />
+            ) : (
+              <p className="text-xs text-slate-400">Sem código</p>
+            )}
+          </div>
+        )}
+        {config.showPrice && (
+          <p className="font-bold text-emerald-700 text-base">
+            {formatCurrency(produto.preco_venda)}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -110,6 +139,7 @@ export function LabelPrinter({
   function handlePrint() {
     if (!printRef.current) return;
     const content = printRef.current.innerHTML;
+    const isReceipt = config.size === "receipt";
     const win = window.open("", "_blank", "width=800,height=600");
     if (!win) return;
     win.document.write(`
@@ -117,18 +147,28 @@ export function LabelPrinter({
         <head>
           <title>Etiquetas</title>
           <style>
-            @page { margin: 5mm; }
-            body { margin: 0; font-family: sans-serif; }
+            @page {
+              size: ${isReceipt ? "80mm auto" : "auto"};
+              margin: ${isReceipt ? "0" : "5mm"};
+            }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+              margin: 0;
+              font-family: ${isReceipt ? '"Courier New", Courier, monospace' : "sans-serif"};
+              ${isReceipt ? "width: 80mm; font-size: 12px;" : ""}
+            }
             .label-grid {
               display: flex;
               flex-wrap: wrap;
-              gap: 4mm;
+              gap: ${isReceipt ? "2mm" : "4mm"};
+              ${isReceipt ? "flex-direction: column;" : ""}
             }
             .label-item {
               page-break-inside: avoid;
             }
             @media print {
               .no-print { display: none !important; }
+              body { padding: 0; }
             }
           </style>
         </head>
