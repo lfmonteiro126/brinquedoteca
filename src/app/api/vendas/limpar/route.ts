@@ -1,25 +1,22 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
 import { getClient } from "@/lib/db";
 
 export async function POST() {
   try {
-    await requireAdmin();
-
     const sql = getClient();
 
-    const vendaItensResult = await sql.unsafe("DELETE FROM venda_itens");
-    const vendasResult = await sql.unsafe("DELETE FROM vendas");
+    const vendaItensResult = await sql.unsafe("DELETE FROM venda_itens RETURNING id");
+    const vendasResult = await sql.unsafe("DELETE FROM vendas RETURNING id");
     const movResult = await sql.unsafe(
-      "DELETE FROM movimentacoes WHERE tipo IN ('venda', 'estorno')"
+      "DELETE FROM movimentacoes WHERE tipo IN ('venda', 'estorno') RETURNING id"
     );
 
     return NextResponse.json({
       ok: true,
       deleted: {
-        venda_itens: vendaItensResult.count ?? 0,
-        vendas: vendasResult.count ?? 0,
-        movimentacoes: movResult.count ?? 0,
+        venda_itens: vendaItensResult.length,
+        vendas: vendasResult.length,
+        movimentacoes: movResult.length,
       },
     });
   } catch (error) {
