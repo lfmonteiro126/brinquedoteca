@@ -18,6 +18,45 @@ function labelMetodo(metodo: string, parcelas: number) {
   return base;
 }
 
+async function ajustarEstoqueNoTx(
+  tx: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (strings: TemplateStringsArray, ...values: any[]): Promise<any>;
+  },
+  params: {
+    produtoId: number;
+    tipo: "entrada" | "saida";
+    quantidade: number;
+    usuarioId: number;
+    referenciaId: number;
+    motivo: string;
+  }
+) {
+  const produto = await tx`SELECT estoque, nome FROM produtos WHERE id = ${params.produtoId} FOR UPDATE`;
+  if (produto.length === 0) throw new Error("Produto não encontrado");
+
+  const estoqueAnterior = Number(produto[0].estoque);
+  const estoqueNovo =
+    params.tipo === "entrada"
+      ? estoqueAnterior + params.quantidade
+      : estoqueAnterior - params.quantidade;
+
+  if (estoqueNovo < 0) {
+    throw new Error(`Estoque insuficiente para "${produto[0].nome}"`);
+  }
+
+  await tx`UPDATE produtos SET estoque = ${estoqueNovo}, updated_at = NOW() WHERE id = ${params.produtoId}`;
+
+  await tx`
+    INSERT INTO movimentacoes (produto_id, tipo, quantidade, estoque_anterior, estoque_novo, usuario_id, referencia_id, motivo)
+    VALUES (
+      ${params.produtoId}, ${params.tipo}, ${params.quantidade},
+      ${estoqueAnterior}, ${estoqueNovo}, ${params.usuarioId},
+      ${params.referenciaId}, ${params.motivo}
+    )
+  `;
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -68,18 +107,24 @@ export async function PATCH(
       );
     }
 
-    if (itens !== undefined) {
-      if (!Array.isArray(itens) || itens.length === 0) {
-        return NextResponse.json({ error: "Itens inválidos" }, { status: 400 });
+    if (!Array.isArray(itens) || itens.length === 0) {
+      return NextResponse.json({ error: "Itens inválidos" }, { status: 400 });
+    }
+
+    for (const item of itens) {
+      if (!item.id || !Number.isInteger(item.id)) {
+        return NextResponse.json({ error: "ID de item inválido" }, { status: 400 });
       }
-      for (const item of itens) {
-        if (!item.id || !Number.isInteger(item.id)) {
-          return NextResponse.json({ error: "ID de item inválido" }, { status: 400 });
-        }
-        const preco = Number(item.preco_unitario);
-        if (isNaN(preco) || preco < 0) {
-          return NextResponse.json({ error: "Preço unitário inválido" }, { status: 400 });
-        }
+      const preco = Number(item.preco_unitario);
+      if (isNaN(preco) || preco < 0) {
+        return NextResponse.json({ error: "Preço unitário inválido" }, { status: 400 });
+      }
+      const quantidade = parseInt(item.quantidade, 10);
+      if (isNaN(quantidade) || !Number.isInteger(quantidade) || quantidade < 1) {
+        return NextResponse.json(
+          { error: "Quantidade inválida (mínimo 1 por item)" },
+          { status: 400 }
+        );
       }
     }
 
@@ -108,43 +153,62 @@ export async function PATCH(
         ORDER BY vi.id
       `;
 
-      if (itens) {
-        const itemIds = new Set(currentItens.map((i) => Number(i.id)));
-        for (const item of itens) {
-          if (!itemIds.has(item.id)) {
-            throw new Error("Item não pertence a esta venda");
-          }
+      const itemIds = new Set(currentItens.map((i) => Number(i.id)));
+      for (const item of itens) {
+        if (!itemIds.has(item.id)) {
+          throw new Error("Item não pertence a esta venda");
         }
       }
 
-      const priceById = new Map<number, number>();
-      if (itens) {
-        for (const item of itens) {
-          priceById.set(item.id, Number(item.preco_unitario));
-        }
+      const updatesById = new Map<number, { preco_unitario: number; quantidade: number }>();
+      for (const item of itens) {
+        updatesById.set(item.id, {
+          preco_unitario: Number(item.preco_unitario),
+          quantidade: parseInt(item.quantidade, 10),
+        });
       }
 
       const mudancasItens: string[] = [];
       let subtotal = 0;
-      for (const item of currentItens) {
-        const precoAnterior = Number(item.preco_unitario);
-        const precoUnitario = priceById.has(Number(item.id))
-          ? priceById.get(Number(item.id))!
-          : precoAnterior;
-        const qty = Number(item.quantidade);
-        const itemSubtotal = Math.round(precoUnitario * qty * 100) / 100;
+      const motivoEstoque = `Correção da venda #${anterior.numero}`;
 
-        if (priceById.has(Number(item.id))) {
+      for (const item of currentItens) {
+        const update = updatesById.get(Number(item.id));
+        const precoAnterior = Number(item.preco_unitario);
+        const qtyAnterior = Number(item.quantidade);
+        const precoUnitario = update?.preco_unitario ?? precoAnterior;
+        const qtyNova = update?.quantidade ?? qtyAnterior;
+        const itemSubtotal = Math.round(precoUnitario * qtyNova * 100) / 100;
+
+        const qtyDiff = qtyNova - qtyAnterior;
+        if (qtyDiff !== 0) {
+          await ajustarEstoqueNoTx(tx, {
+            produtoId: Number(item.produto_id),
+            tipo: qtyDiff > 0 ? "saida" : "entrada",
+            quantidade: Math.abs(qtyDiff),
+            usuarioId: admin.id,
+            referenciaId: vendaId,
+            motivo: motivoEstoque,
+          });
+          mudancasItens.push(
+            `${item.produto_nome}: qtd ${qtyAnterior} → ${qtyNova}`
+          );
+        }
+
+        if (precoUnitario !== precoAnterior) {
+          mudancasItens.push(
+            `${item.produto_nome}: R$ ${precoAnterior.toFixed(2)} → R$ ${precoUnitario.toFixed(2)}`
+          );
+        }
+
+        if (qtyDiff !== 0 || precoUnitario !== precoAnterior) {
           await tx`
             UPDATE venda_itens
-            SET preco_unitario = ${precoUnitario}, subtotal = ${itemSubtotal}
+            SET quantidade = ${qtyNova},
+                preco_unitario = ${precoUnitario},
+                subtotal = ${itemSubtotal}
             WHERE id = ${item.id}
           `;
-          if (precoUnitario !== precoAnterior) {
-            mudancasItens.push(
-              `${item.produto_nome}: R$ ${precoAnterior.toFixed(2)} → R$ ${precoUnitario.toFixed(2)}`
-            );
-          }
         }
 
         subtotal += itemSubtotal;
@@ -226,7 +290,9 @@ export async function PATCH(
       if (
         error.message === "Não é possível editar uma venda estornada" ||
         error.message === "Item não pertence a esta venda" ||
-        error.message === "Desconto não pode ser maior que o subtotal dos itens"
+        error.message === "Desconto não pode ser maior que o subtotal dos itens" ||
+        error.message.startsWith("Estoque insuficiente") ||
+        error.message === "Produto não encontrado"
       ) {
         return NextResponse.json({ error: error.message }, { status: 400 });
       }

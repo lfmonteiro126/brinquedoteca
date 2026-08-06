@@ -19,6 +19,7 @@ export function EditSaleModal({ open, venda, onClose, onSaved }: EditSaleModalPr
   const [parcelas, setParcelas] = useState(1);
   const [desconto, setDesconto] = useState("0");
   const [precos, setPrecos] = useState<Record<number, string>>({});
+  const [quantidades, setQuantidades] = useState<Record<number, string>>({});
   const [justificativa, setJustificativa] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -28,11 +29,14 @@ export function EditSaleModal({ open, venda, onClose, onSaved }: EditSaleModalPr
     setParcelas(venda.parcelas || 1);
     setDesconto(String(venda.desconto ?? 0));
     setJustificativa("");
-    const next: Record<number, string> = {};
+    const nextPrecos: Record<number, string> = {};
+    const nextQtds: Record<number, string> = {};
     for (const item of venda.itens || []) {
-      next[item.id] = String(item.preco_unitario);
+      nextPrecos[item.id] = String(item.preco_unitario);
+      nextQtds[item.id] = String(item.quantidade);
     }
-    setPrecos(next);
+    setPrecos(nextPrecos);
+    setQuantidades(nextQtds);
   }, [open, venda]);
 
   useEffect(() => {
@@ -53,13 +57,18 @@ export function EditSaleModal({ open, venda, onClose, onSaved }: EditSaleModalPr
   const itens = venda.itens || [];
   const subtotal = itens.reduce((sum, item) => {
     const preco = parseFloat(precos[item.id] ?? String(item.preco_unitario)) || 0;
-    return sum + preco * item.quantidade;
+    const qtd = parseInt(quantidades[item.id] ?? String(item.quantidade), 10) || 0;
+    return sum + preco * qtd;
   }, 0);
   const descontoNum = Math.max(0, parseFloat(desconto) || 0);
   const total = Math.max(0, subtotal - descontoNum);
   const justificativaOk = justificativa.trim().length >= 3;
   const descontoOk = descontoNum <= subtotal + 0.001;
-  const isValid = justificativaOk && descontoOk && !loading;
+  const quantidadesOk = itens.every((item) => {
+    const qtd = parseInt(quantidades[item.id] ?? "", 10);
+    return Number.isInteger(qtd) && qtd >= 1;
+  });
+  const isValid = justificativaOk && descontoOk && quantidadesOk && !loading;
 
   async function handleSave() {
     if (!isValid || !venda) return;
@@ -76,6 +85,7 @@ export function EditSaleModal({ open, venda, onClose, onSaved }: EditSaleModalPr
           itens: itens.map((item) => ({
             id: item.id,
             preco_unitario: parseFloat(precos[item.id] ?? String(item.preco_unitario)) || 0,
+            quantidade: parseInt(quantidades[item.id] ?? String(item.quantidade), 10),
           })),
         }),
       });
@@ -108,7 +118,7 @@ export function EditSaleModal({ open, venda, onClose, onSaved }: EditSaleModalPr
               Corrigir venda #{venda.numero}
             </h3>
             <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-              Admin: altere forma de pagamento, desconto ou preços
+              Admin: altere pagamento, quantidade, preço ou desconto
             </p>
           </div>
           <button
@@ -175,34 +185,53 @@ export function EditSaleModal({ open, venda, onClose, onSaved }: EditSaleModalPr
 
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Preços dos itens
+              Itens (quantidade e preço)
             </p>
-            {itens.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2.5 dark:bg-slate-800/50"
-              >
-                <div className="min-w-0 flex-1">
+            {itens.map((item) => {
+              const qtd = parseInt(quantidades[item.id] ?? "0", 10) || 0;
+              const preco = parseFloat(precos[item.id] ?? "0") || 0;
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-xl bg-slate-50 px-3 py-2.5 dark:bg-slate-800/50"
+                >
                   <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
                     {item.produto_nome}
                   </p>
-                  <p className="text-xs text-slate-400">Qtd: {item.quantidade}</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="mb-1 block text-[11px] text-slate-400">Quantidade</label>
+                      <input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={quantidades[item.id] ?? ""}
+                        onChange={(e) =>
+                          setQuantidades((prev) => ({ ...prev, [item.id]: e.target.value }))
+                        }
+                        className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:border-violet-400 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[11px] text-slate-400">Preço unit. (R$)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={precos[item.id] ?? ""}
+                        onChange={(e) =>
+                          setPrecos((prev) => ({ ...prev, [item.id]: e.target.value }))
+                        }
+                        className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-right text-sm outline-none focus:border-violet-400 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200"
+                      />
+                    </div>
+                  </div>
+                  <p className="mt-1.5 text-right text-xs text-slate-500">
+                    Subtotal: {formatCurrency(preco * qtd)}
+                  </p>
                 </div>
-                <div className="w-28">
-                  <label className="sr-only">Preço unitário de {item.produto_nome}</label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.01}
-                    value={precos[item.id] ?? ""}
-                    onChange={(e) =>
-                      setPrecos((prev) => ({ ...prev, [item.id]: e.target.value }))
-                    }
-                    className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-right text-sm outline-none focus:border-violet-400 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200"
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm dark:bg-emerald-950/30">
@@ -230,15 +259,21 @@ export function EditSaleModal({ open, venda, onClose, onSaved }: EditSaleModalPr
               value={justificativa}
               onChange={(e) => setJustificativa(e.target.value)}
               rows={3}
-              placeholder="Ex: funcionário selecionou PIX em vez de débito"
+              placeholder="Ex: digitou quantidade errada no PDV"
               className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200"
             />
             {!justificativaOk && justificativa.length > 0 && (
               <p className="mt-1 text-xs text-amber-600">Mínimo de 3 caracteres</p>
             )}
+            {!quantidadesOk && (
+              <p className="mt-1 text-xs text-red-600">Quantidade mínima por item: 1</p>
+            )}
             {!descontoOk && (
               <p className="mt-1 text-xs text-red-600">Desconto maior que o subtotal</p>
             )}
+            <p className="mt-2 text-[11px] text-slate-400">
+              Alterar quantidade ajusta o estoque automaticamente (baixa ou devolução).
+            </p>
           </div>
         </div>
 
