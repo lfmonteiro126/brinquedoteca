@@ -18,9 +18,14 @@ const JWT_AUDIENCE = "brinquedoteca-app";
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
-  if (!secret || secret.length < 32) {
+  if (!secret) {
     throw new Error(
-      "JWT_SECRET não definido ou muito curto. Configure com pelo menos 32 caracteres."
+      "JWT_SECRET não definido. Configure a variável de ambiente JWT_SECRET."
+    );
+  }
+  if (secret.length < 32) {
+    console.warn(
+      "[SECURITY] JWT_SECRET tem menos de 32 caracteres. Gere uma chave mais forte."
     );
   }
   return new TextEncoder().encode(secret);
@@ -54,7 +59,7 @@ async function verifyToken(token: string): Promise<SessionPayload | null> {
 
 export async function login(email: string, senha: string): Promise<User | null> {
   const row = await sqlGet`
-    SELECT id, nome, email, senha_hash, role, ativo, created_at
+    SELECT id, nome, email, senha_hash, role, ativo, primeiro_login, created_at
     FROM users WHERE email = ${email} AND ativo = true
   ` as (User & { senha_hash: string }) | undefined;
 
@@ -73,7 +78,7 @@ export async function setSession(userId: number) {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_MAX_AGE,

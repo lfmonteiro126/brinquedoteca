@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PUBLIC_API_ROUTES = ["/api/auth/login", "/api/auth/logout"];
-const PUBLIC_PAGES = ["/login"];
+const PUBLIC_PAGES = ["/login", "/trocar-senha"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

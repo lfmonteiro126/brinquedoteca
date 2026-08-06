@@ -55,6 +55,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ user });
   } catch (error) {
     console.error("[Login Error]", error);
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("JWT_SECRET")) {
+      return NextResponse.json(
+        { error: "Configuração do servidor incompleta. Verifique JWT_SECRET." },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
       { error: "Erro ao fazer login" },
       { status: 500 }
