@@ -323,10 +323,11 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
                                   e.stopPropagation();
                                   setEditVenda(v);
                                 }}
-                                className="rounded-xl p-2 text-violet-600 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-900/20 active:scale-[0.96] transition-transform"
-                                title="Editar venda"
+                                className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-semibold text-violet-700 hover:bg-violet-50 dark:text-violet-300 dark:hover:bg-violet-900/20 active:scale-[0.96] transition-transform"
+                                title="Corrigir forma de pagamento, preço ou desconto"
                               >
                                 <Pencil className="h-4 w-4" />
+                                <span className="hidden sm:inline">Corrigir</span>
                               </button>
                               <button
                                 onClick={(e) => {

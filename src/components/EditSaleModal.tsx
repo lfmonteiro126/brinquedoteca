@@ -105,10 +105,10 @@ export function EditSaleModal({ open, venda, onClose, onSaved }: EditSaleModalPr
           </div>
           <div className="flex-1">
             <h3 id="edit-sale-title" className="font-semibold text-slate-800 dark:text-slate-200">
-              Editar venda #{venda.numero}
+              Corrigir venda #{venda.numero}
             </h3>
             <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-              Corrija preço, desconto ou forma de pagamento
+              Admin: altere forma de pagamento, desconto ou preços
             </p>
           </div>
           <button
@@ -121,6 +121,58 @@ export function EditSaleModal({ open, venda, onClose, onSaved }: EditSaleModalPr
         </div>
 
         <div className="space-y-4 overflow-y-auto p-5">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
+                Forma de pagamento *
+              </label>
+              <select
+                value={metodo}
+                onChange={(e) => {
+                  setMetodo(e.target.value);
+                  if (e.target.value !== "credito") setParcelas(1);
+                }}
+                className="w-full rounded-xl border border-violet-200 bg-violet-50/50 px-3 py-2.5 text-sm font-medium outline-none focus:border-violet-400 dark:border-violet-800 dark:bg-violet-950/20 dark:text-slate-200"
+              >
+                <option value="pix">PIX</option>
+                <option value="debito">Cartão de débito</option>
+                <option value="credito">Cartão de crédito</option>
+                <option value="dinheiro">Dinheiro</option>
+              </select>
+            </div>
+            {metodo === "credito" && (
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Parcelas
+                </label>
+                <select
+                  value={parcelas}
+                  onChange={(e) => setParcelas(parseInt(e.target.value, 10))}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200"
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>
+                      {n}x
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className={metodo === "credito" ? "" : "sm:col-span-2"}>
+              <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
+                Desconto (R$)
+              </label>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                value={desconto}
+                onChange={(e) => setDesconto(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200"
+              />
+            </div>
+          </div>
+
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
               Preços dos itens
@@ -152,75 +204,6 @@ export function EditSaleModal({ open, venda, onClose, onSaved }: EditSaleModalPr
               </div>
             ))}
           </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                Forma de pagamento
-              </label>
-              <select
-                value={metodo}
-                onChange={(e) => {
-                  setMetodo(e.target.value);
-                  if (e.target.value !== "credito") setParcelas(1);
-                }}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200"
-              >
-                <option value="pix">PIX</option>
-                <option value="debito">Cartão de débito</option>
-                <option value="credito">Cartão de crédito</option>
-                <option value="dinheiro">Dinheiro</option>
-              </select>
-            </div>
-            {metodo === "credito" ? (
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Parcelas
-                </label>
-                <select
-                  value={parcelas}
-                  onChange={(e) => setParcelas(parseInt(e.target.value, 10))}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200"
-                >
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>
-                      {n}x
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Desconto (R$)
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  value={desconto}
-                  onChange={(e) => setDesconto(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200"
-                />
-              </div>
-            )}
-          </div>
-
-          {metodo === "credito" && (
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
-                Desconto (R$)
-              </label>
-              <input
-                type="number"
-                min={0}
-                step={0.01}
-                value={desconto}
-                onChange={(e) => setDesconto(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 dark:border-[var(--card-border)] dark:bg-[var(--input-bg)] dark:text-slate-200"
-              />
-            </div>
-          )}
 
           <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm dark:bg-emerald-950/30">
             <div className="flex justify-between text-slate-600 dark:text-slate-300">
