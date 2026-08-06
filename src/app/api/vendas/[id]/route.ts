@@ -5,6 +5,19 @@ import { handleApiError } from "@/lib/api";
 
 const VALID_METODOS = ["pix", "debito", "credito", "dinheiro"];
 
+const METODO_LABELS: Record<string, string> = {
+  pix: "PIX",
+  debito: "Débito",
+  credito: "Crédito",
+  dinheiro: "Dinheiro",
+};
+
+function labelMetodo(metodo: string, parcelas: number) {
+  const base = METODO_LABELS[metodo] || metodo;
+  if (metodo === "credito" && parcelas > 1) return `${base} (${parcelas}x)`;
+  return base;
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -76,6 +89,8 @@ export async function PATCH(
         throw new Error("Venda não encontrada");
       }
 
+      const anterior = existing[0];
+
       const jaEstornada = await tx`
         SELECT id FROM movimentacoes
         WHERE tipo = 'estorno' AND referencia_id = ${vendaId}
@@ -86,7 +101,11 @@ export async function PATCH(
       }
 
       const currentItens = await tx`
-        SELECT * FROM venda_itens WHERE venda_id = ${vendaId} ORDER BY id
+        SELECT vi.*, p.nome as produto_nome
+        FROM venda_itens vi
+        JOIN produtos p ON p.id = vi.produto_id
+        WHERE vi.venda_id = ${vendaId}
+        ORDER BY vi.id
       `;
 
       if (itens) {
@@ -105,11 +124,13 @@ export async function PATCH(
         }
       }
 
+      const mudancasItens: string[] = [];
       let subtotal = 0;
       for (const item of currentItens) {
+        const precoAnterior = Number(item.preco_unitario);
         const precoUnitario = priceById.has(Number(item.id))
           ? priceById.get(Number(item.id))!
-          : Number(item.preco_unitario);
+          : precoAnterior;
         const qty = Number(item.quantidade);
         const itemSubtotal = Math.round(precoUnitario * qty * 100) / 100;
 
@@ -119,6 +140,11 @@ export async function PATCH(
             SET preco_unitario = ${precoUnitario}, subtotal = ${itemSubtotal}
             WHERE id = ${item.id}
           `;
+          if (precoUnitario !== precoAnterior) {
+            mudancasItens.push(
+              `${item.produto_nome}: R$ ${precoAnterior.toFixed(2)} → R$ ${precoUnitario.toFixed(2)}`
+            );
+          }
         }
 
         subtotal += itemSubtotal;
@@ -144,6 +170,44 @@ export async function PATCH(
           corrigido_em = NOW()
         WHERE id = ${vendaId}
         RETURNING *
+      `;
+
+      const mudancas: string[] = [];
+      if (anterior.metodo_pagamento !== metodo_pagamento || Number(anterior.parcelas) !== parcelasFinal) {
+        mudancas.push(
+          `Pagamento: ${labelMetodo(String(anterior.metodo_pagamento), Number(anterior.parcelas))} → ${labelMetodo(metodo_pagamento, parcelasFinal)}`
+        );
+      }
+      if (Number(anterior.desconto) !== descontoNum) {
+        mudancas.push(
+          `Desconto: R$ ${Number(anterior.desconto).toFixed(2)} → R$ ${descontoNum.toFixed(2)}`
+        );
+      }
+      if (Number(anterior.total) !== total) {
+        mudancas.push(
+          `Total: R$ ${Number(anterior.total).toFixed(2)} → R$ ${total.toFixed(2)}`
+        );
+      }
+      mudancas.push(...mudancasItens);
+
+      const detalhes = mudancas.length > 0 ? mudancas.join("; ") : "Sem alteração de valores";
+
+      await tx`
+        INSERT INTO venda_correcoes (
+          venda_id, usuario_id, justificativa,
+          metodo_anterior, metodo_novo,
+          parcelas_anterior, parcelas_novo,
+          desconto_anterior, desconto_novo,
+          total_anterior, total_novo,
+          detalhes
+        ) VALUES (
+          ${vendaId}, ${admin.id}, ${justificativaTrim},
+          ${anterior.metodo_pagamento}, ${metodo_pagamento},
+          ${Number(anterior.parcelas)}, ${parcelasFinal},
+          ${Number(anterior.desconto)}, ${descontoNum},
+          ${Number(anterior.total)}, ${total},
+          ${detalhes}
+        )
       `;
 
       return updated[0];

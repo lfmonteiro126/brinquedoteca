@@ -144,6 +144,54 @@ export async function initSchema() {
     EXCEPTION WHEN duplicate_column THEN NULL;
     END $$;
 
+    CREATE TABLE IF NOT EXISTS venda_correcoes (
+      id SERIAL PRIMARY KEY,
+      venda_id INTEGER NOT NULL REFERENCES vendas(id),
+      usuario_id INTEGER NOT NULL REFERENCES users(id),
+      justificativa TEXT NOT NULL,
+      metodo_anterior TEXT NOT NULL,
+      metodo_novo TEXT NOT NULL,
+      parcelas_anterior INTEGER NOT NULL DEFAULT 1,
+      parcelas_novo INTEGER NOT NULL DEFAULT 1,
+      desconto_anterior NUMERIC(10,2) NOT NULL DEFAULT 0,
+      desconto_novo NUMERIC(10,2) NOT NULL DEFAULT 0,
+      total_anterior NUMERIC(10,2) NOT NULL DEFAULT 0,
+      total_novo NUMERIC(10,2) NOT NULL DEFAULT 0,
+      detalhes TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_venda_correcoes_created ON venda_correcoes(created_at);
+    CREATE INDEX IF NOT EXISTS idx_venda_correcoes_venda ON venda_correcoes(venda_id);
+
+    INSERT INTO venda_correcoes (
+      venda_id, usuario_id, justificativa,
+      metodo_anterior, metodo_novo,
+      parcelas_anterior, parcelas_novo,
+      desconto_anterior, desconto_novo,
+      total_anterior, total_novo,
+      detalhes, created_at
+    )
+    SELECT
+      v.id,
+      COALESCE(v.corrigido_por, v.usuario_id),
+      COALESCE(NULLIF(TRIM(v.correcao_justificativa), ''), 'Correção registrada'),
+      v.metodo_pagamento,
+      v.metodo_pagamento,
+      v.parcelas,
+      v.parcelas,
+      v.desconto,
+      v.desconto,
+      v.total,
+      v.total,
+      'Migração de correção existente',
+      v.corrigido_em
+    FROM vendas v
+    WHERE v.corrigido_em IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM venda_correcoes vc WHERE vc.venda_id = v.id
+      );
+
     CREATE TABLE IF NOT EXISTS venda_itens (
       id SERIAL PRIMARY KEY,
       venda_id INTEGER NOT NULL REFERENCES vendas(id),

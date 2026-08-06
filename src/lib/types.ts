@@ -55,10 +55,10 @@ export interface VendaItem {
 }
 
 export interface Movimentacao {
-  id: number;
-  produto_id: number;
-  produto_nome?: string;
-  tipo: "entrada" | "saida" | "ajuste" | "venda" | "inventario" | "estorno";
+  id: number | string;
+  produto_id?: number | null;
+  produto_nome?: string | null;
+  tipo: "entrada" | "saida" | "ajuste" | "venda" | "inventario" | "estorno" | "correcao_venda";
   quantidade: number;
   estoque_anterior: number;
   estoque_novo: number;
@@ -67,6 +67,8 @@ export interface Movimentacao {
   referencia_id: number | null;
   motivo: string | null;
   created_at: string;
+  venda_numero?: number | null;
+  detalhes?: string | null;
 }
 
 export interface DashboardData {

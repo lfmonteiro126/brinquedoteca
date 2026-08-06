@@ -62,6 +62,40 @@ export const vendas = pgTable("vendas", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const vendaCorrecoes = pgTable(
+  "venda_correcoes",
+  {
+    id: serial("id").primaryKey(),
+    vendaId: integer("venda_id")
+      .notNull()
+      .references(() => vendas.id),
+    usuarioId: integer("usuario_id")
+      .notNull()
+      .references(() => users.id),
+    justificativa: text("justificativa").notNull(),
+    metodoAnterior: text("metodo_anterior").notNull(),
+    metodoNovo: text("metodo_novo").notNull(),
+    parcelasAnterior: integer("parcelas_anterior").notNull().default(1),
+    parcelasNovo: integer("parcelas_novo").notNull().default(1),
+    descontoAnterior: numeric("desconto_anterior", { precision: 10, scale: 2 })
+      .notNull()
+      .default("0"),
+    descontoNovo: numeric("desconto_novo", { precision: 10, scale: 2 })
+      .notNull()
+      .default("0"),
+    totalAnterior: numeric("total_anterior", { precision: 10, scale: 2 })
+      .notNull()
+      .default("0"),
+    totalNovo: numeric("total_novo", { precision: 10, scale: 2 }).notNull().default("0"),
+    detalhes: text("detalhes"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("idx_venda_correcoes_created").on(t.createdAt),
+    index("idx_venda_correcoes_venda").on(t.vendaId),
+  ]
+);
+
 export const vendaItens = pgTable("venda_itens", {
   id: serial("id").primaryKey(),
   vendaId: integer("venda_id")

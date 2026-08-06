@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   ClipboardList,
   RotateCcw,
+  Pencil,
   Clock,
   ArrowRight,
 } from "lucide-react";
@@ -58,6 +59,12 @@ function getTipoStyles(tipo: string) {
         color: "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border-rose-100 dark:border-rose-900/30",
         label: "Estorno",
       };
+    case "correcao_venda":
+      return {
+        icon: Pencil,
+        color: "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/30",
+        label: "Correção de venda",
+      };
     default:
       return {
         icon: Settings,
@@ -101,6 +108,12 @@ function renderEventMessage(m: Movimentacao) {
       return (
         <p className="text-sm text-slate-600 dark:text-slate-355">
           {user} atualizou o estoque de {product} via inventário.
+        </p>
+      );
+    case "correcao_venda":
+      return (
+        <p className="text-sm text-slate-600 dark:text-slate-355">
+          {user} corrigiu a {product} no histórico de vendas.
         </p>
       );
     case "ajuste":
@@ -208,6 +221,7 @@ export function AuditoriaView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] 
                 <option value="venda">Venda</option>
                 <option value="inventario">Inventário</option>
                 <option value="estorno">Estorno</option>
+                <option value="correcao_venda">Correção de venda</option>
               </select>
             </div>
             <div>
@@ -276,6 +290,7 @@ export function AuditoriaView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] 
               {movimentacoes.map((m) => {
                 const styles = getTipoStyles(m.tipo);
                 const Icon = styles.icon;
+                const isCorrecao = m.tipo === "correcao_venda";
                 const isPositive = m.quantidade > 0;
                 
                 return (
@@ -289,37 +304,42 @@ export function AuditoriaView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] 
                     <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-4 sm:p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:border-violet-100 dark:hover:border-violet-850">
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                         <div className="space-y-1">
-                          {/* Narrative sentence */}
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold border ${styles.color}`}>
+                            {styles.label}
+                          </span>
                           {renderEventMessage(m)}
 
-                          {/* Time details */}
                           <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
                             <Clock className="h-3.5 w-3.5" />
                             <span>{formatDate(m.created_at)}</span>
                           </div>
                         </div>
 
-                        {/* Stock differences and badges at the right */}
-                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0 self-start sm:self-center">
-                          {/* Stock diff indicators */}
-                          <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1.5 text-xs text-slate-500 dark:text-slate-350 border border-slate-100 dark:border-slate-850 font-display tabular-nums">
-                            <span>{m.estoque_anterior}</span>
-                            <ArrowRight className="h-3 w-3 text-slate-400" />
-                            <span className="font-semibold text-slate-800 dark:text-slate-200">{m.estoque_novo}</span>
-                          </div>
+                        {!isCorrecao && (
+                          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0 self-start sm:self-center">
+                            <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1.5 text-xs text-slate-500 dark:text-slate-350 border border-slate-100 dark:border-slate-850 font-display tabular-nums">
+                              <span>{m.estoque_anterior}</span>
+                              <ArrowRight className="h-3 w-3 text-slate-400" />
+                              <span className="font-semibold text-slate-800 dark:text-slate-200">{m.estoque_novo}</span>
+                            </div>
 
-                          {/* Quantidade diff pill */}
-                          <span className={`inline-flex items-center gap-0.5 rounded-full px-2.5 py-1 text-xs font-bold font-display tabular-nums border ${
-                            isPositive
-                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-900/40"
-                              : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border-red-200/50 dark:border-red-900/40"
-                          }`}>
-                            {isPositive ? "+" : ""}{m.quantidade}
-                          </span>
-                        </div>
+                            <span className={`inline-flex items-center gap-0.5 rounded-full px-2.5 py-1 text-xs font-bold font-display tabular-nums border ${
+                              isPositive
+                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-900/40"
+                                : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400 border-red-200/50 dark:border-red-900/40"
+                            }`}>
+                              {isPositive ? "+" : ""}{m.quantidade}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Motivo description note if it exists */}
+                      {m.detalhes && (
+                        <div className="mt-3 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/20 px-3 py-2 text-xs text-indigo-800 dark:text-indigo-300">
+                          {m.detalhes}
+                        </div>
+                      )}
+
                       {m.motivo && (
                         <div className="mt-3 rounded-xl bg-slate-50/55 dark:bg-slate-900/40 px-3 py-2 border-l-2 border-violet-400 dark:border-violet-500 text-xs italic text-slate-500 dark:text-slate-400">
                           &ldquo;{m.motivo}&rdquo;
