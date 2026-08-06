@@ -302,3 +302,46 @@ button,
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Login page motion */
+@keyframes loginKenburns {
+  from {
+    transform: scale(1.05) translate(0, 0);
+  }
+  to {
+    transform: scale(1.12) translate(-1.5%, -1%);
+  }
+}
+
+@keyframes loginFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes loginFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-kenburns {
+  animation: loginKenburns 28s ease-in-out infinite alternate;
+}
+
+.login-fade {
+  animation: loginFade 0.7s ease-out both;
+}
+
+.login-fade-up {
+  animation: loginFadeUp 0.9s ease-out both;
+}
+

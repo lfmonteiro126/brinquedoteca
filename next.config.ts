@@ -12,7 +12,7 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' https://i.imgur.com https://imgur.com data: blob:",
+      "img-src 'self' https://i.imgur.com https://imgur.com https://images.unsplash.com data: blob:",
       "font-src 'self' https://rsms.me",
       "connect-src 'self'",
       "frame-ancestors 'none'",
@@ -22,6 +22,18 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "i.imgur.com",
+      },
+    ],
+  },
   async headers() {
     return [
       {
