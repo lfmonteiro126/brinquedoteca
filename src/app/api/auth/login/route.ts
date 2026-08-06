@@ -54,7 +54,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ user });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro ao fazer login";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[Login Error]", error);
+    return NextResponse.json(
+      { error: "Erro ao fazer login" },
+      { status: 500 }
+    );
   }
 }

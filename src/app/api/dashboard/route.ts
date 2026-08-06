@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { sqlGet, sqlAll } from "@/lib/db";
+import { handleApiError } from "@/lib/api";
 import type { DashboardData } from "@/lib/types";
 
 export async function GET(request: NextRequest) {
@@ -8,7 +9,7 @@ export async function GET(request: NextRequest) {
     await requireAuth();
     const { searchParams } = new URL(request.url);
     const periodo = searchParams.get("periodo") || "7";
-    const periodoNum = parseInt(periodo, 10);
+    const periodoNum = Math.min(365, Math.max(1, parseInt(periodo, 10) || 7));
 
     const vendasHoje = await sqlGet`
       SELECT COALESCE(SUM(total), 0) as total, COUNT(*) as quantidade
@@ -101,7 +102,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro";
-    return NextResponse.json({ error: message }, { status: 401 });
+    return handleApiError(error);
   }
 }

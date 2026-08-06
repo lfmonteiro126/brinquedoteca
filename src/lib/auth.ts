@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
-import { sqlGet } from "./db";
+import { sqlGet, sqlRun } from "./db";
 import type { User, UserRole } from "./types";
 
 export class AuthError extends Error {
@@ -13,12 +13,14 @@ export class AuthError extends Error {
 
 const SESSION_COOKIE = "brinquedoteca_session";
 const SESSION_MAX_AGE = 60 * 60 * 12;
+const JWT_ISSUER = "brinquedoteca";
+const JWT_AUDIENCE = "brinquedoteca-app";
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
-  if (!secret) {
+  if (!secret || secret.length < 32) {
     throw new Error(
-      "JWT_SECRET não definido. Configure a variável de ambiente JWT_SECRET."
+      "JWT_SECRET não definido ou muito curto. Configure com pelo menos 32 caracteres."
     );
   }
   return new TextEncoder().encode(secret);
@@ -32,13 +34,18 @@ async function signToken(payload: SessionPayload): Promise<string> {
   return new SignJWT({ userId: payload.userId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
+    .setIssuer(JWT_ISSUER)
+    .setAudience(JWT_AUDIENCE)
     .setExpirationTime(`${SESSION_MAX_AGE}s`)
     .sign(getJwtSecret());
 }
 
 async function verifyToken(token: string): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, getJwtSecret());
+    const { payload } = await jwtVerify(token, getJwtSecret(), {
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE,
+    });
     return { userId: payload.userId as number };
   } catch {
     return null;
@@ -51,9 +58,10 @@ export async function login(email: string, senha: string): Promise<User | null> 
     FROM users WHERE email = ${email} AND ativo = true
   ` as (User & { senha_hash: string }) | undefined;
 
-  if (!row || !bcrypt.compareSync(senha, row.senha_hash)) {
-    return null;
-  }
+  if (!row) return null;
+
+  const match = await bcrypt.compare(senha, row.senha_hash);
+  if (!match) return null;
 
   const user = { ...row };
   delete (user as Record<string, unknown>).senha_hash;
@@ -65,7 +73,7 @@ export async function setSession(userId: number) {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_MAX_AGE,
@@ -75,6 +83,12 @@ export async function setSession(userId: number) {
 export async function clearSession() {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE);
+}
+
+export async function invalidateAllUserSessions(userId: number) {
+  await sqlRun`
+    UPDATE users SET updated_at = NOW() WHERE id = ${userId}
+  `;
 }
 
 export async function getSessionUser(): Promise<User | null> {

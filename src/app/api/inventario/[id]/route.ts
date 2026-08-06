@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { sqlGet } from "@/lib/db";
+import { sqlGet, sqlAll } from "@/lib/db";
+import { handleApiError } from "@/lib/api";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -8,29 +9,32 @@ export async function GET(_request: NextRequest, { params }: Params) {
   try {
     await requireAdmin();
     const { id } = await params;
+    const idNum = parseInt(id, 10);
+    if (isNaN(idNum)) {
+      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+    }
 
     const sessao = await sqlGet`
       SELECT s.*, u.nome as usuario_nome
       FROM sessoes_inventario s
       JOIN users u ON u.id = s.usuario_id
-      WHERE s.id = ${parseInt(id)}
+      WHERE s.id = ${idNum}
     `;
 
     if (!sessao) {
       return NextResponse.json({ error: "Sessão não encontrada" }, { status: 404 });
     }
 
-    const itens = await sqlGet`
+    const itens = await sqlAll`
       SELECT ii.*, p.nome as produto_nome, p.codigo_barras, p.categoria
       FROM inventario_itens ii
       JOIN produtos p ON p.id = ii.produto_id
-      WHERE ii.sessao_id = ${parseInt(id)}
+      WHERE ii.sessao_id = ${idNum}
       ORDER BY ii.diferenca DESC
     `;
 
     return NextResponse.json({ sessao, itens });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro";
-    return NextResponse.json({ error: message }, { status: 401 });
+    return handleApiError(error);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { getClient } from "@/lib/db";
+import { handleApiError } from "@/lib/api";
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,7 +61,6 @@ export async function GET(request: NextRequest) {
       pageSize,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro";
-    return NextResponse.json({ error: message }, { status: 401 });
+    return handleApiError(error);
   }
 }

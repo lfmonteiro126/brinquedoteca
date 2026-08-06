@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { sqlGet, sqlAll, registrarMovimentacao, getClient } from "@/lib/db";
+import { registrarMovimentacao, getClient } from "@/lib/db";
 import { handleApiError } from "@/lib/api";
 
 export async function POST(
@@ -15,34 +15,19 @@ export async function POST(
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
 
-    const venda = await sqlGet(
-      "SELECT * FROM vendas WHERE id = $1",
-      vendaId
-    ) as {
-      id: number;
-      numero: number;
-      total: number;
-      usuario_id: number;
-    } | undefined;
+    const result = await getClient().begin(async (tx) => {
+      const venda = await tx`SELECT * FROM vendas WHERE id = ${vendaId} FOR UPDATE`;
+      if (venda.length === 0) {
+        throw new Error("Venda não encontrada");
+      }
 
-    if (!venda) {
-      return NextResponse.json({ error: "Venda não encontrada" }, { status: 404 });
-    }
+      const jaEstornada = await tx`SELECT id FROM movimentacoes WHERE tipo = 'estorno' AND referencia_id = ${vendaId}`;
+      if (jaEstornada.length > 0) {
+        throw new Error("Esta venda já foi estornada");
+      }
 
-    const jaEstornada = await sqlGet(
-      "SELECT id FROM movimentacoes WHERE tipo = 'estorno' AND referencia_id = $1",
-      vendaId
-    ) as { id: number } | undefined;
+      const itens = await tx`SELECT * FROM venda_itens WHERE venda_id = ${vendaId}`;
 
-    if (jaEstornada) {
-      return NextResponse.json({ error: "Esta venda já foi estornada" }, { status: 400 });
-    }
-
-    const itens = await sqlAll`
-      SELECT * FROM venda_itens WHERE venda_id = ${vendaId}
-    ` as { produto_id: number; quantidade: number }[];
-
-    await getClient().begin(async () => {
       for (const item of itens) {
         await registrarMovimentacao({
           produtoId: item.produto_id,
@@ -50,16 +35,24 @@ export async function POST(
           quantidade: item.quantidade,
           usuarioId: admin.id,
           referenciaId: vendaId,
-          motivo: `Estorno da venda #${venda.numero}`,
+          motivo: `Estorno da venda #${venda[0].numero}`,
         });
       }
+
+      return venda[0].numero;
     });
 
     return NextResponse.json({
       ok: true,
-      message: `Venda #${venda.numero} estornada. Estoque devolvido.`,
+      message: `Venda #${result} estornada. Estoque devolvido.`,
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "Venda não encontrada") {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+    if (error instanceof Error && error.message === "Esta venda já foi estornada") {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return handleApiError(error);
   }
 }

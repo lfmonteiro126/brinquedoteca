@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
     if (!senhaAtual) {
       return NextResponse.json({ error: "Senha atual é obrigatória" }, { status: 400 });
     }
-    if (!novaSenha || novaSenha.length < 6) {
+    if (!novaSenha || novaSenha.length < 8) {
       return NextResponse.json(
-        { error: "Nova senha deve ter no mínimo 6 caracteres" },
+        { error: "Nova senha deve ter no mínimo 8 caracteres" },
         { status: 400 }
       );
     }
@@ -24,11 +24,16 @@ export async function POST(request: NextRequest) {
       SELECT id, senha_hash FROM users WHERE id = ${user.id}
     ` as { id: number; senha_hash: string } | undefined;
 
-    if (!row || !bcrypt.compareSync(senhaAtual, row.senha_hash)) {
+    if (!row) {
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    }
+
+    const match = await bcrypt.compare(senhaAtual, row.senha_hash);
+    if (!match) {
       return NextResponse.json({ error: "Senha atual incorreta" }, { status: 400 });
     }
 
-    const hash = bcrypt.hashSync(novaSenha, 10);
+    const hash = await bcrypt.hash(novaSenha, 10);
     await sqlGet`
       UPDATE users SET senha_hash = ${hash}, primeiro_login = false WHERE id = ${user.id}
     `;

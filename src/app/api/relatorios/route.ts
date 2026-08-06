@@ -128,14 +128,14 @@ async function queryVendasPorFuncionario(whereClause: string, params: (string | 
 
 async function queryProdutosMaisVendidos(whereClause: string, params: (string | number)[]) {
   return getClient().unsafe(
-    `SELECT p.nome as produto, p.categoria, p.preco_custo, p.preco_venda,
+    `SELECT p.nome as produto, p.categoria, p.preco_venda,
             COALESCE(SUM(vi.quantidade), 0) as quantidade_vendida,
             COALESCE(SUM(vi.subtotal), 0) as receita_total
      FROM venda_itens vi
      JOIN vendas v ON v.id = vi.venda_id
      JOIN produtos p ON p.id = vi.produto_id
      WHERE true ${whereClause}
-     GROUP BY vi.produto_id, p.nome, p.categoria, p.preco_custo, p.preco_venda
+     GROUP BY vi.produto_id, p.nome, p.categoria, p.preco_venda
      ORDER BY quantidade_vendida DESC`,
     params
   );

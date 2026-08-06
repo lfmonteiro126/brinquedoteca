@@ -47,10 +47,10 @@ export async function PUT(
     }
 
     if (body.senha) {
-      if (body.senha.length < 6) {
-        return NextResponse.json({ error: "Senha deve ter no mínimo 6 caracteres" }, { status: 400 });
+      if (body.senha.length < 8) {
+        return NextResponse.json({ error: "Senha deve ter no mínimo 8 caracteres" }, { status: 400 });
       }
-      const hash = bcrypt.hashSync(body.senha, 10);
+      const hash = await bcrypt.hash(body.senha, 10);
       updates.push(`senha_hash = $${paramIndex++}`);
       values.push(hash);
       if (body.forcePrimeiroLogin !== false) {
@@ -88,8 +88,8 @@ export async function PUT(
 
     return NextResponse.json({ usuario });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro";
-    if (message.includes("UNIQUE")) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("unique") || message.includes("UNIQUE")) {
       return NextResponse.json({ error: "Email já cadastrado" }, { status: 409 });
     }
     return handleApiError(error);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { sqlGet } from "@/lib/db";
+import { handleApiError } from "@/lib/api";
 
 type Params = { params: Promise<{ code: string }> };
 
@@ -19,7 +20,6 @@ export async function GET(_request: NextRequest, { params }: Params) {
 
     return NextResponse.json({ produto });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro";
-    return NextResponse.json({ error: message }, { status: 401 });
+    return handleApiError(error);
   }
 }

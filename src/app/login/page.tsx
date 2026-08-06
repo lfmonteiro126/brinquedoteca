@@ -31,7 +31,9 @@ export default function LoginPage() {
       return;
     }
 
-    if (data.user?.role === "vendedor") {
+    if (data.user?.primeiro_login) {
+      router.push("/trocar-senha");
+    } else if (data.user?.role === "vendedor") {
       router.push("/vendas");
     } else {
       router.push("/");

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, requireAdmin } from "@/lib/auth";
 import { getClient, registrarMovimentacao } from "@/lib/db";
+import { handleApiError } from "@/lib/api";
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,8 +46,7 @@ export async function GET(request: NextRequest) {
       pageSize,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
@@ -71,7 +71,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
     }
 
-    const estoqueInicial = estoque ?? 0;
+    const custoNum = Number(preco_custo);
+    const vendaNum = Number(preco_venda);
+    const estoqueNum = parseInt(estoque, 10);
+    const minimoNum = parseInt(estoque_minimo, 10);
+
+    if (isNaN(custoNum) || custoNum < 0) {
+      return NextResponse.json({ error: "Preço de custo inválido" }, { status: 400 });
+    }
+    if (isNaN(vendaNum) || vendaNum < 0) {
+      return NextResponse.json({ error: "Preço de venda inválido" }, { status: 400 });
+    }
+    if (isNaN(estoqueNum) || estoqueNum < 0) {
+      return NextResponse.json({ error: "Estoque inválido" }, { status: 400 });
+    }
+    if (isNaN(minimoNum) || minimoNum < 0) {
+      return NextResponse.json({ error: "Estoque mínimo inválido" }, { status: 400 });
+    }
+
+    const estoqueInicial = estoqueNum;
 
     const result = await getClient().unsafe(
       `INSERT INTO produtos (nome, descricao, imagem_url, codigo_barras, categoria, preco_custo, preco_venda, estoque, estoque_minimo)
@@ -82,10 +100,10 @@ export async function POST(request: NextRequest) {
         imagem_url?.trim() || null,
         codigo_barras?.trim() || null,
         categoria?.trim() || null,
-        preco_custo ?? 0,
-        preco_venda ?? 0,
+        custoNum,
+        vendaNum,
         0,
-        estoque_minimo ?? 5,
+        minimoNum,
       ]
     );
 
@@ -104,10 +122,10 @@ export async function POST(request: NextRequest) {
     const produto = await getClient().unsafe("SELECT * FROM produtos WHERE id = $1", [produtoId]);
     return NextResponse.json({ produto: produto[0] }, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Erro";
-    if (message.includes("UNIQUE")) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("unique") || message.includes("UNIQUE")) {
       return NextResponse.json({ error: "Código de barras já cadastrado" }, { status: 409 });
     }
-    return NextResponse.json({ error: message }, { status: 500 });
+    return handleApiError(error);
   }
 }

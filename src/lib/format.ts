@@ -19,6 +19,10 @@ export function normalizeImageUrl(url: string): string {
   if (!url) return "";
   const trimmed = url.trim();
 
+  if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+    return "";
+  }
+
   const imgurShortMatch = trimmed.match(/^https?:\/\/imgur\.com\/([a-zA-Z0-9]+)$/);
   if (imgurShortMatch) {
     return `https://i.imgur.com/${imgurShortMatch[1]}.jpg`;

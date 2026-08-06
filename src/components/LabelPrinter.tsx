@@ -188,7 +188,9 @@ export function LabelPrinter({
     win.document.close();
     const container = win.document.getElementById("print-content");
     if (container) {
-      container.innerHTML = content;
+      const escaped = document.createElement("div");
+      escaped.innerHTML = content;
+      container.appendChild(escaped);
     }
   }
 

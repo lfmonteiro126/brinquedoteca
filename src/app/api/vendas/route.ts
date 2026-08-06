@@ -3,9 +3,11 @@ import { requireAuth } from "@/lib/auth";
 import { getClient } from "@/lib/db";
 import { handleApiError } from "@/lib/api";
 
+const VALID_METODOS = ["pix", "debito", "credito", "dinheiro"];
+
 export async function GET(request: NextRequest) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("pageSize") || "20", 10)));
@@ -18,6 +20,11 @@ export async function GET(request: NextRequest) {
     const conditions: string[] = [];
     const params: (string | number)[] = [];
     let paramIndex = 1;
+
+    if (user.role === "vendedor") {
+      conditions.push(`v.usuario_id = $${paramIndex++}`);
+      params.push(user.id);
+    }
 
     if (data) {
       conditions.push(`v.created_at >= $${paramIndex}::date AND v.created_at < ($${paramIndex}::date + interval '1 day')`);
@@ -36,7 +43,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (vendedor) {
+    if (user.role === "admin" && vendedor) {
       conditions.push(`u.nome LIKE $${paramIndex++}`);
       params.push(`%${vendedor}%`);
     }
@@ -103,8 +110,31 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { itens, desconto = 0, metodo_pagamento = "dinheiro", parcelas = 1, desconto_autorizado_por = null } = body;
 
-    if (!itens?.length) {
+    if (!Array.isArray(itens) || itens.length === 0) {
       return NextResponse.json({ error: "Adicione itens à venda" }, { status: 400 });
+    }
+
+    const descontoNum = Number(desconto);
+    if (isNaN(descontoNum) || descontoNum < 0) {
+      return NextResponse.json({ error: "Desconto inválido" }, { status: 400 });
+    }
+
+    if (!VALID_METODOS.includes(metodo_pagamento)) {
+      return NextResponse.json({ error: "Método de pagamento inválido" }, { status: 400 });
+    }
+
+    const parcelasNum = parseInt(parcelas, 10);
+    if (isNaN(parcelasNum) || parcelasNum < 1 || parcelasNum > 12) {
+      return NextResponse.json({ error: "Parcelas inválidas" }, { status: 400 });
+    }
+
+    for (const item of itens) {
+      if (!item.produto_id || !Number.isInteger(item.produto_id)) {
+        return NextResponse.json({ error: "ID de produto inválido" }, { status: 400 });
+      }
+      if (!item.quantidade || !Number.isInteger(item.quantidade) || item.quantidade < 1) {
+        return NextResponse.json({ error: "Quantidade inválida" }, { status: 400 });
+      }
     }
 
     const { proximoNumeroVenda, registrarMovimentacao } = await import("@/lib/db");
@@ -127,7 +157,7 @@ export async function POST(request: NextRequest) {
 
       if (produtoResult.length === 0) {
         return NextResponse.json(
-          { error: `Produto #${item.produto_id} não encontrado` },
+          { error: `Produto não encontrado` },
           { status: 400 }
         );
       }
@@ -152,24 +182,23 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    total -= desconto;
+    total -= descontoNum;
     if (total < 0) total = 0;
 
     const vendaId = await getClient().begin(async (tx) => {
       const vendaResult = await tx`
         INSERT INTO vendas (numero, usuario_id, total, desconto, metodo_pagamento, parcelas, desconto_autorizado_por)
-        VALUES (${numero}, ${user.id}, ${total}, ${desconto}, ${metodo_pagamento}, ${parcelas}, ${desconto_autorizado_por})
+        VALUES (${numero}, ${user.id}, ${total}, ${descontoNum}, ${metodo_pagamento}, ${parcelasNum}, ${desconto_autorizado_por || null})
         RETURNING id
       `;
 
       const id = vendaResult[0].id;
 
-      const descontoVal = Number(desconto);
       const descontoFormatado = new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",
-      }).format(descontoVal);
-      const motivoMovimentacao = descontoVal > 0 && desconto_autorizado_por
+      }).format(descontoNum);
+      const motivoMovimentacao = descontoNum > 0 && desconto_autorizado_por
         ? `Venda #${numero} (Desconto de ${descontoFormatado} autorizado por ${desconto_autorizado_por})`
         : `Venda #${numero}`;
 

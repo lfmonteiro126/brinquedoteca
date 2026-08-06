@@ -5,6 +5,9 @@ export function handleApiError(error: unknown): NextResponse {
   if (error instanceof AuthError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
-  const message = error instanceof Error ? error.message : "Erro interno";
-  return NextResponse.json({ error: message }, { status: 500 });
+  console.error("[API Error]", error);
+  return NextResponse.json(
+    { error: "Erro interno do servidor" },
+    { status: 500 }
+  );
 }

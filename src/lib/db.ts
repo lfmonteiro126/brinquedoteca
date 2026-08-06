@@ -1,5 +1,4 @@
 import postgres from "postgres";
-import bcrypt from "bcryptjs";
 
 let _client: ReturnType<typeof postgres> | null = null;
 let _initialized = false;
@@ -10,7 +9,7 @@ export function getClient() {
     if (!DATABASE_URL) {
       throw new Error("DATABASE_URL não definida. Configure a variável de ambiente.");
     }
-    _client = postgres(DATABASE_URL, { connect_timeout: 10 });
+    _client = postgres(DATABASE_URL, { connect_timeout: 10, max: 20 });
   }
   return _client;
 }
@@ -170,9 +169,11 @@ export async function initSchema() {
       diferenca INTEGER NOT NULL
     );
 
-    CREATE INDEX IF NOT EXISTS idx_produtos_codigo ON produtos(codigo_barras);
-    CREATE INDEX IF NOT EXISTS idx_movimentacoes_produto ON movimentacoes(produto_id);
-    CREATE INDEX IF NOT EXISTS idx_vendas_data ON vendas(created_at);
+    CREATE INDEX IF NOT EXISTS idx_movimentacoes_tipo ON movimentacoes(tipo);
+    CREATE INDEX IF NOT EXISTS idx_movimentacoes_created ON movimentacoes(created_at);
+    CREATE INDEX IF NOT EXISTS idx_vendas_usuario ON vendas(usuario_id);
+    CREATE INDEX IF NOT EXISTS idx_sessoes_inventario_status ON sessoes_inventario(status);
+    CREATE INDEX IF NOT EXISTS idx_produtos_nome ON produtos(nome);
   `);
 
   const adminResult = await sql.unsafe(
@@ -181,11 +182,16 @@ export async function initSchema() {
   );
 
   if (adminResult.length === 0) {
-    const hash = bcrypt.hashSync("admin123", 10);
+    const crypto = await import("crypto");
+    const tempPassword = crypto.randomBytes(16).toString("base64url").slice(0, 16);
+    const bcrypt = (await import("bcryptjs")).default;
+    const hash = await bcrypt.hash(tempPassword, 10);
     await sql.unsafe(
-      `INSERT INTO users (nome, email, senha_hash, role) VALUES ($1, $2, $3, $4)`,
+      `INSERT INTO users (nome, email, senha_hash, role, primeiro_login) VALUES ($1, $2, $3, $4, true)`,
       ["Administrador", "admin@loja", hash, "admin"]
     );
+    console.warn(`[SECURITY] Admin criado com senha temporária: ${tempPassword}`);
+    console.warn("[SECURITY] Troque a senha imediatamente após o primeiro login!");
   }
 }
 
@@ -221,8 +227,8 @@ export async function registrarMovimentacao(params: {
 }
 
 export async function proximoNumeroVenda(): Promise<number> {
-  const result = await sqlGet`
-    SELECT MAX(numero) as max_num FROM vendas
-  ` as { max_num: number | null } | undefined;
-  return (result?.max_num ?? 0) + 1;
+  return getClient().begin(async (tx) => {
+    const result = await tx`SELECT COALESCE(MAX(numero), 0) + 1 as next_num FROM vendas FOR UPDATE`;
+    return Number(result[0].next_num);
+  });
 }
