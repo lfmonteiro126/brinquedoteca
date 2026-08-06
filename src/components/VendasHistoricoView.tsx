@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Filter,
   Undo2,
+  Pencil,
   X,
   CreditCard,
   Wallet,
@@ -18,6 +19,7 @@ import {
 import { formatCurrency, formatDate } from "@/lib/format";
 import { Pagination } from "@/components/Pagination";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { EditSaleModal } from "@/components/EditSaleModal";
 import { useToast } from "@/components/Toast";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Venda } from "@/lib/types";
@@ -64,6 +66,7 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
   const [showFilters, setShowFilters] = useState(false);
   const [estornando, setEstornando] = useState<number | null>(null);
   const [confirmEstorno, setConfirmEstorno] = useState<Venda | null>(null);
+  const [editVenda, setEditVenda] = useState<Venda | null>(null);
   const { showToast } = useToast();
 
   const [data, setData] = useState("");
@@ -314,17 +317,29 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
                         {/* Ações */}
                         <div className="flex items-center gap-1.5">
                           {isAdmin && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setConfirmEstorno(v);
-                              }}
-                              disabled={estornando === v.id}
-                              className="rounded-xl p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 active:scale-[0.96] transition-transform"
-                              title="Estornar venda"
-                            >
-                              <Undo2 className="h-4 w-4" />
-                            </button>
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditVenda(v);
+                                }}
+                                className="rounded-xl p-2 text-violet-600 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-900/20 active:scale-[0.96] transition-transform"
+                                title="Editar venda"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmEstorno(v);
+                                }}
+                                disabled={estornando === v.id}
+                                className="rounded-xl p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 active:scale-[0.96] transition-transform"
+                                title="Estornar venda"
+                              >
+                                <Undo2 className="h-4 w-4" />
+                              </button>
+                            </>
                           )}
                           <div className="rounded-xl p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                             {isExpanded ? (
@@ -381,6 +396,19 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
                               <span>Total Final</span>
                               <span className="font-display tabular-nums text-emerald-600 dark:text-emerald-400">{formatCurrency(v.total)}</span>
                             </div>
+                            {v.correcao_justificativa && (
+                              <div className="mt-3 rounded-xl border border-violet-100 bg-violet-50/80 px-3 py-2 text-[11px] text-violet-800 dark:border-violet-900/40 dark:bg-violet-950/30 dark:text-violet-300">
+                                <p className="font-semibold">Correção administrativa</p>
+                                <p className="mt-0.5 italic">{v.correcao_justificativa}</p>
+                                {(v.corrigido_por_nome || v.corrigido_em) && (
+                                  <p className="mt-1 text-violet-500 dark:text-violet-400 not-italic">
+                                    {v.corrigido_por_nome ? `Por ${v.corrigido_por_nome}` : ""}
+                                    {v.corrigido_por_nome && v.corrigido_em ? " · " : ""}
+                                    {v.corrigido_em ? formatDate(v.corrigido_em) : ""}
+                                  </p>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -404,6 +432,13 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
         danger
         onConfirm={handleEstorno}
         onCancel={() => setConfirmEstorno(null)}
+      />
+
+      <EditSaleModal
+        open={!!editVenda}
+        venda={editVenda}
+        onClose={() => setEditVenda(null)}
+        onSaved={() => setReloadKey((k) => k + 1)}
       />
     </div>
   );

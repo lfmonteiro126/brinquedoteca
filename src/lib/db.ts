@@ -129,6 +129,21 @@ export async function initSchema() {
     EXCEPTION WHEN duplicate_column THEN NULL;
     END $$;
 
+    DO $$ BEGIN
+      ALTER TABLE vendas ADD COLUMN correcao_justificativa TEXT;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+
+    DO $$ BEGIN
+      ALTER TABLE vendas ADD COLUMN corrigido_por INTEGER REFERENCES users(id);
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+
+    DO $$ BEGIN
+      ALTER TABLE vendas ADD COLUMN corrigido_em TIMESTAMPTZ;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+
     CREATE TABLE IF NOT EXISTS venda_itens (
       id SERIAL PRIMARY KEY,
       venda_id INTEGER NOT NULL REFERENCES vendas(id),

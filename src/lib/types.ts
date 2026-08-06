@@ -37,6 +37,10 @@ export interface Venda {
   parcelas: number;
   created_at: string;
   desconto_autorizado_por?: string | null;
+  correcao_justificativa?: string | null;
+  corrigido_por?: number | null;
+  corrigido_por_nome?: string | null;
+  corrigido_em?: string | null;
   itens?: VendaItem[];
 }
 

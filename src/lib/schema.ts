@@ -56,6 +56,9 @@ export const vendas = pgTable("vendas", {
   metodoPagamento: text("metodo_pagamento").notNull().default("dinheiro"),
   parcelas: integer("parcelas").notNull().default(1),
   descontoAutorizadoPor: text("desconto_autorizado_por"),
+  correcaoJustificativa: text("correcao_justificativa"),
+  corrigidoPor: integer("corrigido_por").references(() => users.id),
+  corrigidoEm: timestamp("corrigido_em"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
