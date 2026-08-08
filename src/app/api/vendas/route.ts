@@ -141,8 +141,10 @@ export async function POST(request: NextRequest) {
     }
 
     const resultado = await getClient().begin(async (tx) => {
+      // PostgreSQL rejects FOR UPDATE with aggregates (MAX). Lock the table instead.
+      await tx`LOCK TABLE vendas IN SHARE ROW EXCLUSIVE MODE`;
       const nextResult = await tx`
-        SELECT COALESCE(MAX(numero), 0) + 1 as next_num FROM vendas FOR UPDATE
+        SELECT COALESCE(MAX(numero), 0) + 1 as next_num FROM vendas
       `;
       const numero = Number(nextResult[0].next_num);
 

@@ -267,10 +267,10 @@ export async function registrarMovimentacao(params: {
   motivo?: string | null;
 }): Promise<number> {
   return getClient().begin(async (tx) => {
-    const produto = await tx`SELECT estoque FROM produtos WHERE id = ${params.produtoId}`;
+    const produto = await tx`SELECT estoque FROM produtos WHERE id = ${params.produtoId} FOR UPDATE`;
     if (produto.length === 0) throw new Error("Produto não encontrado");
 
-    const estoqueAnterior = produto[0].estoque;
+    const estoqueAnterior = Number(produto[0].estoque);
     const estoqueNovo =
       params.tipo === "entrada"
         ? estoqueAnterior + params.quantidade
@@ -291,7 +291,9 @@ export async function registrarMovimentacao(params: {
 
 export async function proximoNumeroVenda(): Promise<number> {
   return getClient().begin(async (tx) => {
-    const result = await tx`SELECT COALESCE(MAX(numero), 0) + 1 as next_num FROM vendas FOR UPDATE`;
+    // FOR UPDATE cannot be used with aggregates in PostgreSQL
+    await tx`LOCK TABLE vendas IN SHARE ROW EXCLUSIVE MODE`;
+    const result = await tx`SELECT COALESCE(MAX(numero), 0) + 1 as next_num FROM vendas`;
     return Number(result[0].next_num);
   });
 }
