@@ -130,101 +130,148 @@ export async function POST(request: NextRequest) {
     }
 
     for (const item of itens) {
-      if (!item.produto_id || !Number.isInteger(item.produto_id)) {
+      const produtoId = Number(item.produto_id);
+      const quantidade = Number(item.quantidade);
+      if (!Number.isInteger(produtoId) || produtoId < 1) {
         return NextResponse.json({ error: "ID de produto inválido" }, { status: 400 });
       }
-      if (!item.quantidade || !Number.isInteger(item.quantidade) || item.quantidade < 1) {
+      if (!Number.isInteger(quantidade) || quantidade < 1) {
         return NextResponse.json({ error: "Quantidade inválida" }, { status: 400 });
       }
     }
 
-    const { proximoNumeroVenda, registrarMovimentacao } = await import("@/lib/db");
-    const numero = await proximoNumeroVenda();
+    const resultado = await getClient().begin(async (tx) => {
+      const nextResult = await tx`
+        SELECT COALESCE(MAX(numero), 0) + 1 as next_num FROM vendas FOR UPDATE
+      `;
+      const numero = Number(nextResult[0].next_num);
 
-    let total = 0;
-    const itensValidados: Array<{
-      produto_id: number;
-      quantidade: number;
-      preco_unitario: number;
-      subtotal: number;
-      nome: string;
-    }> = [];
+      let total = 0;
+      const itensValidados: Array<{
+        produto_id: number;
+        quantidade: number;
+        preco_unitario: number;
+        subtotal: number;
+        nome: string;
+      }> = [];
 
-    for (const item of itens) {
-      const produtoResult = await getClient().unsafe(
-        "SELECT * FROM produtos WHERE id = $1 AND ativo = true",
-        [item.produto_id]
-      );
+      for (const item of itens) {
+        const produtoId = Number(item.produto_id);
+        const quantidade = Number(item.quantidade);
 
-      if (produtoResult.length === 0) {
-        return NextResponse.json(
-          { error: `Produto não encontrado` },
-          { status: 400 }
-        );
+        const produtoResult = await tx`
+          SELECT id, nome, estoque, preco_venda
+          FROM produtos
+          WHERE id = ${produtoId} AND ativo = true
+          FOR UPDATE
+        `;
+
+        if (produtoResult.length === 0) {
+          throw new Error(`Produto não encontrado`);
+        }
+
+        const produto = produtoResult[0];
+        const estoqueAtual = Number(produto.estoque);
+
+        if (estoqueAtual < quantidade) {
+          throw new Error(
+            `Estoque insuficiente para "${produto.nome}" (${estoqueAtual} disponíveis)`
+          );
+        }
+
+        const precoUnitario = Number(produto.preco_venda);
+        const subtotal = Math.round(precoUnitario * quantidade * 100) / 100;
+        total += subtotal;
+        itensValidados.push({
+          produto_id: Number(produto.id),
+          quantidade,
+          preco_unitario: precoUnitario,
+          subtotal,
+          nome: String(produto.nome),
+        });
       }
 
-      const produto = produtoResult[0];
+      total = Math.round((total - descontoNum) * 100) / 100;
+      if (total < 0) total = 0;
 
-      if (produto.estoque < item.quantidade) {
-        return NextResponse.json(
-          { error: `Estoque insuficiente para "${produto.nome}" (${produto.estoque} disponíveis)` },
-          { status: 400 }
-        );
-      }
-
-      const subtotal = Number(produto.preco_venda) * item.quantidade;
-      total += subtotal;
-      itensValidados.push({
-        produto_id: produto.id,
-        quantidade: item.quantidade,
-        preco_unitario: Number(produto.preco_venda),
-        subtotal,
-        nome: produto.nome,
-      });
-    }
-
-    total -= descontoNum;
-    if (total < 0) total = 0;
-
-    const vendaId = await getClient().begin(async (tx) => {
       const vendaResult = await tx`
         INSERT INTO vendas (numero, usuario_id, total, desconto, metodo_pagamento, parcelas, desconto_autorizado_por)
-        VALUES (${numero}, ${user.id}, ${total}, ${descontoNum}, ${metodo_pagamento}, ${parcelasNum}, ${desconto_autorizado_por || null})
-        RETURNING id
+        VALUES (
+          ${numero},
+          ${user.id},
+          ${total},
+          ${descontoNum},
+          ${metodo_pagamento},
+          ${parcelasNum},
+          ${desconto_autorizado_por || null}
+        )
+        RETURNING *
       `;
 
-      const id = vendaResult[0].id;
+      const venda = vendaResult[0];
+      const vendaId = Number(venda.id);
 
       const descontoFormatado = new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",
       }).format(descontoNum);
-      const motivoMovimentacao = descontoNum > 0 && desconto_autorizado_por
-        ? `Venda #${numero} (Desconto de ${descontoFormatado} autorizado por ${desconto_autorizado_por})`
-        : `Venda #${numero}`;
+      const motivoMovimentacao =
+        descontoNum > 0 && desconto_autorizado_por
+          ? `Venda #${numero} (Desconto de ${descontoFormatado} autorizado por ${desconto_autorizado_por})`
+          : `Venda #${numero}`;
 
       for (const item of itensValidados) {
         await tx`
           INSERT INTO venda_itens (venda_id, produto_id, quantidade, preco_unitario, subtotal)
-          VALUES (${id}, ${item.produto_id}, ${item.quantidade}, ${item.preco_unitario}, ${item.subtotal})
+          VALUES (${vendaId}, ${item.produto_id}, ${item.quantidade}, ${item.preco_unitario}, ${item.subtotal})
         `;
 
-        await registrarMovimentacao({
-          produtoId: item.produto_id,
-          tipo: "venda",
-          quantidade: item.quantidade,
-          usuarioId: user.id,
-          referenciaId: id,
-          motivo: motivoMovimentacao,
-        });
+        const produtoLock = await tx`
+          SELECT estoque FROM produtos WHERE id = ${item.produto_id} FOR UPDATE
+        `;
+        const estoqueAnterior = Number(produtoLock[0].estoque);
+        const estoqueNovo = estoqueAnterior - item.quantidade;
+        if (estoqueNovo < 0) {
+          throw new Error(`Estoque insuficiente para "${item.nome}"`);
+        }
+
+        await tx`
+          UPDATE produtos
+          SET estoque = ${estoqueNovo}, updated_at = NOW()
+          WHERE id = ${item.produto_id}
+        `;
+
+        await tx`
+          INSERT INTO movimentacoes (
+            produto_id, tipo, quantidade, estoque_anterior, estoque_novo,
+            usuario_id, referencia_id, motivo
+          ) VALUES (
+            ${item.produto_id}, 'venda', ${item.quantidade},
+            ${estoqueAnterior}, ${estoqueNovo},
+            ${user.id}, ${vendaId}, ${motivoMovimentacao}
+          )
+        `;
       }
 
-      return id;
+      return { venda, numero, total, itens: itensValidados };
     });
 
-    const vendaResult = await getClient().unsafe("SELECT * FROM vendas WHERE id = $1", [vendaId]);
-    return NextResponse.json({ venda: vendaResult[0], numero, total, itens: itensValidados }, { status: 201 });
+    return NextResponse.json(resultado, { status: 201 });
   } catch (error) {
+    if (error instanceof Error) {
+      if (
+        error.message === "Produto não encontrado" ||
+        error.message.startsWith("Estoque insuficiente")
+      ) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+      if (error.message.includes("unique") || error.message.includes("UNIQUE")) {
+        return NextResponse.json(
+          { error: "Conflito ao gerar número da venda. Tente novamente." },
+          { status: 409 }
+        );
+      }
+    }
     return handleApiError(error);
   }
 }
