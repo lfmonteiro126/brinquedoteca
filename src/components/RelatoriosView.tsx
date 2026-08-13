@@ -126,14 +126,34 @@ function TableRenderer({ headers, rows }: { headers: string[]; rows: string[][] 
   );
 }
 
-function ExportButtons({ data, filename, onExportCSV, onExportPDF }: { data: object[]; filename: string; onExportCSV: (d: object[], f: string) => void; onExportPDF: (d: object[], f: string) => void }) {
+function ExportButtons({
+  data,
+  filename,
+  onExportCSV,
+  onExportPDF,
+  exportingPdf,
+}: {
+  data: object[];
+  filename: string;
+  onExportCSV: (d: object[], f: string) => void;
+  onExportPDF: () => void;
+  exportingPdf?: boolean;
+}) {
   return (
     <div className="flex justify-end gap-2">
-      <button onClick={() => onExportCSV(data, filename)} className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[var(--card-bg)] hover:bg-slate-50 dark:hover:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 active:scale-[0.97] transition-all shadow-2xs">
+      <button
+        onClick={() => onExportCSV(data, filename)}
+        className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[var(--card-bg)] hover:bg-slate-50 dark:hover:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 active:scale-[0.97] transition-all shadow-2xs"
+      >
         <Download className="h-4 w-4 text-slate-500" /> CSV
       </button>
-      <button onClick={() => onExportPDF(data, filename)} className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[var(--card-bg)] hover:bg-slate-50 dark:hover:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 active:scale-[0.97] transition-all shadow-2xs">
-        <FileText className="h-4 w-4 text-slate-500" /> PDF
+      <button
+        onClick={onExportPDF}
+        disabled={exportingPdf}
+        className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[var(--card-bg)] hover:bg-slate-50 dark:hover:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 active:scale-[0.97] transition-all shadow-2xs disabled:opacity-60"
+      >
+        <FileText className="h-4 w-4 text-slate-500" />
+        {exportingPdf ? "Gerando PDF..." : "PDF completo"}
       </button>
     </div>
   );
@@ -156,7 +176,15 @@ interface ProdutoData {
 }
 interface MargemData extends ProdutoData { custo_total: number; lucro: number; margem: number; }
 
-function ResumoTab({ dados, onExportPDF }: { dados: ResumoData | null; onExportPDF: (d: object[], f: string) => void }) {
+function ResumoTab({
+  dados,
+  onExportPDF,
+  exportingPdf,
+}: {
+  dados: ResumoData | null;
+  onExportPDF: () => void;
+  exportingPdf?: boolean;
+}) {
   if (!dados) return null;
   const cards = [
     { label: "Total de vendas", value: String(dados.totalVendas), icon: ShoppingBag, color: "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400" },
@@ -168,8 +196,13 @@ function ResumoTab({ dados, onExportPDF }: { dados: ResumoData | null; onExportP
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <button onClick={() => onExportPDF([{ ...dados }], "resumo")} className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[var(--card-bg)] hover:bg-slate-50 dark:hover:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 active:scale-[0.97] transition-all shadow-2xs">
-          <FileText className="h-4 w-4 text-slate-500" /> PDF
+        <button
+          onClick={onExportPDF}
+          disabled={exportingPdf}
+          className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[var(--card-bg)] hover:bg-slate-50 dark:hover:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 active:scale-[0.97] transition-all shadow-2xs disabled:opacity-60"
+        >
+          <FileText className="h-4 w-4 text-slate-500" />
+          {exportingPdf ? "Gerando PDF..." : "PDF completo"}
         </button>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -194,11 +227,21 @@ function ResumoTab({ dados, onExportPDF }: { dados: ResumoData | null; onExportP
   );
 }
 
-function PeriodoTab({ dados, onExportCSV, onExportPDF }: { dados: PeriodoData[]; onExportCSV: (d: object[], f: string) => void; onExportPDF: (d: object[], f: string) => void }) {
+function PeriodoTab({
+  dados,
+  onExportCSV,
+  onExportPDF,
+  exportingPdf,
+}: {
+  dados: PeriodoData[];
+  onExportCSV: (d: object[], f: string) => void;
+  onExportPDF: () => void;
+  exportingPdf?: boolean;
+}) {
   if (!dados?.length) return <EmptyState />;
   return (
     <div className="space-y-4">
-      <ExportButtons data={dados} filename="vendas_por_periodo" onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
+      <ExportButtons data={dados} filename="vendas_por_periodo" onExportCSV={onExportCSV} onExportPDF={onExportPDF} exportingPdf={exportingPdf} />
       <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
         <h3 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Vendas por período</h3>
         <ResponsiveContainer width="100%" height={350}>
@@ -222,11 +265,21 @@ function PeriodoTab({ dados, onExportCSV, onExportPDF }: { dados: PeriodoData[];
   );
 }
 
-function CategoriaTab({ dados, onExportCSV, onExportPDF }: { dados: CategoriaData[]; onExportCSV: (d: object[], f: string) => void; onExportPDF: (d: object[], f: string) => void }) {
+function CategoriaTab({
+  dados,
+  onExportCSV,
+  onExportPDF,
+  exportingPdf,
+}: {
+  dados: CategoriaData[];
+  onExportCSV: (d: object[], f: string) => void;
+  onExportPDF: () => void;
+  exportingPdf?: boolean;
+}) {
   if (!dados?.length) return <EmptyState />;
   return (
     <div className="space-y-4">
-      <ExportButtons data={dados} filename="vendas_por_categoria" onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
+      <ExportButtons data={dados} filename="vendas_por_categoria" onExportCSV={onExportCSV} onExportPDF={onExportPDF} exportingPdf={exportingPdf} />
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
           <h3 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Receita por categoria</h3>
@@ -264,11 +317,21 @@ function CategoriaTab({ dados, onExportCSV, onExportPDF }: { dados: CategoriaDat
   );
 }
 
-function FuncionarioTab({ dados, onExportCSV, onExportPDF }: { dados: FuncionarioData[]; onExportCSV: (d: object[], f: string) => void; onExportPDF: (d: object[], f: string) => void }) {
+function FuncionarioTab({
+  dados,
+  onExportCSV,
+  onExportPDF,
+  exportingPdf,
+}: {
+  dados: FuncionarioData[];
+  onExportCSV: (d: object[], f: string) => void;
+  onExportPDF: () => void;
+  exportingPdf?: boolean;
+}) {
   if (!dados?.length) return <EmptyState />;
   return (
     <div className="space-y-4">
-      <ExportButtons data={dados} filename="vendas_por_funcionario" onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
+      <ExportButtons data={dados} filename="vendas_por_funcionario" onExportCSV={onExportCSV} onExportPDF={onExportPDF} exportingPdf={exportingPdf} />
       <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
         <h3 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Vendas por funcionário</h3>
         <ResponsiveContainer width="100%" height={300}>
@@ -292,14 +355,24 @@ function FuncionarioTab({ dados, onExportCSV, onExportPDF }: { dados: Funcionari
   );
 }
 
-function ProdutosTab({ dados, onExportCSV, onExportPDF }: { dados: ProdutoData[]; onExportCSV: (d: object[], f: string) => void; onExportPDF: (d: object[], f: string) => void }) {
+function ProdutosTab({
+  dados,
+  onExportCSV,
+  onExportPDF,
+  exportingPdf,
+}: {
+  dados: ProdutoData[];
+  onExportCSV: (d: object[], f: string) => void;
+  onExportPDF: () => void;
+  exportingPdf?: boolean;
+}) {
   if (!dados?.length) return <EmptyState />;
   const top10 = dados.slice(0, 10);
   const bottom10 = [...dados].reverse().filter((d) => d.quantidade_vendida > 0).slice(0, 10);
 
   return (
     <div className="space-y-6">
-      <ExportButtons data={dados} filename="produtos_vendidos" onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
+      <ExportButtons data={dados} filename="produtos_vendidos" onExportCSV={onExportCSV} onExportPDF={onExportPDF} exportingPdf={exportingPdf} />
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
           <h3 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Mais vendidos</h3>
@@ -348,13 +421,23 @@ function ProdutosTab({ dados, onExportCSV, onExportPDF }: { dados: ProdutoData[]
   );
 }
 
-function MargemTab({ dados, onExportCSV, onExportPDF }: { dados: MargemData[]; onExportCSV: (d: object[], f: string) => void; onExportPDF: (d: object[], f: string) => void }) {
+function MargemTab({
+  dados,
+  onExportCSV,
+  onExportPDF,
+  exportingPdf,
+}: {
+  dados: MargemData[];
+  onExportCSV: (d: object[], f: string) => void;
+  onExportPDF: () => void;
+  exportingPdf?: boolean;
+}) {
   if (!dados?.length) return <EmptyState />;
   const comMargem = dados.filter((d) => d.receita_total > 0);
 
   return (
     <div className="space-y-4">
-      <ExportButtons data={comMargem} filename="margem_lucro" onExportCSV={onExportCSV} onExportPDF={onExportPDF} />
+      <ExportButtons data={comMargem} filename="margem_lucro" onExportCSV={onExportCSV} onExportPDF={onExportPDF} exportingPdf={exportingPdf} />
       <div className="rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
         <h3 className="mb-4 font-semibold text-slate-800 dark:text-slate-200">Margem de lucro por produto</h3>
         <ResponsiveContainer width="100%" height={350}>
@@ -400,6 +483,7 @@ export function RelatoriosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
   const [appliedDesde, setAppliedDesde] = useState("");
   const [appliedAte, setAppliedAte] = useState("");
   const [hasFetched, setHasFetched] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   useEffect(() => {
     if (!hasFetched) return;
     let cancelled = false;
@@ -461,33 +545,258 @@ export function RelatoriosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
     URL.revokeObjectURL(url);
   }
 
-  function exportPDF(data: object[], filename: string) {
-    if (!data.length) return;
-    const doc = new jsPDF({ orientation: "landscape" });
-    const first = data[0] as Record<string, unknown>;
-    const headers = Object.keys(first);
-    const rows = data.map((row) => {
-      const r = row as Record<string, unknown>;
-      return headers.map((h) => String(r[h] ?? ""));
-    });
+  async function fetchRelatorio(tipo: string, extra?: Record<string, string>) {
+    const params = new URLSearchParams({ tipo });
+    if (appliedDesde) params.set("desde", appliedDesde);
+    if (appliedAte) params.set("ate", appliedAte);
+    if (extra) {
+      for (const [k, v] of Object.entries(extra)) params.set(k, v);
+    }
+    const r = await fetch(`/api/relatorios?${params}`);
+    const json = await r.json();
+    return json.dados ?? null;
+  }
 
+  function periodoLabel() {
+    if (appliedDesde && appliedAte) return `${appliedDesde} a ${appliedAte}`;
+    if (appliedDesde) return `desde ${appliedDesde}`;
+    if (appliedAte) return `até ${appliedAte}`;
+    return "todo o período";
+  }
+
+  function addSectionTitle(
+    doc: jsPDF,
+    title: string,
+    startY: number,
+    opts?: { newPage?: boolean }
+  ) {
+    let y = startY;
+    if (opts?.newPage || y > 180) {
+      doc.addPage();
+      y = 20;
+    } else if (y > 28) {
+      y += 10;
+    }
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Ateliê Angels Kids", 14, 15);
+    doc.setFontSize(13);
+    doc.setTextColor(124, 58, 237);
+    doc.text(title, 14, y);
+    doc.setTextColor(0, 0, 0);
+    return y + 6;
+  }
+
+  function addEmptyNote(doc: jsPDF, y: number) {
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    const dateStr = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
-    doc.text(`Relatório: ${filename.replace(/_/g, " ")}  |  Gerado em: ${dateStr}`, 14, 22);
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text("Nenhum dado disponível nesta seção.", 14, y + 4);
+    doc.setTextColor(0);
+    return y + 12;
+  }
 
-    autoTable(doc, {
-      startY: 28,
-      head: [headers.map((h) => h.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))],
-      body: rows,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [124, 58, 237] },
-    });
+  async function exportCompletePDF() {
+    if (exportingPdf) return;
+    setExportingPdf(true);
+    try {
+      const [resumo, periodo, categoria, funcionario, produtos, margem] = await Promise.all([
+        fetchRelatorio("resumo") as Promise<ResumoData | null>,
+        fetchRelatorio("vendas_periodo", { agrupar }) as Promise<PeriodoData[] | null>,
+        fetchRelatorio("vendas_categoria") as Promise<CategoriaData[] | null>,
+        fetchRelatorio("vendas_funcionario") as Promise<FuncionarioData[] | null>,
+        fetchRelatorio("produtos_mais_vendidos") as Promise<ProdutoData[] | null>,
+        fetchRelatorio("margem_lucro") as Promise<MargemData[] | null>,
+      ]);
 
-    doc.save(`${filename}.pdf`);
+      const doc = new jsPDF({ orientation: "landscape" });
+      const dateStr = new Date().toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("Ateliê Angels Kids", 14, 18);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.text("Relatório completo de vendas", 14, 26);
+      doc.setFontSize(9);
+      doc.setTextColor(80);
+      doc.text(`Período: ${periodoLabel()}  |  Gerado em: ${dateStr}`, 14, 33);
+      doc.setTextColor(0);
+
+      let y = 42;
+
+      // —— Resumo ——
+      y = addSectionTitle(doc, "1. Resumo", y);
+      if (resumo) {
+        autoTable(doc, {
+          startY: y,
+          head: [["Indicador", "Valor"]],
+          body: [
+            ["Total de vendas", String(resumo.totalVendas)],
+            ["Valor total", formatCurrency(resumo.valorTotal)],
+            ["Ticket médio", formatCurrency(resumo.ticketMedio)],
+            ["Itens vendidos", String(resumo.totalItens)],
+            ["Descontos", formatCurrency(resumo.totalDescontos)],
+          ],
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [124, 58, 237] },
+          columnStyles: { 1: { halign: "right" } },
+        });
+        y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
+      } else {
+        y = addEmptyNote(doc, y);
+      }
+
+      // —— Por período ——
+      y = addSectionTitle(doc, "2. Por período", y);
+      if (periodo?.length) {
+        autoTable(doc, {
+          startY: y,
+          head: [["Período", "Vendas", "Valor"]],
+          body: periodo.map((d) => [d.periodo, String(d.vendas), formatCurrency(d.valor)]),
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [124, 58, 237] },
+          columnStyles: { 1: { halign: "right" }, 2: { halign: "right" } },
+        });
+        y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
+      } else {
+        y = addEmptyNote(doc, y);
+      }
+
+      // —— Por categoria ——
+      y = addSectionTitle(doc, "3. Por categoria", y);
+      if (categoria?.length) {
+        autoTable(doc, {
+          startY: y,
+          head: [["Categoria", "Vendas", "Qtd", "Valor"]],
+          body: categoria.map((d) => [
+            d.categoria,
+            String(d.vendas),
+            String(d.quantidade),
+            formatCurrency(d.valor),
+          ]),
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [124, 58, 237] },
+          columnStyles: {
+            1: { halign: "right" },
+            2: { halign: "right" },
+            3: { halign: "right" },
+          },
+        });
+        y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
+      } else {
+        y = addEmptyNote(doc, y);
+      }
+
+      // —— Por funcionário ——
+      y = addSectionTitle(doc, "4. Por funcionário", y);
+      if (funcionario?.length) {
+        autoTable(doc, {
+          startY: y,
+          head: [["Funcionário", "Vendas", "Ticket médio", "Valor total"]],
+          body: funcionario.map((d) => [
+            d.funcionario,
+            String(d.vendas),
+            formatCurrency(d.ticket_medio),
+            formatCurrency(d.valor),
+          ]),
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [124, 58, 237] },
+          columnStyles: {
+            1: { halign: "right" },
+            2: { halign: "right" },
+            3: { halign: "right" },
+          },
+        });
+        y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
+      } else {
+        y = addEmptyNote(doc, y);
+      }
+
+      // —— Produtos ——
+      y = addSectionTitle(doc, "5. Produtos", y);
+      if (produtos?.length) {
+        autoTable(doc, {
+          startY: y,
+          head: [["Produto", "Categoria", "Preço venda", "Qtd vendida", "Receita"]],
+          body: produtos.map((d) => [
+            d.produto,
+            d.categoria || "—",
+            formatCurrency(d.preco_venda),
+            String(d.quantidade_vendida),
+            formatCurrency(d.receita_total),
+          ]),
+          styles: { fontSize: 7 },
+          headStyles: { fillColor: [124, 58, 237] },
+          columnStyles: {
+            2: { halign: "right" },
+            3: { halign: "right" },
+            4: { halign: "right" },
+          },
+        });
+        y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
+      } else {
+        y = addEmptyNote(doc, y);
+      }
+
+      // —— Margem ——
+      const comMargem = (margem ?? []).filter((d) => d.receita_total > 0);
+      y = addSectionTitle(doc, "6. Margem", y);
+      if (comMargem.length) {
+        autoTable(doc, {
+          startY: y,
+          head: [
+            [
+              "Produto",
+              "Categoria",
+              "Custo unit.",
+              "Venda unit.",
+              "Qtd",
+              "Receita",
+              "Custo total",
+              "Lucro",
+              "Margem",
+            ],
+          ],
+          body: comMargem.map((d) => [
+            d.produto,
+            d.categoria || "—",
+            formatCurrency(d.preco_custo),
+            formatCurrency(d.preco_venda),
+            String(d.quantidade_vendida),
+            formatCurrency(d.receita_total),
+            formatCurrency(d.custo_total),
+            formatCurrency(d.lucro),
+            `${(d.margem ?? 0).toFixed(1)}%`,
+          ]),
+          styles: { fontSize: 7 },
+          headStyles: { fillColor: [124, 58, 237] },
+          columnStyles: {
+            2: { halign: "right" },
+            3: { halign: "right" },
+            4: { halign: "right" },
+            5: { halign: "right" },
+            6: { halign: "right" },
+            7: { halign: "right" },
+            8: { halign: "right" },
+          },
+        });
+      } else {
+        addEmptyNote(doc, y);
+      }
+
+      const stamp = new Date().toISOString().slice(0, 10);
+      doc.save(`relatorio_completo_${stamp}.pdf`);
+    } catch (err) {
+      console.error("Erro ao gerar PDF completo:", err);
+      alert("Não foi possível gerar o PDF. Tente novamente.");
+    } finally {
+      setExportingPdf(false);
+    }
   }
 
   function formatDateInput(d: Date) {
@@ -603,12 +912,49 @@ export function RelatoriosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
         <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-sm"><SkeletonTable rows={4} cols={4} /></div>
       ) : (
         <>
-          {activeTab === "resumo" && <ResumoTab dados={dados as ResumoData} onExportPDF={exportPDF} />}
-          {activeTab === "periodo" && <PeriodoTab dados={dados as PeriodoData[]} onExportCSV={exportCSV} onExportPDF={exportPDF} />}
-          {activeTab === "categoria" && <CategoriaTab dados={dados as CategoriaData[]} onExportCSV={exportCSV} onExportPDF={exportPDF} />}
-          {activeTab === "funcionario" && <FuncionarioTab dados={dados as FuncionarioData[]} onExportCSV={exportCSV} onExportPDF={exportPDF} />}
-          {activeTab === "produtos" && <ProdutosTab dados={dados as ProdutoData[]} onExportCSV={exportCSV} onExportPDF={exportPDF} />}
-          {activeTab === "margem" && <MargemTab dados={dados as MargemData[]} onExportCSV={exportCSV} onExportPDF={exportPDF} />}
+          {activeTab === "resumo" && (
+            <ResumoTab dados={dados as ResumoData} onExportPDF={exportCompletePDF} exportingPdf={exportingPdf} />
+          )}
+          {activeTab === "periodo" && (
+            <PeriodoTab
+              dados={dados as PeriodoData[]}
+              onExportCSV={exportCSV}
+              onExportPDF={exportCompletePDF}
+              exportingPdf={exportingPdf}
+            />
+          )}
+          {activeTab === "categoria" && (
+            <CategoriaTab
+              dados={dados as CategoriaData[]}
+              onExportCSV={exportCSV}
+              onExportPDF={exportCompletePDF}
+              exportingPdf={exportingPdf}
+            />
+          )}
+          {activeTab === "funcionario" && (
+            <FuncionarioTab
+              dados={dados as FuncionarioData[]}
+              onExportCSV={exportCSV}
+              onExportPDF={exportCompletePDF}
+              exportingPdf={exportingPdf}
+            />
+          )}
+          {activeTab === "produtos" && (
+            <ProdutosTab
+              dados={dados as ProdutoData[]}
+              onExportCSV={exportCSV}
+              onExportPDF={exportCompletePDF}
+              exportingPdf={exportingPdf}
+            />
+          )}
+          {activeTab === "margem" && (
+            <MargemTab
+              dados={dados as MargemData[]}
+              onExportCSV={exportCSV}
+              onExportPDF={exportCompletePDF}
+              exportingPdf={exportingPdf}
+            />
+          )}
         </>
       )}
     </div>
