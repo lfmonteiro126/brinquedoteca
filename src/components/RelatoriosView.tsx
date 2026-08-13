@@ -490,6 +490,28 @@ export function RelatoriosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
     doc.save(`${filename}.pdf`);
   }
 
+  function formatDateInput(d: Date) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function aplicarPeriodo(novoDesde: string, novoAte: string) {
+    setDesde(novoDesde);
+    setAte(novoAte);
+    setAppliedDesde(novoDesde);
+    setAppliedAte(novoAte);
+    setHasFetched(true);
+  }
+
+  function ultimosSeteDias() {
+    const hoje = new Date();
+    const seteDiasAtras = new Date();
+    seteDiasAtras.setDate(hoje.getDate() - 6);
+    aplicarPeriodo(formatDateInput(seteDiasAtras), formatDateInput(hoje));
+  }
+
   return (
     <div className="space-y-6">
       {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
@@ -498,8 +520,8 @@ export function RelatoriosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
         <p className="text-slate-500 dark:text-slate-400">Análise de vendas e desempenho</p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
-        <div className="flex-1 min-w-[200px] sm:flex-initial">
+      <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] p-5 shadow-xs">
+        <div className="flex-1 min-w-[160px] sm:flex-initial">
           <label className="mb-1 block text-xs font-semibold text-slate-500 dark:text-slate-400">Desde</label>
           <input
             type="date"
@@ -508,7 +530,7 @@ export function RelatoriosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
             className="w-full rounded-xl border border-slate-250/60 dark:border-slate-800 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:text-slate-200 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 dark:focus:ring-violet-800/30"
           />
         </div>
-        <div className="flex-1 min-w-[200px] sm:flex-initial">
+        <div className="flex-1 min-w-[160px] sm:flex-initial">
           <label className="mb-1 block text-xs font-semibold text-slate-500 dark:text-slate-400">Até</label>
           <input
             type="date"
@@ -531,9 +553,16 @@ export function RelatoriosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
             </select>
           </div>
         )}
-        <div className="flex items-end gap-2 mt-4 sm:mt-0 w-full sm:w-auto">
+        <button
+          type="button"
+          onClick={ultimosSeteDias}
+          className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-semibold text-violet-700 hover:bg-violet-100 active:scale-[0.98] transition-all dark:border-violet-800 dark:bg-violet-950/40 dark:text-violet-300 dark:hover:bg-violet-900/40"
+        >
+          Últimos 7 dias
+        </button>
+        <div className="flex items-end gap-2 w-full sm:w-auto">
           <button
-            onClick={() => { setAppliedDesde(desde); setAppliedAte(ate); setHasFetched(true); }}
+            onClick={() => aplicarPeriodo(desde, ate)}
             className="flex-1 sm:flex-initial rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-750 active:scale-[0.98] transition-all"
           >
             Aplicar
@@ -566,7 +595,9 @@ export function RelatoriosView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[]
 
       {!hasFetched ? (
         <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-12 text-center shadow-sm">
-          <p className="text-slate-400 dark:text-slate-500">Selecione um período e clique em <strong>Aplicar</strong> para gerar o relatório.</p>
+          <p className="text-slate-400 dark:text-slate-500">
+            Selecione um período e clique em <strong>Aplicar</strong>, ou use <strong>Últimos 7 dias</strong> para gerar na hora.
+          </p>
         </div>
       ) : loading ? (
         <div className="rounded-2xl bg-white dark:bg-[var(--card-bg)] p-6 shadow-sm"><SkeletonTable rows={4} cols={4} /></div>
