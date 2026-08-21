@@ -57,6 +57,13 @@ const metodoLabels: Record<string, string> = {
   dinheiro: "Dinheiro",
 };
 
+function labelPagamento(metodo: string, parcelas: number | string | null | undefined) {
+  const base = metodoLabels[metodo] || metodo;
+  if (metodo !== "credito") return base;
+  const n = Math.max(1, parseInt(String(parcelas ?? 1), 10) || 1);
+  return `${base} ${n}x`;
+}
+
 export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean; breadcrumbs?: BreadcrumbItem[] }) {
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [total, setTotal] = useState(0);
@@ -309,11 +316,10 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
                       <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-4 sm:gap-6">
                         <div className="flex items-center gap-4">
                           {/* Método de Pagamento */}
-                          <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1.5 text-xs text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-850">
+                          <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1.5 text-xs text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-850 whitespace-nowrap">
                             {getPaymentIcon(v.metodo_pagamento)}
                             <span className="font-medium">
-                              {metodoLabels[v.metodo_pagamento] || v.metodo_pagamento}
-                              {v.metodo_pagamento === "credito" && v.parcelas > 1 ? ` (${v.parcelas}x)` : ""}
+                              {labelPagamento(v.metodo_pagamento, v.parcelas)}
                             </span>
                           </div>
 
@@ -408,6 +414,12 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
                                 )}
                               </>
                             )}
+                            <div className="flex justify-between">
+                              <span>Pagamento</span>
+                              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                {labelPagamento(v.metodo_pagamento, v.parcelas)}
+                              </span>
+                            </div>
                             <div className="flex justify-between text-sm font-bold text-slate-800 dark:text-slate-200 pt-1.5">
                               <span>Total Final</span>
                               <span className="font-display tabular-nums text-emerald-600 dark:text-emerald-400">{formatCurrency(v.total)}</span>
