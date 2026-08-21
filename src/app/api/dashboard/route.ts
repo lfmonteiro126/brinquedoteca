@@ -13,19 +13,23 @@ export async function GET(request: NextRequest) {
 
     const vendasHoje = await sqlGet`
       SELECT COALESCE(SUM(total), 0) as total, COUNT(*) as quantidade
-      FROM vendas WHERE created_at >= CURRENT_DATE AND created_at < (CURRENT_DATE + interval '1 day')
+      FROM vendas
+      WHERE estornada = false
+        AND created_at >= CURRENT_DATE AND created_at < (CURRENT_DATE + interval '1 day')
     ` as { total: number; quantidade: number } | undefined;
 
     const vendasPeriodo = await sqlGet`
       SELECT COALESCE(SUM(total), 0) as total, COUNT(*) as quantidade
       FROM vendas
-      WHERE created_at >= (NOW() - make_interval(days => ${periodoNum}))
+      WHERE estornada = false
+        AND created_at >= (NOW() - make_interval(days => ${periodoNum}))
     ` as { total: number; quantidade: number } | undefined;
 
     const periodoAnterior = await sqlGet`
       SELECT COALESCE(SUM(total), 0) as total, COUNT(*) as quantidade
       FROM vendas
-      WHERE created_at >= (NOW() - make_interval(days => ${periodoNum * 2}))
+      WHERE estornada = false
+        AND created_at >= (NOW() - make_interval(days => ${periodoNum * 2}))
         AND created_at < (NOW() - make_interval(days => ${periodoNum}))
     ` as { total: number; quantidade: number } | undefined;
 
@@ -34,7 +38,8 @@ export async function GET(request: NextRequest) {
               COALESCE(SUM(total), 0) as total,
               COUNT(*) as quantidade
        FROM vendas
-       WHERE created_at >= (NOW() - make_interval(days => ${periodoNum}))
+       WHERE estornada = false
+         AND created_at >= (NOW() - make_interval(days => ${periodoNum}))
        GROUP BY hora
        ORDER BY hora ASC
     ` as { hora: number; total: number; quantidade: number }[];
@@ -43,14 +48,15 @@ export async function GET(request: NextRequest) {
       SELECT COALESCE(SUM(vi.quantidade), 0) as total_itens
       FROM venda_itens vi
       JOIN vendas v ON v.id = vi.venda_id
-      WHERE v.created_at >= (NOW() - make_interval(days => ${periodoNum}))
+      WHERE v.estornada = false
+        AND v.created_at >= (NOW() - make_interval(days => ${periodoNum}))
     ` as { total_itens: number } | undefined;
 
     const estornosPeriodo = await sqlGet`
       SELECT COUNT(*) as total
-      FROM movimentacoes
-      WHERE tipo = 'estorno'
-        AND created_at >= (NOW() - make_interval(days => ${periodoNum}))
+      FROM vendas
+      WHERE estornada = true
+        AND estornada_em >= (NOW() - make_interval(days => ${periodoNum}))
     ` as { total: number } | undefined;
 
     const ticketMedio = (vendasPeriodo?.quantidade ?? 0) > 0
@@ -73,7 +79,8 @@ export async function GET(request: NextRequest) {
     const vendasRecentes = await sqlAll`
       SELECT v.*, u.nome as usuario_nome
       FROM vendas v JOIN users u ON u.id = v.usuario_id
-      WHERE v.created_at >= (NOW() - make_interval(days => ${periodoNum}))
+      WHERE v.estornada = false
+        AND v.created_at >= (NOW() - make_interval(days => ${periodoNum}))
       ORDER BY v.created_at DESC LIMIT 5
     `;
 
@@ -82,7 +89,8 @@ export async function GET(request: NextRequest) {
       FROM venda_itens vi
       JOIN produtos p ON p.id = vi.produto_id
       JOIN vendas v ON v.id = vi.venda_id
-      WHERE v.created_at >= (NOW() - make_interval(days => ${periodoNum}))
+      WHERE v.estornada = false
+        AND v.created_at >= (NOW() - make_interval(days => ${periodoNum}))
       GROUP BY p.id
       ORDER BY total_vendido DESC
       LIMIT 5

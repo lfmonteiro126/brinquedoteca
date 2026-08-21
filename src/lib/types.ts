@@ -41,6 +41,10 @@ export interface Venda {
   corrigido_por?: number | null;
   corrigido_por_nome?: string | null;
   corrigido_em?: string | null;
+  estornada?: boolean;
+  estornada_em?: string | null;
+  estornada_por?: number | null;
+  estornada_por_nome?: string | null;
   itens?: VendaItem[];
 }
 

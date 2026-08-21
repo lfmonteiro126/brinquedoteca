@@ -1,4 +1,5 @@
 import postgres from "postgres";
+import { calcularEstoqueNovo } from "./estoque";
 
 let _client: ReturnType<typeof postgres> | null = null;
 let _initialized = false;
@@ -144,6 +145,21 @@ export async function initSchema() {
     EXCEPTION WHEN duplicate_column THEN NULL;
     END $$;
 
+    DO $$ BEGIN
+      ALTER TABLE vendas ADD COLUMN estornada BOOLEAN NOT NULL DEFAULT false;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+
+    DO $$ BEGIN
+      ALTER TABLE vendas ADD COLUMN estornada_em TIMESTAMPTZ;
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+
+    DO $$ BEGIN
+      ALTER TABLE vendas ADD COLUMN estornada_por INTEGER REFERENCES users(id);
+    EXCEPTION WHEN duplicate_column THEN NULL;
+    END $$;
+
     CREATE TABLE IF NOT EXISTS venda_correcoes (
       id SERIAL PRIMARY KEY,
       venda_id INTEGER NOT NULL REFERENCES vendas(id),
@@ -237,6 +253,25 @@ export async function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_vendas_usuario ON vendas(usuario_id);
     CREATE INDEX IF NOT EXISTS idx_sessoes_inventario_status ON sessoes_inventario(status);
     CREATE INDEX IF NOT EXISTS idx_produtos_nome ON produtos(nome);
+    CREATE INDEX IF NOT EXISTS idx_vendas_estornada ON vendas(estornada);
+  `);
+
+  await sql.unsafe(`
+    UPDATE vendas v
+    SET
+      estornada = true,
+      estornada_em = COALESCE(
+        v.estornada_em,
+        (SELECT MIN(m.created_at) FROM movimentacoes m WHERE m.tipo = 'estorno' AND m.referencia_id = v.id)
+      ),
+      estornada_por = COALESCE(
+        v.estornada_por,
+        (SELECT m.usuario_id FROM movimentacoes m WHERE m.tipo = 'estorno' AND m.referencia_id = v.id ORDER BY m.id ASC LIMIT 1)
+      )
+    WHERE v.estornada = false
+      AND EXISTS (
+        SELECT 1 FROM movimentacoes m WHERE m.tipo = 'estorno' AND m.referencia_id = v.id
+      )
   `);
 
   const adminResult = await sql.unsafe(
@@ -258,35 +293,43 @@ export async function initSchema() {
   }
 }
 
-export async function registrarMovimentacao(params: {
-  produtoId: number;
-  tipo: "entrada" | "saida" | "ajuste" | "venda" | "inventario" | "estorno";
-  quantidade: number;
-  usuarioId: number;
-  referenciaId?: number | null;
-  motivo?: string | null;
-}): Promise<number> {
-  return getClient().begin(async (tx) => {
-    const produto = await tx`SELECT estoque FROM produtos WHERE id = ${params.produtoId} FOR UPDATE`;
+type SqlTagged = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (strings: TemplateStringsArray, ...values: any[]): Promise<any>;
+};
+
+export async function registrarMovimentacao(
+  params: {
+    produtoId: number;
+    tipo: "entrada" | "saida" | "ajuste" | "venda" | "inventario" | "estorno";
+    quantidade: number;
+    usuarioId: number;
+    referenciaId?: number | null;
+    motivo?: string | null;
+  },
+  tx?: SqlTagged
+): Promise<number> {
+  const apply = async (sql: SqlTagged) => {
+    const produto = await sql`SELECT estoque FROM produtos WHERE id = ${params.produtoId} FOR UPDATE`;
     if (produto.length === 0) throw new Error("Produto não encontrado");
 
     const estoqueAnterior = Number(produto[0].estoque);
-    const estoqueNovo =
-      params.tipo === "entrada"
-        ? estoqueAnterior + params.quantidade
-        : estoqueAnterior - params.quantidade;
+    const estoqueNovo = calcularEstoqueNovo(params.tipo, estoqueAnterior, params.quantidade);
 
     if (estoqueNovo < 0) throw new Error("Estoque insuficiente");
 
-    await tx`UPDATE produtos SET estoque = ${estoqueNovo}, updated_at = NOW() WHERE id = ${params.produtoId}`;
+    await sql`UPDATE produtos SET estoque = ${estoqueNovo}, updated_at = NOW() WHERE id = ${params.produtoId}`;
 
-    await tx`
+    await sql`
       INSERT INTO movimentacoes (produto_id, tipo, quantidade, estoque_anterior, estoque_novo, usuario_id, referencia_id, motivo)
       VALUES (${params.produtoId}, ${params.tipo}, ${params.quantidade}, ${estoqueAnterior}, ${estoqueNovo}, ${params.usuarioId}, ${params.referenciaId ?? null}, ${params.motivo ?? null})
     `;
 
     return estoqueNovo;
-  });
+  };
+
+  if (tx) return apply(tx);
+  return getClient().begin(apply);
 }
 
 export async function proximoNumeroVenda(): Promise<number> {

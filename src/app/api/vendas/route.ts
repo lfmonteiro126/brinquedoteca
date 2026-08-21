@@ -61,10 +61,11 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * pageSize;
     const vendas = await getClient().unsafe(
-      `SELECT v.*, u.nome as usuario_nome, c.nome as corrigido_por_nome
+      `SELECT v.*, u.nome as usuario_nome, c.nome as corrigido_por_nome, e.nome as estornada_por_nome
        FROM vendas v
        JOIN users u ON u.id = v.usuario_id
        LEFT JOIN users c ON c.id = v.corrigido_por
+       LEFT JOIN users e ON e.id = v.estornada_por
        ${whereClause}
        ORDER BY v.created_at DESC
        LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,

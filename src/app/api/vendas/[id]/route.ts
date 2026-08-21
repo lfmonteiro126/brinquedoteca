@@ -136,6 +136,10 @@ export async function PATCH(
 
       const anterior = existing[0];
 
+      if (anterior.estornada) {
+        throw new Error("Não é possível editar uma venda estornada");
+      }
+
       const jaEstornada = await tx`
         SELECT id FROM movimentacoes
         WHERE tipo = 'estorno' AND referencia_id = ${vendaId}

@@ -21,7 +21,13 @@ export async function POST(
         throw new Error("Venda não encontrada");
       }
 
-      const jaEstornada = await tx`SELECT id FROM movimentacoes WHERE tipo = 'estorno' AND referencia_id = ${vendaId}`;
+      if (venda[0].estornada) {
+        throw new Error("Esta venda já foi estornada");
+      }
+
+      const jaEstornada = await tx`
+        SELECT id FROM movimentacoes WHERE tipo = 'estorno' AND referencia_id = ${vendaId} LIMIT 1
+      `;
       if (jaEstornada.length > 0) {
         throw new Error("Esta venda já foi estornada");
       }
@@ -29,15 +35,26 @@ export async function POST(
       const itens = await tx`SELECT * FROM venda_itens WHERE venda_id = ${vendaId}`;
 
       for (const item of itens) {
-        await registrarMovimentacao({
-          produtoId: item.produto_id,
-          tipo: "estorno",
-          quantidade: item.quantidade,
-          usuarioId: admin.id,
-          referenciaId: vendaId,
-          motivo: `Estorno da venda #${venda[0].numero}`,
-        });
+        await registrarMovimentacao(
+          {
+            produtoId: Number(item.produto_id),
+            tipo: "estorno",
+            quantidade: Number(item.quantidade),
+            usuarioId: admin.id,
+            referenciaId: vendaId,
+            motivo: `Estorno da venda #${venda[0].numero}`,
+          },
+          tx
+        );
       }
+
+      await tx`
+        UPDATE vendas SET
+          estornada = true,
+          estornada_em = NOW(),
+          estornada_por = ${admin.id}
+        WHERE id = ${vendaId}
+      `;
 
       return venda[0].numero;
     });
@@ -50,7 +67,12 @@ export async function POST(
     if (error instanceof Error && error.message === "Venda não encontrada") {
       return NextResponse.json({ error: error.message }, { status: 404 });
     }
-    if (error instanceof Error && error.message === "Esta venda já foi estornada") {
+    if (
+      error instanceof Error &&
+      (error.message === "Esta venda já foi estornada" ||
+        error.message === "Produto não encontrado" ||
+        error.message === "Estoque insuficiente")
+    ) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return handleApiError(error);

@@ -62,14 +62,17 @@ export async function POST(request: NextRequest) {
 
         if (diferenca !== 0) {
           divergencias++;
-          await registrarMovimentacao({
-            produtoId: item.produto_id,
-            tipo: diferenca > 0 ? "entrada" : "saida",
-            quantidade: Math.abs(diferenca),
-            usuarioId: user.id,
-            referenciaId: sessaoId,
-            motivo: "Inventário físico",
-          });
+          await registrarMovimentacao(
+            {
+              produtoId: item.produto_id,
+              tipo: diferenca > 0 ? "entrada" : "saida",
+              quantidade: Math.abs(diferenca),
+              usuarioId: user.id,
+              referenciaId: sessaoId,
+              motivo: "Inventário físico",
+            },
+            tx
+          );
         }
       }
 

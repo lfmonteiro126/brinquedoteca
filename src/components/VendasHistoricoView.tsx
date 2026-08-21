@@ -131,6 +131,7 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
       const res = await fetch(`/api/vendas/${confirmEstorno.id}/estorno`, { method: "POST" });
       const data = await res.json();
       if (res.ok) {
+        showToast("success", data.message || "Venda estornada. Estoque devolvido.");
         setReloadKey((k) => k + 1);
       } else {
         showToast("error", data.error || "Erro ao estornar venda");
@@ -257,11 +258,16 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
             <div className="space-y-3">
               {vendas.map((v) => {
                 const isExpanded = expanded === v.id;
+                const estornada = Boolean(v.estornada);
                 return (
                   <div
                     key={v.id}
-                    className={`group rounded-2xl border border-slate-200 dark:border-[var(--card-border)] bg-white dark:bg-[var(--card-bg)] shadow-xs transition-all duration-200 hover:shadow-md hover:border-violet-200 dark:hover:border-violet-800/80 ${
-                      isExpanded ? "border-violet-300 dark:border-violet-700 ring-2 ring-violet-50 dark:ring-violet-950/20" : ""
+                    className={`group rounded-2xl border bg-white dark:bg-[var(--card-bg)] shadow-xs transition-all duration-200 ${
+                      estornada
+                        ? "border-rose-200 dark:border-rose-900/40 opacity-90"
+                        : `border-slate-200 dark:border-[var(--card-border)] hover:shadow-md hover:border-violet-200 dark:hover:border-violet-800/80 ${
+                            isExpanded ? "border-violet-300 dark:border-violet-700 ring-2 ring-violet-50 dark:ring-violet-950/20" : ""
+                          }`
                     }`}
                   >
                     {/* Linha Principal do Card */}
@@ -279,6 +285,11 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
                             <span className="font-bold text-slate-800 dark:text-slate-100 font-display">
                               Venda #{v.numero}
                             </span>
+                            {estornada && (
+                              <span className="inline-flex items-center rounded-full bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-400 border border-rose-200/70 dark:border-rose-900/40">
+                                Estornada
+                              </span>
+                            )}
                             {v.desconto > 0 && (
                               <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 dark:bg-amber-955/40 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/40">
                                 <Percent className="h-2.5 w-2.5" />
@@ -308,7 +319,11 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
 
                           {/* Valor Total */}
                           <div className="text-right min-w-[70px]">
-                            <p className="text-lg font-bold font-display tabular-nums text-emerald-600 dark:text-emerald-400">
+                            <p className={`text-lg font-bold font-display tabular-nums ${
+                              estornada
+                                ? "text-slate-400 dark:text-slate-500 line-through"
+                                : "text-emerald-600 dark:text-emerald-400"
+                            }`}>
                               {formatCurrency(v.total)}
                             </p>
                           </div>
@@ -316,7 +331,7 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
 
                         {/* Ações */}
                         <div className="flex items-center gap-1.5">
-                          {isAdmin && (
+                          {isAdmin && !estornada && (
                             <>
                               <button
                                 onClick={(e) => {
@@ -397,6 +412,18 @@ export function VendasHistoricoView({ isAdmin, breadcrumbs }: { isAdmin: boolean
                               <span>Total Final</span>
                               <span className="font-display tabular-nums text-emerald-600 dark:text-emerald-400">{formatCurrency(v.total)}</span>
                             </div>
+                            {estornada && (
+                              <div className="mt-3 rounded-xl border border-rose-100 bg-rose-50/80 px-3 py-2 text-[11px] text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
+                                <p className="font-semibold">Venda estornada — estoque devolvido</p>
+                                {(v.estornada_por_nome || v.estornada_em) && (
+                                  <p className="mt-1 text-rose-500 dark:text-rose-400">
+                                    {v.estornada_por_nome ? `Por ${v.estornada_por_nome}` : ""}
+                                    {v.estornada_por_nome && v.estornada_em ? " · " : ""}
+                                    {v.estornada_em ? formatDate(v.estornada_em) : ""}
+                                  </p>
+                                )}
+                              </div>
+                            )}
                             {v.correcao_justificativa && (
                               <div className="mt-3 rounded-xl border border-violet-100 bg-violet-50/80 px-3 py-2 text-[11px] text-violet-800 dark:border-violet-900/40 dark:bg-violet-950/30 dark:text-violet-300">
                                 <p className="font-semibold">Correção administrativa</p>

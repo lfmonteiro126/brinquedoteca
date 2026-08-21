@@ -59,6 +59,9 @@ export const vendas = pgTable("vendas", {
   correcaoJustificativa: text("correcao_justificativa"),
   corrigidoPor: integer("corrigido_por").references(() => users.id),
   corrigidoEm: timestamp("corrigido_em"),
+  estornada: boolean("estornada").notNull().default(false),
+  estornadaEm: timestamp("estornada_em"),
+  estornadaPor: integer("estornada_por").references(() => users.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

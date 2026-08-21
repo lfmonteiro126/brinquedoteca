@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const ate = searchParams.get("ate") || "";
     const agrupar = searchParams.get("agrupar") || "dia";
 
-    const conditions: string[] = [];
+    const conditions: string[] = ["v.estornada = false"];
     const params: (string | number)[] = [];
     let paramIndex = 1;
 
