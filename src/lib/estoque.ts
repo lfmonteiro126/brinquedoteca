@@ -9,3 +9,11 @@ export function calcularEstoqueNovo(
     ? estoqueAnterior + quantidade
     : estoqueAnterior - quantidade;
 }
+
+/** Quantidade que ainda falta devolver ao estoque após um estorno. */
+export function calcularAjusteEstoqueEstorno(
+  quantidadeItem: number,
+  netMovimentacoesEstorno: number
+): number {
+  return Math.max(0, quantidadeItem - netMovimentacoesEstorno);
+}

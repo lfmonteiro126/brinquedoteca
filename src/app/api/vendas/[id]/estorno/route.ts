@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { registrarMovimentacao, getClient } from "@/lib/db";
+import { devolverEstoqueNoTx, getClient } from "@/lib/db";
 import { handleApiError } from "@/lib/api";
 
 export async function POST(
@@ -33,19 +33,19 @@ export async function POST(
       }
 
       const itens = await tx`SELECT * FROM venda_itens WHERE venda_id = ${vendaId}`;
+      if (itens.length === 0) {
+        throw new Error("Venda sem itens para devolver ao estoque");
+      }
 
       for (const item of itens) {
-        await registrarMovimentacao(
-          {
-            produtoId: Number(item.produto_id),
-            tipo: "estorno",
-            quantidade: Number(item.quantidade),
-            usuarioId: admin.id,
-            referenciaId: vendaId,
-            motivo: `Estorno da venda #${venda[0].numero}`,
-          },
-          tx
-        );
+        await devolverEstoqueNoTx(tx, {
+          produtoId: Number(item.produto_id),
+          quantidade: Number(item.quantidade),
+          usuarioId: admin.id,
+          referenciaId: vendaId,
+          motivo: `Estorno da venda #${venda[0].numero}`,
+          tipo: "estorno",
+        });
       }
 
       await tx`
@@ -71,7 +71,9 @@ export async function POST(
       error instanceof Error &&
       (error.message === "Esta venda já foi estornada" ||
         error.message === "Produto não encontrado" ||
-        error.message === "Estoque insuficiente")
+        error.message === "Estoque insuficiente" ||
+        error.message === "Venda sem itens para devolver ao estoque" ||
+        error.message === "Quantidade inválida para devolução de estoque")
     ) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }

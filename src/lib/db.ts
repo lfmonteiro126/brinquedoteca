@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import { calcularEstoqueNovo } from "./estoque";
+import { calcularEstoqueNovo, calcularAjusteEstoqueEstorno } from "./estoque";
 
 let _client: ReturnType<typeof postgres> | null = null;
 let _initialized = false;
@@ -274,6 +274,8 @@ export async function initSchema() {
       )
   `);
 
+  await repararEstoqueDeEstornos(sql);
+
   const adminResult = await sql.unsafe(
     `SELECT id FROM users WHERE email = $1`,
     ["admin@loja"]
@@ -297,6 +299,101 @@ type SqlTagged = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (strings: TemplateStringsArray, ...values: any[]): Promise<any>;
 };
+
+export async function devolverEstoqueNoTx(
+  tx: SqlTagged,
+  params: {
+    produtoId: number;
+    quantidade: number;
+    usuarioId: number;
+    referenciaId: number;
+    motivo: string;
+    tipo?: "estorno" | "entrada";
+  }
+): Promise<number> {
+  const quantidade = Number(params.quantidade);
+  if (!Number.isInteger(quantidade) || quantidade <= 0) {
+    throw new Error("Quantidade inválida para devolução de estoque");
+  }
+
+  const produto = await tx`SELECT estoque FROM produtos WHERE id = ${params.produtoId} FOR UPDATE`;
+  if (produto.length === 0) throw new Error("Produto não encontrado");
+
+  const estoqueAnterior = Number(produto[0].estoque);
+  const estoqueNovo = estoqueAnterior + quantidade;
+
+  await tx`UPDATE produtos SET estoque = ${estoqueNovo}, updated_at = NOW() WHERE id = ${params.produtoId}`;
+
+  await tx`
+    INSERT INTO movimentacoes (produto_id, tipo, quantidade, estoque_anterior, estoque_novo, usuario_id, referencia_id, motivo)
+    VALUES (
+      ${params.produtoId}, ${params.tipo ?? "estorno"}, ${quantidade},
+      ${estoqueAnterior}, ${estoqueNovo}, ${params.usuarioId},
+      ${params.referenciaId}, ${params.motivo}
+    )
+  `;
+
+  return estoqueNovo;
+}
+
+async function repararEstoqueDeEstornos(sql: ReturnType<typeof getClient>): Promise<void> {
+  try {
+    await sql.begin(async (tx) => {
+      const vendasEstornadas = await tx`
+        SELECT id, numero, COALESCE(estornada_por, usuario_id) as usuario_id
+        FROM vendas
+        WHERE estornada = true
+      `;
+
+      for (const venda of vendasEstornadas) {
+        const itens = await tx`
+          SELECT produto_id, SUM(quantidade) as quantidade
+          FROM venda_itens
+          WHERE venda_id = ${venda.id}
+          GROUP BY produto_id
+        `;
+
+        for (const item of itens) {
+          const motivoCorrecao = `Correção de estoque do estorno da venda #${venda.numero}`;
+          const jaCorrigido = await tx`
+            SELECT id FROM movimentacoes
+            WHERE referencia_id = ${venda.id}
+              AND produto_id = ${item.produto_id}
+              AND motivo = ${motivoCorrecao}
+            LIMIT 1
+          `;
+          if (jaCorrigido.length > 0) continue;
+
+          const movs = await tx`
+            SELECT estoque_anterior, estoque_novo
+            FROM movimentacoes
+            WHERE tipo = 'estorno'
+              AND referencia_id = ${venda.id}
+              AND produto_id = ${item.produto_id}
+          `;
+
+          let netEstorno = 0;
+          for (const m of movs) {
+            netEstorno += Number(m.estoque_novo) - Number(m.estoque_anterior);
+          }
+          const gap = calcularAjusteEstoqueEstorno(Number(item.quantidade), netEstorno);
+          if (gap <= 0) continue;
+
+          await devolverEstoqueNoTx(tx, {
+            produtoId: Number(item.produto_id),
+            quantidade: gap,
+            usuarioId: Number(venda.usuario_id),
+            referenciaId: Number(venda.id),
+            motivo: motivoCorrecao,
+            tipo: "entrada",
+          });
+        }
+      }
+    });
+  } catch (error) {
+    console.error("[estoque] Falha ao reparar estoque de estornos:", error);
+  }
+}
 
 export async function registrarMovimentacao(
   params: {
