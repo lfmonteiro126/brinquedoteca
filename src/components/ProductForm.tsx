@@ -419,9 +419,13 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
             type="number"
             min={0}
             value={form.estoque_minimo}
-            onChange={(e) => update("estoque_minimo", parseInt(e.target.value, 10) || 0)}
+            onChange={(e) => {
+              const parsed = parseInt(e.target.value, 10);
+              update("estoque_minimo", Number.isNaN(parsed) ? 0 : parsed);
+            }}
             className="w-full rounded-xl border px-4 py-2.5 outline-none focus:border-violet-400"
           />
+          <p className="mt-1 text-xs text-slate-400">Use 0 para desativar o alerta deste produto</p>
         </div>
       </div>
       {isEdit && form.estoque !== initial?.estoque && (

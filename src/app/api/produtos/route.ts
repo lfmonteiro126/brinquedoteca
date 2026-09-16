@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, requireAdmin } from "@/lib/auth";
 import { getClient, registrarMovimentacao } from "@/lib/db";
 import { handleApiError } from "@/lib/api";
+import { parseEstoqueMinimo, SQL_ESTOQUE_BAIXO } from "@/lib/estoque";
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (estoqueBaixo) {
-      conditions.push("estoque <= estoque_minimo");
+      conditions.push(SQL_ESTOQUE_BAIXO);
     }
 
     const whereClause = "WHERE " + conditions.join(" AND ");
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     const custoNum = Number(preco_custo);
     const vendaNum = Number(preco_venda);
     const estoqueNum = parseInt(estoque, 10);
-    const minimoNum = parseInt(estoque_minimo, 10);
+    const minimoNum = parseEstoqueMinimo(estoque_minimo);
 
     if (isNaN(custoNum) || custoNum < 0) {
       return NextResponse.json({ error: "Preço de custo inválido" }, { status: 400 });
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
     if (isNaN(estoqueNum) || estoqueNum < 0) {
       return NextResponse.json({ error: "Estoque inválido" }, { status: 400 });
     }
-    if (isNaN(minimoNum) || minimoNum < 0) {
+    if (minimoNum === null) {
       return NextResponse.json({ error: "Estoque mínimo inválido" }, { status: 400 });
     }
 

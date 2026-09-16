@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { sqlGet, sqlAll } from "@/lib/db";
 import { handleApiError } from "@/lib/api";
 import type { DashboardData } from "@/lib/types";
+import { SQL_ESTOQUE_BAIXO } from "@/lib/estoque";
 
 export async function GET(request: NextRequest) {
   try {
@@ -71,10 +72,10 @@ export async function GET(request: NextRequest) {
       SELECT COUNT(*) as count FROM produtos WHERE ativo = true AND estoque > 0
     ` as { count: number } | undefined;
 
-    const produtosEstoqueBaixo = await sqlAll`
-      SELECT * FROM produtos WHERE ativo = true AND estoque <= estoque_minimo
-      ORDER BY estoque ASC LIMIT 10
-    `;
+    const produtosEstoqueBaixo = await sqlAll(
+      `SELECT * FROM produtos WHERE ativo = true AND ${SQL_ESTOQUE_BAIXO}
+       ORDER BY estoque ASC LIMIT 10`
+    );
 
     const vendasRecentes = await sqlAll`
       SELECT v.*, u.nome as usuario_nome

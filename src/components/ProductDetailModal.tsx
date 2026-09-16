@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { AlertTriangle, Calendar, Edit, Package, ShoppingCart, Tag, X } from "lucide-react";
 import { formatCurrency, normalizeImageUrl } from "@/lib/format";
+import { temAlertaEstoque } from "@/lib/estoque";
 import type { Produto } from "@/lib/types";
 
 interface ProductDetailModalProps {
@@ -21,7 +22,7 @@ export function ProductDetailModal({
   onAddToCart,
 }: ProductDetailModalProps) {
   const p = produto;
-  const baixo = p.estoque <= p.estoque_minimo;
+  const baixo = temAlertaEstoque(p.estoque, p.estoque_minimo);
   const semEstoque = p.estoque === 0;
   const margem = p.preco_custo > 0
     ? ((p.preco_venda - p.preco_custo) / p.preco_custo * 100).toFixed(1)

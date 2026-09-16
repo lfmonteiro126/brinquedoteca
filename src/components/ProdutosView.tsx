@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { formatCurrency, normalizeImageUrl } from "@/lib/format";
+import { temAlertaEstoque } from "@/lib/estoque";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "@/components/Toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -31,7 +32,15 @@ const PAGE_SIZE = 20;
 type ViewMode = "grid" | "list";
 type StockFilter = "all" | "low" | "out" | "ok";
 
-export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; breadcrumbs?: BreadcrumbItem[] }) {
+export function ProdutosView({
+  isAdmin,
+  breadcrumbs,
+  initialStockFilter = "all",
+}: {
+  isAdmin: boolean;
+  breadcrumbs?: BreadcrumbItem[];
+  initialStockFilter?: StockFilter;
+}) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -42,8 +51,8 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
   const [deleteTarget, setDeleteTarget] = useState<Produto | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [showFilters, setShowFilters] = useState(false);
-  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
+  const [showFilters, setShowFilters] = useState(initialStockFilter !== "all");
+  const [stockFilter, setStockFilter] = useState<StockFilter>(initialStockFilter);
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [sortBy, setSortBy] = useState("nome");
@@ -67,6 +76,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
       params.set("page", String(page));
       params.set("pageSize", String(PAGE_SIZE));
       if (search) params.set("q", search);
+      if (stockFilter === "low") params.set("estoque_baixo", "1");
       try {
         const res = await fetch(`/api/produtos?${params}`);
         const data = await res.json();
@@ -85,7 +95,16 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
     }
     load();
     return () => { cancelled = true; };
-  }, [page, search]);
+  }, [page, search, stockFilter]);
+
+  useEffect(() => {
+    setStockFilter((current) => {
+      if (initialStockFilter === "low") return "low";
+      if (current === "low") return "all";
+      return current;
+    });
+    if (initialStockFilter === "low") setShowFilters(true);
+  }, [initialStockFilter]);
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
     setQ(e.target.value);
@@ -135,10 +154,10 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
     // Filtro de categoria
     if (categoriaFilter && p.categoria !== categoriaFilter) return false;
 
-    // Filtro de estoque
-    if (stockFilter === "low" && p.estoque > p.estoque_minimo) return false;
+    // Filtro de estoque (o filtro "low" já vem da API)
+    if (stockFilter === "low" && !temAlertaEstoque(p.estoque, p.estoque_minimo)) return false;
     if (stockFilter === "out" && p.estoque > 0) return false;
-    if (stockFilter === "ok" && p.estoque <= p.estoque_minimo) return false;
+    if (stockFilter === "ok" && (p.estoque <= 0 || temAlertaEstoque(p.estoque, p.estoque_minimo))) return false;
 
     // Filtro de preço
     if (priceMin && p.preco_venda < parseFloat(priceMin)) return false;
@@ -158,12 +177,21 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
 
   const hasActiveFilters = stockFilter !== "all" || priceMin || priceMax || sortBy !== "nome";
 
+  function updateStockFilter(value: StockFilter) {
+    setStockFilter(value);
+    setPage(1);
+    const nextUrl = value === "low" ? "/produtos?estoque_baixo=1" : "/produtos";
+    router.replace(nextUrl, { scroll: false });
+  }
+
   function clearFilters() {
     setStockFilter("all");
     setPriceMin("");
     setPriceMax("");
     setSortBy("nome");
     setCategoriaFilter("");
+    setPage(1);
+    router.replace("/produtos", { scroll: false });
   }
 
   return (
@@ -172,9 +200,13 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-violet-900 dark:text-violet-300">Brinquedos</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-violet-900 dark:text-violet-300">
+            {stockFilter === "low" ? "Alertas de estoque" : "Brinquedos"}
+          </h1>
           <p className="text-slate-500 dark:text-slate-400">
-            {total} produto{total !== 1 ? "s" : ""} cadastrado{total !== 1 ? "s" : ""}
+            {stockFilter === "low"
+              ? `${total} produto${total !== 1 ? "s" : ""} abaixo do mínimo`
+              : `${total} produto${total !== 1 ? "s" : ""} cadastrado${total !== 1 ? "s" : ""}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -264,7 +296,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
               <label className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">Status Estoque</label>
               <select
                 value={stockFilter}
-                onChange={(e) => setStockFilter(e.target.value as StockFilter)}
+                onChange={(e) => updateStockFilter(e.target.value as StockFilter)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:bg-[var(--input-bg)] dark:border-[var(--card-border)] dark:text-slate-200"
               >
                 <option value="all">Todos</option>
@@ -380,7 +412,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
         // Visualização em grade
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {produtosFiltrados.map((p) => {
-            const baixo = p.estoque <= p.estoque_minimo;
+            const baixo = temAlertaEstoque(p.estoque, p.estoque_minimo);
             const semEstoque = p.estoque === 0;
             return (
               <div
@@ -524,7 +556,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
           {/* Cards no mobile */}
           <div className="sm:hidden space-y-3">
             {produtosFiltrados.map((p) => {
-              const baixo = p.estoque <= p.estoque_minimo;
+              const baixo = temAlertaEstoque(p.estoque, p.estoque_minimo);
               const semEstoque = p.estoque === 0;
               return (
                 <div
@@ -621,7 +653,7 @@ export function ProdutosView({ isAdmin, breadcrumbs }: { isAdmin: boolean; bread
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-[var(--card-border)]">
                   {produtosFiltrados.map((p) => {
-                    const baixo = p.estoque <= p.estoque_minimo;
+                    const baixo = temAlertaEstoque(p.estoque, p.estoque_minimo);
                     const semEstoque = p.estoque === 0;
                     return (
                       <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">

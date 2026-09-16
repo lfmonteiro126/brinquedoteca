@@ -344,7 +344,7 @@ export function DashboardView() {
           subtitle="abaixo do mínimo"
           icon={AlertTriangle}
           color="bg-amber-100 text-amber-600"
-          href="/produtos"
+          href="/produtos?estoque_baixo=1"
         />
       </div>
 
@@ -421,7 +421,7 @@ export function DashboardView() {
               <h2 className="font-semibold text-slate-800 dark:text-slate-200">Estoque baixo</h2>
             </div>
             {data.produtosEstoqueBaixo.length > 0 && (
-              <Link href="/produtos" className="rounded-lg px-2 py-1 text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline">
+              <Link href="/produtos?estoque_baixo=1" className="rounded-lg px-2 py-1 text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline">
                 Ver todos →
               </Link>
             )}
@@ -431,14 +431,16 @@ export function DashboardView() {
           ) : (
             <ul className="space-y-2">
               {data.produtosEstoqueBaixo.slice(0, 5).map((p) => (
-                <li
-                  key={p.id}
-                  className="flex items-center justify-between rounded-xl bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-sm hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors cursor-pointer"
-                >
-                  <span className="font-medium text-slate-700 dark:text-slate-300">{p.nome}</span>
-                  <span className="font-bold text-amber-700 dark:text-amber-400">
-                    {p.estoque} / min. {p.estoque_minimo}
-                  </span>
+                <li key={p.id}>
+                  <Link
+                    href={`/produtos/${p.id}/editar`}
+                    className="flex items-center justify-between rounded-xl bg-amber-50 dark:bg-amber-900/20 px-3 py-2 text-sm hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+                  >
+                    <span className="font-medium text-slate-700 dark:text-slate-300">{p.nome}</span>
+                    <span className="font-bold text-amber-700 dark:text-amber-400">
+                      {p.estoque} / min. {p.estoque_minimo}
+                    </span>
+                  </Link>
                 </li>
               ))}
               {data.produtosEstoqueBaixo.length > 5 && (

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, requireAdmin } from "@/lib/auth";
 import { sqlGet, sqlRun, registrarMovimentacao } from "@/lib/db";
 import { handleApiError } from "@/lib/api";
+import { parseEstoqueMinimo } from "@/lib/estoque";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -64,6 +65,11 @@ export async function PUT(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
     }
 
+    const minimoNum = parseEstoqueMinimo(body.estoque_minimo);
+    if (minimoNum === null) {
+      return NextResponse.json({ error: "Estoque mínimo inválido" }, { status: 400 });
+    }
+
     await sqlRun`
       UPDATE produtos SET
         nome = ${nome},
@@ -73,7 +79,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
         categoria = ${body.categoria?.trim() || null},
         preco_custo = ${Number(body.preco_custo) || 0},
         preco_venda = ${Number(body.preco_venda) || 0},
-        estoque_minimo = ${parseInt(body.estoque_minimo, 10) || 5},
+        estoque_minimo = ${minimoNum},
         ativo = ${body.ativo ?? true},
         updated_at = NOW()
       WHERE id = ${produtoId}
