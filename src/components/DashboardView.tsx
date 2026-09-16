@@ -305,7 +305,7 @@ export function DashboardView() {
         </div>
       </div>
 
-      {showNotification && data.produtosEstoqueBaixo.length > 0 && (
+      {showNotification && data.produtosEstoqueBaixoTotal > 0 && (
         <NotificationBanner onDismiss={() => setShowNotification(false)} />
       )}
 
@@ -340,7 +340,7 @@ export function DashboardView() {
         />
         <StatCard
           title="Alertas de estoque"
-          value={String(data.produtosEstoqueBaixo.length)}
+          value={String(data.produtosEstoqueBaixoTotal)}
           subtitle="abaixo do mínimo"
           icon={AlertTriangle}
           color="bg-amber-100 text-amber-600"
@@ -420,7 +420,7 @@ export function DashboardView() {
               <AlertTriangle className="h-5 w-5 text-amber-500" />
               <h2 className="font-semibold text-slate-800 dark:text-slate-200">Estoque baixo</h2>
             </div>
-            {data.produtosEstoqueBaixo.length > 0 && (
+            {data.produtosEstoqueBaixoTotal > 0 && (
               <Link href="/produtos?estoque_baixo=1" className="rounded-lg px-2 py-1 text-xs font-medium text-violet-600 dark:text-violet-400 hover:underline">
                 Ver todos →
               </Link>
@@ -443,9 +443,9 @@ export function DashboardView() {
                   </Link>
                 </li>
               ))}
-              {data.produtosEstoqueBaixo.length > 5 && (
+              {data.produtosEstoqueBaixoTotal > 5 && (
                 <li className="text-center text-xs text-slate-400 dark:text-slate-500">
-                  +{data.produtosEstoqueBaixo.length - 5} mais
+                  +{data.produtosEstoqueBaixoTotal - 5} mais
                 </li>
               )}
             </ul>

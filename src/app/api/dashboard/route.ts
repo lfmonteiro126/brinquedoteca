@@ -77,6 +77,10 @@ export async function GET(request: NextRequest) {
        ORDER BY estoque ASC LIMIT 10`
     );
 
+    const produtosEstoqueBaixoTotal = await sqlGet<{ count: number }>(
+      `SELECT COUNT(*)::int as count FROM produtos WHERE ativo = true AND ${SQL_ESTOQUE_BAIXO}`
+    );
+
     const vendasRecentes = await sqlAll`
       SELECT v.*, u.nome as usuario_nome
       FROM vendas v JOIN users u ON u.id = v.usuario_id
@@ -103,6 +107,7 @@ export async function GET(request: NextRequest) {
       periodoAnterior: periodoAnterior ?? { total: 0, quantidade: 0 },
       produtosEstoque: produtosEstoque?.count ?? 0,
       produtosEstoqueBaixo: produtosEstoqueBaixo as unknown as DashboardData["produtosEstoqueBaixo"],
+      produtosEstoqueBaixoTotal: produtosEstoqueBaixoTotal?.count ?? produtosEstoqueBaixo.length,
       vendasRecentes: vendasRecentes as unknown as DashboardData["vendasRecentes"],
       topProdutos: topProdutos as unknown as DashboardData["topProdutos"],
       vendasPorHora,

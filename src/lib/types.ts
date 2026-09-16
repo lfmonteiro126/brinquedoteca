@@ -81,6 +81,7 @@ export interface DashboardData {
   periodoAnterior: { total: number; quantidade: number };
   produtosEstoque: number;
   produtosEstoqueBaixo: Produto[];
+  produtosEstoqueBaixoTotal: number;
   vendasRecentes: Venda[];
   topProdutos: { produto_nome: string; total_vendido: number }[];
   vendasPorHora: { hora: number; total: number; quantidade: number }[];
