@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { calcularEstoqueNovo, calcularAjusteEstoqueEstorno } from "./estoque";
+import {
+  calcularEstoqueNovo,
+  calcularAjusteEstoqueEstorno,
+  temAlertaEstoque,
+  parseEstoqueMinimo,
+} from "./estoque";
 
 describe("calcularEstoqueNovo", () => {
   it("devolve unidades no estorno", () => {
@@ -28,5 +33,40 @@ describe("calcularAjusteEstoqueEstorno", () => {
 
   it("devolve a quantidade quando a venda foi marcada sem movimentação", () => {
     expect(calcularAjusteEstoqueEstorno(1, 0)).toBe(1);
+  });
+});
+
+describe("temAlertaEstoque", () => {
+  it("alerta quando o estoque está no mínimo ou abaixo", () => {
+    expect(temAlertaEstoque(5, 5)).toBe(true);
+    expect(temAlertaEstoque(2, 5)).toBe(true);
+  });
+
+  it("não alerta quando o estoque está acima do mínimo", () => {
+    expect(temAlertaEstoque(6, 5)).toBe(false);
+  });
+
+  it("desativa o alerta quando o mínimo é zero", () => {
+    expect(temAlertaEstoque(0, 0)).toBe(false);
+    expect(temAlertaEstoque(3, 0)).toBe(false);
+  });
+});
+
+describe("parseEstoqueMinimo", () => {
+  it("aceita zero para desligar o alerta", () => {
+    expect(parseEstoqueMinimo(0)).toBe(0);
+    expect(parseEstoqueMinimo("0")).toBe(0);
+  });
+
+  it("aceita valores positivos", () => {
+    expect(parseEstoqueMinimo(5)).toBe(5);
+    expect(parseEstoqueMinimo("8")).toBe(8);
+  });
+
+  it("rejeita valores inválidos", () => {
+    expect(parseEstoqueMinimo(-1)).toBeNull();
+    expect(parseEstoqueMinimo("")).toBeNull();
+    expect(parseEstoqueMinimo("abc")).toBeNull();
+    expect(parseEstoqueMinimo(1.5)).toBeNull();
   });
 });

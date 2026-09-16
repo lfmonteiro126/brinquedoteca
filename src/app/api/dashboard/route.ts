@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { sqlGet, sqlAll } from "@/lib/db";
 import { handleApiError } from "@/lib/api";
 import type { DashboardData } from "@/lib/types";
+import { SQL_ESTOQUE_BAIXO } from "@/lib/estoque";
 
 export async function GET(request: NextRequest) {
   try {
@@ -71,10 +72,14 @@ export async function GET(request: NextRequest) {
       SELECT COUNT(*) as count FROM produtos WHERE ativo = true AND estoque > 0
     ` as { count: number } | undefined;
 
-    const produtosEstoqueBaixo = await sqlAll`
-      SELECT * FROM produtos WHERE ativo = true AND estoque <= estoque_minimo
-      ORDER BY estoque ASC LIMIT 10
-    `;
+    const produtosEstoqueBaixo = await sqlAll(
+      `SELECT * FROM produtos WHERE ativo = true AND ${SQL_ESTOQUE_BAIXO}
+       ORDER BY estoque ASC LIMIT 10`
+    );
+
+    const produtosEstoqueBaixoTotal = await sqlGet<{ count: number }>(
+      `SELECT COUNT(*)::int as count FROM produtos WHERE ativo = true AND ${SQL_ESTOQUE_BAIXO}`
+    );
 
     const vendasRecentes = await sqlAll`
       SELECT v.*, u.nome as usuario_nome
@@ -102,6 +107,7 @@ export async function GET(request: NextRequest) {
       periodoAnterior: periodoAnterior ?? { total: 0, quantidade: 0 },
       produtosEstoque: produtosEstoque?.count ?? 0,
       produtosEstoqueBaixo: produtosEstoqueBaixo as unknown as DashboardData["produtosEstoqueBaixo"],
+      produtosEstoqueBaixoTotal: produtosEstoqueBaixoTotal?.count ?? produtosEstoqueBaixo.length,
       vendasRecentes: vendasRecentes as unknown as DashboardData["vendasRecentes"],
       topProdutos: topProdutos as unknown as DashboardData["topProdutos"],
       vendasPorHora,
