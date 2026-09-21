@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Barcode,
   Check,
-  ImageOff,
   Minus,
   Plus,
   Printer,
@@ -16,13 +15,14 @@ import {
   CreditCard,
   Keyboard,
 } from "lucide-react";
-import { formatCurrency, normalizeImageUrl } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import { escapeHtml } from "@/lib/sanitize";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useToast } from "@/components/Toast";
 import { useKeyboardShortcuts, getShortcutLabel } from "@/hooks/useKeyboardShortcuts";
 import { ShortcutHelp } from "@/components/ShortcutHelp";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
+import { ProductImage } from "@/components/ProductImage";
 import type { Produto, User } from "@/lib/types";
 
 interface CartItem {
@@ -702,17 +702,13 @@ Pgto:    ${vendaFinalizada.metodo_pagamento}
                   onClick={() => adicionarAoCarrinho(p)}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-violet-50 dark:hover:bg-violet-900/20 active:bg-violet-100 dark:active:bg-violet-900/40"
                 >
-                  {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
-                    <img
-                      src={normalizeImageUrl(p.imagem_url)}
-                      alt={p.nome}
-                      className="h-12 w-12 shrink-0 rounded-xl object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700">
-                      <ImageOff className="h-5 w-5 text-slate-400 dark:text-slate-500" />
-                    </div>
-                  )}
+                  <ProductImage
+                    src={p.imagem_url}
+                    alt={p.nome}
+                    className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                    fallbackClassName="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700"
+                    iconClassName="h-5 w-5 text-slate-400 dark:text-slate-500"
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-slate-800 dark:text-slate-200 truncate">
                       {p.nome}
@@ -761,17 +757,13 @@ Pgto:    ${vendaFinalizada.metodo_pagamento}
                     onClick={() => adicionarAoCarrinho(p)}
                     className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-violet-50 dark:hover:bg-violet-900/20 active:bg-violet-100 dark:active:bg-violet-900/40"
                   >
-                    {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
-                      <img
-                        src={normalizeImageUrl(p.imagem_url)}
-                        alt={p.nome}
-                        className="h-10 w-10 shrink-0 rounded-xl object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700">
-                        <ImageOff className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-                      </div>
-                    )}
+                    <ProductImage
+                      src={p.imagem_url}
+                      alt={p.nome}
+                      className="h-10 w-10 shrink-0 rounded-xl object-cover"
+                      fallbackClassName="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700"
+                      iconClassName="h-4 w-4 text-slate-400 dark:text-slate-500"
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium text-slate-800 dark:text-slate-200">
                         {p.nome}
@@ -835,17 +827,13 @@ Pgto:    ${vendaFinalizada.metodo_pagamento}
                     }`}
                   >
                     {/* Imagem - menor no mobile */}
-                    {item.produto.imagem_url && normalizeImageUrl(item.produto.imagem_url) ? (
-                      <img
-                        src={normalizeImageUrl(item.produto.imagem_url)}
-                        alt={item.produto.nome}
-                        className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 rounded-xl object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl bg-slate-200 dark:bg-slate-700">
-                        <ImageOff className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400 dark:text-slate-500" />
-                      </div>
-                    )}
+                    <ProductImage
+                      src={item.produto.imagem_url}
+                      alt={item.produto.nome}
+                      className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 rounded-xl object-cover"
+                      fallbackClassName="flex h-10 w-10 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl bg-slate-200 dark:bg-slate-700"
+                      iconClassName="h-4 w-4 sm:h-5 sm:w-5 text-slate-400 dark:text-slate-500"
+                    />
 
                     {/* Info do produto */}
                     <div className="min-w-0 flex-1">
@@ -1109,17 +1097,13 @@ Pgto:    ${vendaFinalizada.metodo_pagamento}
                     aria-label={`Adicionar ${p.nome} ao carrinho`}
                     className="flex w-full items-center gap-3 rounded-xl border border-slate-100 dark:border-[var(--card-border)] px-4 py-3 text-left transition hover:border-violet-200 hover:bg-violet-50 dark:hover:bg-violet-900/20 active:bg-violet-100 dark:active:bg-violet-900/40"
                   >
-                    {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
-                      <img
-                        src={normalizeImageUrl(p.imagem_url)}
-                        alt={p.nome}
-                        className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-xl object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700">
-                        <ImageOff className="h-5 w-5 text-slate-400 dark:text-slate-500" />
-                      </div>
-                    )}
+                    <ProductImage
+                      src={p.imagem_url}
+                      alt={p.nome}
+                      className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 rounded-xl object-cover"
+                      fallbackClassName="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700"
+                      iconClassName="h-5 w-5 text-slate-400 dark:text-slate-500"
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-slate-800 dark:text-slate-200">{p.nome}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -1214,17 +1198,13 @@ Pgto:    ${vendaFinalizada.metodo_pagamento}
               </button>
             </div>
             <div className="flex flex-col items-center gap-4">
-              {produtoDetalhe.imagem_url && normalizeImageUrl(produtoDetalhe.imagem_url) ? (
-                <img
-                  src={normalizeImageUrl(produtoDetalhe.imagem_url)}
-                  alt={produtoDetalhe.nome}
-                  className="h-40 w-40 sm:h-48 sm:w-48 rounded-2xl object-cover"
-                />
-              ) : (
-                <div className="flex h-40 w-40 sm:h-48 sm:w-48 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-700">
-                  <ImageOff className="h-12 w-12 text-slate-400 dark:text-slate-500" />
-                </div>
-              )}
+              <ProductImage
+                src={produtoDetalhe.imagem_url}
+                alt={produtoDetalhe.nome}
+                className="h-40 w-40 sm:h-48 sm:w-48 rounded-2xl object-cover"
+                fallbackClassName="flex h-40 w-40 sm:h-48 sm:w-48 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-700"
+                iconClassName="h-12 w-12 text-slate-400 dark:text-slate-500"
+              />
               <div className="w-full text-center">
                 <p className="text-lg font-bold text-slate-800 dark:text-slate-200">
                   {produtoDetalhe.nome}

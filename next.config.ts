@@ -12,7 +12,8 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' https://i.imgur.com https://imgur.com https://images.unsplash.com data: blob:",
+      // Permite imagens de qualquer origem (URLs coladas no cadastro) + uploads data/blob
+      "img-src 'self' https: http: data: blob:",
       "font-src 'self' https://rsms.me",
       "connect-src 'self'",
       "frame-ancestors 'none'",
@@ -26,11 +27,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "images.unsplash.com",
+        hostname: "*",
       },
       {
-        protocol: "https",
-        hostname: "i.imgur.com",
+        protocol: "http",
+        hostname: "*",
       },
     ],
   },

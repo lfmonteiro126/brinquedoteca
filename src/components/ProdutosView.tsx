@@ -17,13 +17,14 @@ import {
   Package,
   X,
 } from "lucide-react";
-import { formatCurrency, normalizeImageUrl } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import { temAlertaEstoque } from "@/lib/estoque";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "@/components/Toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { StockAdjustModal } from "@/components/StockAdjustModal";
 import { ProductDetailModal } from "@/components/ProductDetailModal";
+import { ProductImage } from "@/components/ProductImage";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
 import type { Produto } from "@/lib/types";
 
@@ -435,17 +436,11 @@ export function ProdutosView({
                         ESTOQUE OK
                       </span>
                     )}
-                    {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
-                      <img
-                        src={normalizeImageUrl(p.imagem_url)}
-                        alt={p.nome}
-                        className="h-44 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-violet-100 to-violet-50 dark:from-violet-900/20 dark:to-violet-800/10">
-                        <Package className="h-12 w-12 text-violet-300 dark:text-violet-600" />
-                      </div>
-                    )}
+                    <ProductImage
+                      src={p.imagem_url}
+                      alt={p.nome}
+                      className="h-44 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
                   </div>
 
                   <div className="flex flex-1 flex-col p-4">
@@ -564,13 +559,13 @@ export function ProdutosView({
                   className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:bg-[var(--card-bg)] dark:border-[var(--card-border)]"
                 >
                   <div className="flex items-start gap-3">
-                    {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
-                      <img src={normalizeImageUrl(p.imagem_url)} alt={p.nome} className="h-14 w-14 shrink-0 rounded-xl object-cover" />
-                    ) : (
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700">
-                        <Package className="h-6 w-6 text-slate-400" />
-                      </div>
-                    )}
+                    <ProductImage
+                      src={p.imagem_url}
+                      alt={p.nome}
+                      className="h-14 w-14 shrink-0 rounded-xl object-cover"
+                      fallbackClassName="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700"
+                      iconClassName="h-6 w-6 text-slate-400"
+                    />
                     <div className="min-w-0 flex-1">
                       <button onClick={() => setSelectedProduct(p)} className="text-left font-medium text-slate-800 dark:text-slate-200 hover:text-violet-600 dark:hover:text-violet-400 line-clamp-1">
                         {p.nome}
@@ -659,13 +654,13 @@ export function ProdutosView({
                       <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
-                            {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
-                              <img src={normalizeImageUrl(p.imagem_url)} alt={p.nome} className="h-10 w-10 rounded-xl object-cover border border-slate-150/40" />
-                            ) : (
-                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-850">
-                                <Package className="h-5 w-5 text-slate-400" />
-                              </div>
-                            )}
+                            <ProductImage
+                              src={p.imagem_url}
+                              alt={p.nome}
+                              className="h-10 w-10 rounded-xl object-cover border border-slate-150/40"
+                              fallbackClassName="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-850"
+                              iconClassName="h-5 w-5 text-slate-400"
+                            />
                             <div>
                               <button onClick={() => setSelectedProduct(p)} className="text-left font-semibold text-slate-850 dark:text-slate-100 hover:text-violet-650 dark:hover:text-violet-400 transition-colors">
                                 {p.nome}

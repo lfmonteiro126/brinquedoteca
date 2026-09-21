@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertTriangle, Calendar, Edit, Package, ShoppingCart, Tag, X } from "lucide-react";
-import { formatCurrency, normalizeImageUrl } from "@/lib/format";
+import { AlertTriangle, Calendar, Edit, ShoppingCart, Tag, X } from "lucide-react";
+import { formatCurrency } from "@/lib/format";
 import { temAlertaEstoque } from "@/lib/estoque";
+import { ProductImage } from "@/components/ProductImage";
 import type { Produto } from "@/lib/types";
 
 interface ProductDetailModalProps {
@@ -47,17 +48,13 @@ export function ProductDetailModal({
       >
         {/* Banner da imagem com fixed height */}
         <div className="relative h-44 sm:h-52 w-full shrink-0 overflow-hidden bg-slate-50 dark:bg-slate-900">
-          {p.imagem_url && normalizeImageUrl(p.imagem_url) ? (
-            <img
-              src={normalizeImageUrl(p.imagem_url)}
-              alt={p.nome}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-100 to-violet-50 dark:from-violet-900/20 dark:to-violet-800/10">
-              <Package className="h-14 w-14 text-violet-300 dark:text-violet-650" />
-            </div>
-          )}
+          <ProductImage
+            src={p.imagem_url}
+            alt={p.nome}
+            className="h-full w-full object-cover"
+            fallbackClassName="flex h-full w-full items-center justify-center bg-gradient-to-br from-violet-100 to-violet-50 dark:from-violet-900/20 dark:to-violet-800/10"
+            iconClassName="h-14 w-14 text-violet-300 dark:text-violet-650"
+          />
 
           {/* Badge de status flutuante */}
           <div className="absolute left-4 top-4 z-10">

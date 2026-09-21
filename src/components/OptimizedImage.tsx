@@ -62,6 +62,7 @@ export function OptimizedImage({
         height={height}
         loading={priority ? "eager" : "lazy"}
         decoding="async"
+        referrerPolicy="no-referrer"
         onLoad={() => setLoaded(true)}
         onError={() => setError(true)}
         className={`transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"} ${className}`}

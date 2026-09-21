@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Barcode, Package, Check, Printer } from "lucide-react";
+import { Search, Barcode, Check, Printer } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { LabelPrinter } from "@/components/LabelPrinter";
 import { formatCurrency } from "@/lib/format";
 import { Breadcrumbs, type BreadcrumbItem } from "@/components/Breadcrumbs";
+import { ProductImage } from "@/components/ProductImage";
 import type { Produto } from "@/lib/types";
 
 export function CodigoBarrasView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem[] }) {
@@ -199,13 +200,13 @@ export function CodigoBarrasView({ breadcrumbs }: { breadcrumbs?: BreadcrumbItem
                       </td>
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          {p.imagem_url ? (
-                            <img src={p.imagem_url} alt={p.nome} className="h-10 w-10 rounded-xl object-cover" />
-                          ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700">
-                              <Package className="h-5 w-5 text-slate-400" />
-                            </div>
-                          )}
+                          <ProductImage
+                            src={p.imagem_url}
+                            alt={p.nome}
+                            className="h-10 w-10 rounded-xl object-cover"
+                            fallbackClassName="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700"
+                            iconClassName="h-5 w-5 text-slate-400"
+                          />
                           <div>
                             <p className="font-semibold text-slate-800 dark:text-slate-200">{p.nome}</p>
                           </div>
