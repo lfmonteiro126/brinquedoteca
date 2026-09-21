@@ -34,7 +34,13 @@ export async function PUT(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
 
-    if (body.ajuste_estoque && body.ajuste_quantidade) {
+    // Ajuste rápido de estoque (StockAdjustModal) — sem atualizar demais campos
+    const isStockOnlyAdjust =
+      Boolean(body.ajuste_estoque) &&
+      body.ajuste_quantidade != null &&
+      body.nome === undefined;
+
+    if (isStockOnlyAdjust) {
       const quantidade = parseInt(body.ajuste_quantidade, 10);
       if (isNaN(quantidade) || quantidade <= 0) {
         return NextResponse.json({ error: "Quantidade de ajuste inválida" }, { status: 400 });
@@ -84,6 +90,21 @@ export async function PUT(request: NextRequest, { params }: Params) {
         updated_at = NOW()
       WHERE id = ${produtoId}
     `;
+
+    // Edição completa do formulário também pode incluir ajuste de estoque
+    if (body.ajuste_estoque && body.ajuste_quantidade) {
+      const quantidade = parseInt(body.ajuste_quantidade, 10);
+      if (!isNaN(quantidade) && quantidade > 0) {
+        const tipo = body.ajuste_tipo === "saida" ? "saida" : "entrada";
+        await registrarMovimentacao({
+          produtoId,
+          tipo,
+          quantidade,
+          usuarioId: user.id,
+          motivo: body.ajuste_motivo || `Ajuste manual (${tipo})`,
+        });
+      }
+    }
 
     const produto = await sqlGet("SELECT * FROM produtos WHERE id = $1", produtoId);
     return NextResponse.json({ produto });

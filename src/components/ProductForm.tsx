@@ -340,6 +340,7 @@ export function ProductForm({ initial, isEdit }: ProductFormProps) {
                       src={normalizeImageUrl(form.imagem_url)}
                       alt="Preview"
                       className="h-20 w-20 rounded-lg object-cover border bg-white shadow-sm"
+                      referrerPolicy="no-referrer"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = "none";
                       }}

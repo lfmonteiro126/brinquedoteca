@@ -105,7 +105,7 @@ export function GlobalSearch() {
           subtitle: `${formatCurrency(p.preco_venda)} · Estoque: ${p.estoque}`,
           href: `/produtos/${p.id}/editar`,
           icon: <Package className="h-4 w-4" />,
-          image: p.imagem_url ? normalizeImageUrl(p.imagem_url) : undefined,
+          image: normalizeImageUrl(p.imagem_url || "") || undefined,
         }));
 
         const filteredPages = PAGE_LINKS.filter((p) =>
@@ -234,6 +234,7 @@ export function GlobalSearch() {
                             src={result.image}
                             alt={result.title}
                             className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                            referrerPolicy="no-referrer"
                           />
                         ) : (
                           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
